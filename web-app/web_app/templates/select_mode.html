@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chọn Chế độ Học - Flashcard App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navbar Section -->
+    <nav class="navbar">
+        <div class="navbar-brand">Flashcard App</div>
+        <div class="navbar-user-info">
+            {% if session.get('username') %}
+                <span>Xin chào, {{ session.get('username') }}!</span>
+                <a href="{{ url_for('main.logout') }}" class="button logout-button">Đăng xuất</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="button login-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>⚡ Chọn Chế độ Học</h1>
+        <p>Chọn chế độ học tập phù hợp với bạn:</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {% if modes %}
+            <ul class="mode-list">
+                {% for mode_code, mode_name in modes.items() %}
+                    <li>
+                        <a href="{{ url_for('main.set_learning_mode', mode_code=mode_code) }}" class="button mode-button">
+                            {{ mode_name }}
+                            {% if mode_code == current_mode %}
+                                <span class="current-mode-indicator"> (Hiện tại)</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Không có chế độ học nào khả dụng.</p>
+        {% endif %}
+
+        <div class="button-group">
+            <a href="{{ url_for('main.index') }}" class="button secondary">🔙 Quay lại Chọn bộ</a>
+        </div>
+
+        <div class="footer">
+            <p>Flashcard Web App - Phiên bản thử nghiệm</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Thẻ - Flashcard App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navbar Section -->
+    <nav class="navbar">
+        <div class="navbar-brand">Flashcard App</div>
+        <div class="navbar-user-info">
+            {% if session.get('username') %}
+                <span>Xin chào, {{ session.get('username') }}!</span>
+                <a href="{{ url_for('main.logout') }}" class="button logout-button">Đăng xuất</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="button login-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Flashcard Area -->
+        <div class="flashcard-area">
+            {% if flashcard %}
+                <div class="flashcard {% if not is_front %}is-back-side{% endif %}"> {# THAY ĐỔI: Thêm lớp is-back-side nếu là mặt sau #}
+                    <div class="flashcard-content">
+                        {% if is_front %}
+                            <p class="card-side">Mặt trước</p>
+                            {# Added scrollable-card-content div #}
+                            <div class="scrollable-card-content">
+                                <div class="card-text">{{ flashcard.front }}</div>
+                            </div>
+                            <a href="{{ url_for('main.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
+                        {% else %}
+                            <p class="card-side">Mặt sau</p>
+                            {# Added scrollable-card-content div #}
+                            <div class="scrollable-card-content">
+                                <div class="card-text">{{ flashcard.back }}</div>
+                            </div>
+                            <div class="button-group">
+                                {% if progress.last_reviewed is none %}
+                                    <!-- Thẻ mới, chỉ có nút Tiếp tục -->
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response=2) }}" class="button primary">▶️ Tiếp tục</a>
+                                {% else %}
+                                    <!-- Thẻ đã học, có các nút đánh giá -->
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response=-1) }}" class="button danger">❌ Quên</a>
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response=0) }}" class="button warning">🤔 Mơ hồ</a>
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response=1) }}" class="button success">✅ Nhớ</a>
+                                {% endif %}
+                                <!-- Nút Gợi ý Ghi chú AI (đã tạm gác lại) -->
+                                <!-- <button id="generateSmartNote" class="button ai-button">✨ Gợi ý Ghi chú ✨</button> -->
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% elif wait_time_ts %}
+                <div class="flashcard no-card">
+                    <div class="flashcard-content">
+                        <h2>🎉 Hoàn thành!</h2>
+                        {% if is_midnight_tomorrow %}
+                            <p>Bạn đã hoàn thành tất cả các thẻ cần ôn tập hoặc thẻ mới cho hôm nay.</p>
+                            <p>Hãy quay lại vào ngày mai để tiếp tục học nhé!</p>
+                        {% else %}
+                            <p>Bạn đã ôn hết các thẻ đến hạn hiện tại.</p>
+                            <p>Thẻ tiếp theo sẽ đến hạn vào khoảng <strong>{{ wait_minutes }} phút</strong> nữa.</p>
+                        {% endif %}
+                        <a href="{{ url_for('main.learn_set', set_id=context_stats.set_id) }}" class="button primary">▶️ Tiếp tục (thử lại)</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="flashcard no-card">
+                    <div class="flashcard-content">
+                        <h2>Không có thẻ nào!</h2>
+                        <p>Không tìm thấy thẻ nào để học trong bộ này.</p>
+                        <a href="{{ url_for('main.select_set_page') }}" class="button primary">Chọn bộ khác</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- New container for the right column elements -->
+        <div class="right-column-container">
+            <!-- Separate frame for top controls, now a sibling to context-panel -->
+            <div class="top-controls-frame">
+                <h3>Chọn chức năng</h3> {# Added title here #}
+                <div class="control-button-group">
+                    <a href="{{ url_for('main.select_set_page') }}" class="control-button set-button">📚 Bộ</a>
+                    <a href="{{ url_for('main.select_mode') }}" class="control-button mode-button">⚡ Chế độ</a>
+                </div>
+            </div>
+
+            <!-- Context Panel (Bảng thống kê nhỏ) -->
+            <div class="context-panel">
+                <h2>📊 Thống kê</h2>
+                {% if context_stats %}
+                    <!-- Box 1: Thống kê chung -->
+                    <div class="stats-box general-stats">
+                        <h3>Tổng quan chung</h3>
+                        <p><strong>Điểm của bạn:</strong> {{ context_stats.total_score }}</p>
+                        <p><strong>Đã học:</strong> {{ context_stats.learned_distinct_overall }} thẻ</p>
+                        <p><strong>Cần ôn:</strong> {{ context_stats.due_overall }} thẻ</p>
+                        <p><strong>Số bộ đã học:</strong> {{ context_stats.learned_sets_count }}</p>
+                    </div>
+
+                    <!-- Box 2: Chế độ hiện tại -->
+                    <div class="stats-box mode-stats">
+                        <h3>Chế độ</h3>
+                        <p><strong>Hiện tại:</strong> {{ context_stats.current_mode_display }}</p>
+                    </div>
+
+                    <!-- Box 3: Thống kê bộ hiện tại -->
+                    <div class="stats-box set-stats">
+                        <h3>Bộ hiện tại</h3>
+                        <p><strong>Bộ:</strong> {{ context_stats.set_title }}</p>
+                        <p><strong>Đã học trong bộ:</strong> {{ context_stats.set_learned_cards }} / {{ context_stats.set_total_cards }}</p>
+                        <p><strong>Cần ôn trong bộ:</strong> {{ context_stats.set_due_cards }}</p>
+                    </div>
+
+                    <!-- Box 4: Thống kê thẻ hiện tại -->
+                    {% if flashcard and progress %}
+                    <div class="stats-box card-stats">
+                        <h3>Thẻ hiện tại</h3>
+                        <p><strong>ID Thẻ:</strong> {{ flashcard.flashcard_id }}</p>
+                        <p><strong>Lần đúng liên tiếp:</strong> {{ progress.correct_streak }}</p>
+                        <p><strong>Tổng số lần đúng:</strong> {{ progress.correct_count }}</p>
+                        <p><strong>Tổng lượt ôn:</strong> {{ progress.review_count }}</p>
+                        <p><strong>Thời gian đến hạn:</strong> {{ progress.due_time | format_unix_timestamp }}</p>
+                        <p><strong>Lần ôn cuối:</strong> {{ progress.last_reviewed | format_unix_timestamp }}</p>
+                    </div>
+                    {% endif %}
+
+                {% else %}
+                    <p>Không có dữ liệu thống kê.</p>
+                {% endif %}
+                <div class="button-group">
+                    {# Removed the "Chọn bộ khác" button from here as per user's request #}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Note Modal (đã tạm gác lại) -->
+    <!--
+    <div id="smartNoteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>✨ Gợi ý Ghi chú Thông minh ✨</h2>
+            <div id="smartNoteContent" class="modal-body">
+                <p>Đang tạo ghi chú...</p>
+            </div>
+            <div class="modal-footer">
+                <button id="copySmartNote" class="button primary">Sao chép</button>
+                <button id="closeSmartNoteModal" class="button secondary">Đóng</button>
+            </div>
+        </div>
+    </div>
+    -->
+
+    <!-- Smart Note Script (đã tạm gác lại) -->
+    <!--
+    <script>
+        const generateButton = document.getElementById('generateSmartNote');
+        const smartNoteModal = document.getElementById('smartNoteModal');
+        const smartNoteContent = document.getElementById('smartNoteContent');
+        const closeButton = document.querySelector('.close-button');
+        const copyButton = document.getElementById('copySmartNote');
+        const closeModalButton = document.getElementById('closeSmartNoteModal');
+
+        const flashcardFront = "{{ flashcard.front | e }}";
+        const flashcardBack = "{{ flashcard.back | e }}";
+
+        if (generateButton) {
+            generateButton.addEventListener('click', async () => {
+                smartNoteModal.style.display = 'block';
+                smartNoteContent.innerHTML = '<p>Đang tạo ghi chú thông minh... Vui lòng chờ.</p><div class="loader"></div>';
+                copyButton.style.display = 'none';
+
+                try {
+                    const response = await fetch('/generate_smart_note', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            front: flashcardFront,
+                            back: flashcardBack
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.note) {
+                        smartNoteContent.innerHTML = `<p>${data.note}</p>`;
+                        copyButton.style.display = 'inline-block';
+                    } else {
+                        smartNoteContent.innerHTML = '<p>Không thể tạo ghi chú thông minh. Vui lòng thử lại.</p>';
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi tạo ghi chú thông minh:', error);
+                    smartNoteContent.innerHTML = '<p>Đã xảy ra lỗi khi tạo ghi chú. Vui lòng thử lại sau.</p>';
+                }
+            });
+        }
+
+        closeButton.addEventListener('click', () => {
+            smartNoteModal.style.display = 'none';
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            smartNoteModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == smartNoteModal) {
+                smartNoteModal.style.display = 'none';
+            }
+        });
+
+        copyButton.addEventListener('click', () => {
+            const textToCopy = smartNoteContent.innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('Đã sao chép ghi chú vào clipboard!');
+            } catch (err) {
+                console.error('Không thể sao chép văn bản: ', err);
+                alert('Không thể sao chép ghi chú. Vui lòng sao chép thủ công.');
+            }
+            document.body.removeChild(textarea);
+        });
+    </script>
+    -->
+
+    <script>
+        // Debugging: Log progress_id when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const progressIdElement = document.getElementById('debugProgressId');
+            if (progressIdElement) {
+                console.log('Debug: progress.progress_id from Jinja2:', progressIdElement.dataset.progressId);
+            } else {
+                console.log('Debug: progressIdElement not found. progress object might not be available.');
+            }
+        });
+    </script>
+    {% if progress %}
+    <div id="debugProgressId" data-progress-id="{{ progress.progress_id }}" style="display:none;"></div>
+    {% endif %}
+</body>
+</html>

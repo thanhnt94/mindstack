@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chọn Bộ Thẻ - Flashcard App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navbar Section -->
+    <nav class="navbar">
+        <div class="navbar-brand">Flashcard App</div>
+        <div class="navbar-user-info">
+            {% if session.get('username') %}
+                <span>Xin chào, {{ session.get('username') }}!</span>
+                <a href="{{ url_for('main.logout') }}" class="button logout-button">Đăng xuất</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="button login-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Chào mừng, {{ user.username or user.telegram_id }}!</h1>
+        <p>Chọn một bộ thẻ để bắt đầu học:</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {% if sets %}
+            <ul class="set-list">
+                {% for set in sets %}
+                    <li>
+                        <!-- Sửa liên kết để trỏ đến route học thẻ -->
+                        <a href="{{ url_for('main.learn_set', set_id=set.set_id) }}">{{ set.title }} (ID: {{ set.set_id }})</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Bạn chưa học/tạo bộ thẻ nào.</p>
+        {% endif %}
+
+        <!-- Đã loại bỏ nút "Chọn Chế độ Học" khỏi trang này theo yêu cầu -->
+        <!-- <div class="button-group">
+            <a href="{{ url_for('main.select_mode') }}" class="button primary">⚙️ Chọn Chế độ Học</a>
+        </div> -->
+
+        <div class="footer">
+            <p>Flashcard Web App - Phiên bản thử nghiệm</p>
+        </div>
+    </div>
+</body>
+</html>

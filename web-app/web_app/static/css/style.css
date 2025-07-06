@@ -1,0 +1,807 @@
+/* flashcard-web/web_app/static/css/style.css */
+body {
+    font-family: 'Inter', sans-serif; /* Sử dụng font Inter */
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 20px; /* Padding toàn bộ body */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+    color: #333;
+}
+
+/* ========================== Bố cục chính (Main Container) ========================== */
+/* Đã thay đổi: Sử dụng Grid cho bố cục chính trên desktop để kiểm soát tốt hơn */
+.main-container {
+    display: grid; /* Chuyển sang Grid layout */
+    /* Đã thay đổi: Điều chỉnh grid-template-columns để flashcard-area không bị cắt và có min-width */
+    grid-template-columns: minmax(600px, 1fr) 380px; /* Cột thẻ (linh hoạt, min 600px), cột bên phải (cố định 380px) */
+    gap: 100px; /* Khoảng cách giữa các cột trên desktop */
+    width: 100%;
+    max-width: 2200px; /* Chiều rộng tối đa của toàn bộ nội dung */
+    justify-content: center; /* Căn giữa các khối trong container */
+    align-items: start; /* Căn chỉnh các khối lên đầu */
+}
+
+/* Container mới cho cột bên phải (khung điều khiển + bảng thống kê) */
+.right-column-container {
+    display: flex;
+    flex-direction: column; /* Xếp các phần tử con theo cột */
+    gap: 20px; /* Khoảng cách giữa khung điều khiển và bảng thống kê */
+    width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng của cột grid */
+    /* Các thuộc tính flex-shrink, flex-grow không cần trên container này khi dùng Grid */
+}
+
+/* Khung riêng cho các nút điều khiển (Bộ và Chế độ) */
+.top-controls-frame {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Giống box-shadow của context-panel */
+    width: 100%; /* Đảm bảo chiều rộng bằng với right-column-container */
+    display: flex;
+    flex-direction: column; /* Để tiêu đề và nút được xếp chồng lên nhau */
+    align-items: center; /* Căn giữa nội dung theo chiều ngang */
+    box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
+}
+
+.top-controls-frame h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 15px; /* Khoảng cách giữa tiêu đề và nút */
+    font-size: 1.2em; /* Kích thước font cho tiêu đề */
+    text-align: center;
+}
+
+.control-button-group {
+    display: inline-flex; /* Sử dụng inline-flex để nhóm các nút */
+    gap: 8px; /* Khoảng cách giữa các nút */
+    flex-wrap: wrap; /* Cho phép xuống dòng trên màn hình rất nhỏ */
+    justify-content: center; /* Đảm bảo các nút được căn giữa trong nhóm */
+}
+
+/* Bảng thống kê */
+.context-panel {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 12px; /* Bo tròn góc */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    flex: 1; /* Cho phép co giãn */
+    width: 100%; /* Đảm bảo chiều rộng bằng với right-column-container */
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Khoảng cách giữa các box thống kê con */
+    box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
+}
+
+.context-panel h2 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* Kiểu cho các box thống kê con */
+.stats-box {
+    background-color: #f8f8f8; /* Nền sáng cho từng box */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* Bóng đổ nhẹ bên trong */
+}
+
+.stats-box h3 {
+    color: #34495e;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #e9e9e9;
+}
+
+.stats-box p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.stats-box p strong {
+    color: #2c3e50;
+}
+
+
+.context-panel hr {
+    border: none;
+    border-top: 1px dashed #e0e0e0;
+    margin: 20px 0;
+}
+
+/* Khu vực thẻ flashcard */
+.flashcard-area {
+    width: 100%; /* Chiếm toàn bộ chiều rộng của cột grid */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    order: 1; /* Đảm bảo thứ tự hiển thị */
+}
+
+/* Nút điều khiển chung (Bộ, Chế độ, Lật thẻ, đánh giá) */
+.control-button {
+    display: inline-flex; /* Sử dụng inline-flex để căn chỉnh nội dung */
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px; /* Padding nhỏ hơn */
+    border-radius: 6px; /* Bo tròn vừa phải */
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.85em; /* Cỡ chữ nhỏ hơn */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #ccc;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    white-space: nowrap; /* Ngăn văn bản xuống dòng */
+}
+
+.control-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.control-button.set-button {
+    background-color: #e0f2f7; /* Màu nền xanh nhạt */
+    color: #2196f3; /* Màu chữ xanh */
+    border-color: #b3e5fc;
+}
+
+.control-button.set-button:hover {
+    background-color: #cce9f5;
+}
+
+.control-button.mode-button {
+    background-color: #e8f5e9; /* Màu nền xanh lá nhạt */
+    color: #4caf50; /* Màu chữ xanh lá */
+    border-color: #c8e6c9;
+}
+
+.control-button.mode-button:hover {
+    background-color: #d8eed9;
+}
+
+/* Thẻ flashcard chính */
+.flashcard {
+    background-color: #ffffff;
+    border-radius: 12px; /* Bo tròn góc */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    width: 100%;
+    padding: 30px; /* Giữ padding để có không gian cho nội dung cuộn */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    height: 700px; /* Chiều cao cố định của toàn bộ flashcard trên desktop */
+    min-height: unset; /* Đảm bảo không có min-height cũ */
+}
+
+.flashcard.no-card {
+    background-color: #e6f7ff; /* Màu nền nhẹ nhàng cho trạng thái không có thẻ */
+    border: 1px solid #91d5ff;
+    color: #1890ff;
+}
+
+.flashcard.no-card h2 {
+    color: #1890ff;
+}
+
+/* Nội dung bên trong thẻ flashcard */
+.flashcard-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Cho phép nội dung co giãn */
+    min-height: 0; /* Đảm bảo flex item có thể co lại */
+    /* Đã thay đổi: Căn giữa các thành phần con theo chiều dọc và đẩy ra hai phía */
+    justify-content: space-between; /* Đẩy nội dung và nút ra hai phía */
+    align-items: center; /* Căn giữa theo chiều ngang */
+}
+
+/* Khu vực nội dung thẻ có thể cuộn */
+.scrollable-card-content {
+    flex-grow: 1; /* Cho phép nội dung cuộn chiếm không gian còn lại */
+    overflow-y: auto; /* Kích hoạt cuộn dọc khi nội dung tràn */
+    margin-bottom: 20px; /* Khoảng cách giữa nội dung cuộn và nút */
+    padding: 0 10px; /* Thêm padding nhỏ để nội dung không dính vào mép khi cuộn */
+    box-sizing: border-box;
+    min-height: 0; /* Đảm bảo flex item có thể co lại */
+    text-align: center; /* Đảm bảo văn bản được căn giữa trong scrollable-card-content */
+    /* Đã thay đổi: Sử dụng flex để căn giữa chữ bên trong */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Căn giữa nội dung theo chiều dọc */
+    align-items: center; /* Căn giữa nội dung theo chiều ngang */
+}
+
+.card-side {
+    font-size: 0.85em;
+    color: #888;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0; /* Ngăn không cho phần này bị co lại */
+}
+
+.card-text {
+    font-size: 2em; /* Kích thước chữ thẻ */
+    font-weight: bold;
+    word-wrap: break-word;
+    white-space: pre-wrap; /* Giữ định dạng xuống dòng */
+    color: #2c3e50;
+    margin-bottom: 0; /* Bỏ margin-bottom vì đã có margin trên scrollable-card-content */
+}
+
+/* Nhóm các nút đánh giá (Chưa nhớ, Mơ hồ, Nhớ) */
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: auto; /* Đẩy nhóm nút xuống dưới cùng */
+    padding-top: 10px; /* Khoảng cách trên nhóm nút */
+    flex-shrink: 0; /* Ngăn không cho nhóm nút bị co lại */
+}
+
+/* Container cho nút Lật thẻ */
+.flip-button-container {
+    width: 100%; /* Đảm bảo container chiếm toàn bộ chiều rộng của flashcard-content */
+    display: flex;
+    justify-content: center; /* Đã thay đổi: Căn giữa nút theo chiều ngang */
+    margin-top: auto; /* Đẩy nút xuống dưới cùng của flashcard-content */
+    padding-top: 10px; /* Khoảng cách trên nút */
+    flex-shrink: 0; /* Ngăn không cho container này bị co lại */
+}
+
+/* Kiểu dáng chung cho tất cả các nút */
+.button {
+    display: inline-flex; /* Sử dụng inline-flex để căn chỉnh nội dung và chiều rộng tự động */
+    align-items: center; /* Căn giữa nội dung theo chiều dọc */
+    justify-content: center; /* Căn giữa nội dung theo chiều ngang */
+    padding: 12px 25px;
+    border-radius: 8px; /* Bo tròn góc */
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: auto; /* Đảm bảo chiều rộng tự động */
+    max-width: 200px; /* Giới hạn chiều rộng tối đa cho nút */
+}
+
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.button.primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.button.primary:hover {
+    background-color: #0056b3;
+}
+
+.button.success {
+    background-color: #28a745;
+    color: white;
+}
+
+.button.success:hover {
+    background-color: #218838;
+}
+
+.button.warning {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.button.warning:hover {
+    background-color: #e0a800;
+}
+
+.button.danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.button.danger:hover {
+    background-color: #c82333;
+}
+
+.button.secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.button.secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Kiểu cho nút AI */
+.button.ai-button {
+    background-color: #8e44ad; /* Màu tím */
+    color: white;
+}
+
+.button.ai-button:hover {
+    background-color: #6c3483;
+}
+
+/* Kiểu cho Modal ghi chú thông minh */
+.modal {
+    display: none; /* Ẩn theo mặc định */
+    position: fixed; /* Giữ nguyên vị trí */
+    z-index: 1001; /* Nằm trên cùng */
+    left: 0;
+    top: 0;
+    width: 100%; /* Chiều rộng đầy đủ */
+    height: 100%; /* Chiều cao đầy đủ */
+    overflow: auto; /* Cho phép cuộn nếu cần */
+    background-color: rgba(0,0,0,0.6); /* Nền đen với độ trong suốt */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+@keyframes animatetop {
+    from {top: -300px; opacity: 0}
+    to {top: 0; opacity: 1}
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 10px 0;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    line-height: 1.6;
+    color: #444;
+}
+
+.modal-body p {
+    margin-bottom: 10px;
+}
+
+.modal-footer {
+    padding-top: 20px;
+    text-align: right;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+}
+
+.modal-footer .button {
+    margin-left: 10px;
+}
+
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 2s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+/* Container chung và footer cho select_set.html */
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    margin-top: 50px; /* Đẩy xuống một chút */
+}
+
+.container h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.container p {
+    color: #666;
+    line-height: 1.6;
+}
+
+.set-list, .mode-list { /* Áp dụng cho cả danh sách bộ và chế độ */
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.set-list li, .mode-list li {
+    background-color: #e9e9e9;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: left;
+}
+
+.set-list li a, .mode-list li a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    display: block;
+}
+
+.set-list li a:hover, .mode-list li a:hover {
+    color: #0056b3;
+}
+
+/* Kiểu cho các nút chọn chế độ */
+.mode-list .button.mode-button {
+    width: 100%; /* Làm cho nút chiếm toàn bộ chiều rộng */
+    text-align: left;
+    padding: 15px 20px;
+    font-size: 1.1em;
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+    box-shadow: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    display: flex; /* Sử dụng flex để căn chỉnh chỉ báo */
+    justify-content: space-between; /* Đẩy chỉ báo sang phải */
+    align-items: center;
+}
+
+.mode-list .button.mode-button:hover {
+    background-color: #e0e0e0;
+    border-color: #ccc;
+    transform: none; /* Bỏ translateY cho các nút này */
+    box-shadow: none;
+}
+
+.current-mode-indicator {
+    font-weight: normal;
+    color: #28a745; /* Màu xanh lá cây cho chế độ hiện tại */
+    font-size: 0.9em;
+    background-color: #d4edda;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+
+.flashes {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.flashes li {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #c3e6cb;
+}
+
+.flashes li.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.footer {
+    margin-top: 30px;
+    font-size: 0.9em;
+    color: #999;
+}
+
+/* Kiểu cho form đăng nhập */
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+    width: calc(100% - 20px); /* Điều chỉnh cho padding */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Kiểu cho Navbar */
+.navbar {
+    width: 100%;
+    background-color: #2c3e50; /* Nền tối cho navbar */
+    color: white;
+    padding: 15px 30px; /* Thêm padding ngang để tạo khoảng trống bên trong */
+    display: flex;
+    justify-content: space-between; /* Giữ space-between để đẩy các phần tử ra hai phía */
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: fixed; /* Giữ cố định ở trên cùng */
+    top: 0;
+    left: 0;
+    z-index: 1000; /* Đảm bảo nó nằm trên các nội dung khác */
+    box-sizing: border-box; /* Quan trọng: Đảm bảo padding không làm tăng width */
+}
+
+.navbar-brand {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #f4f7f6;
+    letter-spacing: 1px;
+    /* Không cần padding riêng ở đây nếu đã có padding chung cho .navbar */
+}
+
+.navbar-user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.navbar-user-info span {
+    font-size: 1em;
+    color: #ecf0f1;
+    white-space: nowrap; /* Ngăn văn bản xuống dòng */
+    overflow: hidden; /* Ẩn phần văn bản bị tràn */
+    text-overflow: ellipsis; /* Hiển thị dấu ba chấm nếu văn bản quá dài */
+    max-width: 180px; /* Tăng giới hạn chiều rộng tối đa cho tên người dùng */
+}
+
+.navbar-user-info .logout-button,
+.navbar-user-info .login-button {
+    background-color: #e74c3c; /* Màu đỏ cho nút đăng xuất */
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.9em; 
+    line-height: 1; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    min-width: 90px; /* Tăng chiều rộng tối thiểu của nút */
+    height: 34px; 
+    box-sizing: border-box; 
+    transition: background-color 0.3s ease;
+    box-shadow: none; 
+}
+
+.navbar-user-info .login-button {
+    background-color: #3498db; /* Màu xanh dương cho nút đăng nhập */
+}
+
+.navbar-user-info .logout-button:hover {
+    background-color: #c0392b;
+}
+
+.navbar-user-info .login-button:hover {
+    background-color: #2980b9;
+}
+
+/* Điều chỉnh padding body để nội dung không bị ẩn sau navbar cố định */
+body {
+    padding-top: 80px; /* Điều chỉnh dựa trên chiều cao navbar */
+}
+
+/* ========================== Điều chỉnh Responsive ========================== */
+
+/* Màn hình Desktop (>= 769px) */
+@media (min-width: 769px) {
+    .main-container {
+        grid-template-columns: minmax(600px, 1fr) 380px; /* Cột thẻ (linh hoạt, min 600px), cột bên phải (cố định 380px) */
+        gap: 20px; /* Khoảng cách giữa các cột trên desktop */
+        display: grid; /* Đảm bảo là grid */
+        flex-direction: row; /* Desktop: xếp các khối ngang hàng */
+        flex-wrap: nowrap; /* Ngăn không cho xuống dòng trên desktop */
+    }
+
+    .flashcard-area {
+        order: 1; /* Thẻ ở vị trí đầu tiên */
+        /* Đã thêm: Đảm bảo flashcard-area không bị tràn ra ngoài */
+        overflow: hidden;
+    }
+    .right-column-container {
+        order: 2; /* Cột bên phải ở vị trí thứ hai */
+        margin-top: 0; /* Không có margin-top trên desktop */
+    }
+}
+
+/* Màn hình Mobile (<= 768px) */
+@media (max-width: 768px) {
+    /* Main container trên mobile */
+    .main-container {
+        display: flex; /* Chuyển lại sang flex cho mobile */
+        flex-direction: column; /* Xếp các khối theo cột */
+        align-items: center; /* Căn giữa các khối */
+        gap: 20px; /* Khoảng cách giữa các khối trên mobile */
+    }
+
+    /* Khu vực thẻ flashcard trên mobile */
+    .flashcard-area {
+        order: 1;
+        width: 100%; /* Đảm bảo thẻ chiếm toàn bộ chiều rộng khả dụng */
+        max-width: 90%; /* Giới hạn chiều rộng cho mobile */
+        min-width: unset; /* Bỏ min-width cố định */
+        margin-top: 0; /* Đã thay đổi: Loại bỏ margin-top */
+        margin-bottom: 0; /* Đã thay đổi: Loại bỏ margin-bottom */
+        padding-top: 0; /* Đã thay đổi: Bỏ padding-top */
+        padding-bottom: 0; /* Đã thay đổi: Bỏ padding-bottom */
+        box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
+    }
+
+    /* Container cột bên phải trên mobile */
+    .right-column-container {
+        order: 2;
+        margin-top: 0; /* Đã thay đổi: Bỏ margin-top ở đây để kiểm soát bằng gap của main-container */
+        width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng khả dụng */
+        max-width: 90%; /* Giới hạn chiều rộng cho mobile */
+        min-width: unset; /* Bỏ min-width cố định */
+        flex: 1 1 auto; /* Cho phép co giãn tự động trên mobile */
+    }
+
+    /* Bảng thống kê và khung điều khiển trên mobile */
+    .context-panel, .top-controls-frame {
+        max-width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng của right-column-container */
+        min-width: unset;
+        width: 100%;
+    }
+
+    /* Thẻ flashcard chính trên mobile */
+    .flashcard {
+        padding: 15px; /* Giảm padding trên mobile để giảm khoảng cách nội bộ */
+        height: 550px; /* Cố định chiều cao cho mobile */
+        min-height: unset; /* Bỏ min-height cũ */
+    }
+
+    /* Nội dung bên trong thẻ flashcard trên mobile */
+    .flashcard-content {
+        padding-top: 0; /* Đảm bảo nội dung bắt đầu từ đầu */
+        padding-bottom: 0; /* Đảm bảo nội dung kết thúc đúng chỗ */
+        /* Căn giữa các thành phần con theo chiều dọc và ngang */
+        justify-content: space-between; /* Đảm bảo mặt trước vẫn căn giữa */
+        align-items: center; /* Giữ nguyên căn giữa theo chiều ngang */
+    }
+
+    /* Khu vực nội dung thẻ có thể cuộn trên mobile */
+    .scrollable-card-content {
+        /* Căn giữa nội dung bên trong scrollable-card-content */
+        justify-content: center; /* Đảm bảo mặt trước vẫn căn giữa */
+        align-items: center; /* Căn giữa nội dung theo chiều ngang */
+        text-align: center; /* Giữ nguyên căn giữa văn bản */
+    }
+
+    /* Các quy tắc mới chỉ áp dụng cho mặt sau của thẻ */
+    .is-back-side .flashcard-content {
+        justify-content: flex-start; /* Mặt sau bắt đầu từ trên cùng */
+    }
+
+    .is-back-side .scrollable-card-content {
+        justify-content: flex-start; /* Nội dung cuộn của mặt sau bắt đầu từ trên cùng */
+    }
+
+    /* Kích thước chữ thẻ trên mobile */
+    .card-text {
+        font-size: 1.4em; /* Giảm cỡ chữ cho mobile */
+    }
+
+    /* Nút chung trên mobile */
+    .button {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+
+    /* Container chung trên mobile */
+    .container {
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    /* Nhập liệu form trên mobile */
+    .form-group input[type="text"],
+    .form-group input[type="password"] {
+        width: calc(100% - 20px); /* Điều chỉnh cho padding */
+    }
+
+    /* Navbar trên mobile: Luôn một dòng */
+    .navbar {
+        flex-direction: row; /* Luôn giữ hàng ngang */
+        flex-wrap: nowrap; /* Ngăn không cho các phần tử con xuống dòng */
+        padding: 10px 15px; /* Giảm padding ngang để có thêm không gian */
+        justify-content: space-between; /* Giữ space-between để đẩy các phần tử ra hai phía */
+        align-items: center; /* Căn giữa theo chiều dọc */
+    }
+
+    .navbar-brand {
+        margin-bottom: 0; /* Bỏ margin-bottom khi ở chế độ hàng ngang */
+        font-size: 1.4em; /* Giảm kích thước font */
+        flex-shrink: 0; /* Ngăn không cho co lại quá nhiều */
+        padding-right: 10px; /* Thêm padding để tách khỏi user info */
+    }
+
+    .navbar-user-info {
+        flex-grow: 1; /* Cho phép phần này chiếm hết không gian còn lại */
+        justify-content: flex-end; /* Đẩy tên người dùng và nút sang phải */
+        gap: 8px; /* Giảm khoảng cách giữa tên và nút */
+        min-width: 0; /* Cho phép co lại nếu cần */
+    }
+
+    .navbar-user-info .logout-button,
+    .navbar-user-info .login-button {
+        padding: 5px 10px; /* Giảm padding */
+        font-size: 0.75em; /* Giảm kích thước font */
+        min-width: 60px; /* Giảm min-width */
+        height: 28px; /* Giảm chiều cao */
+        flex-shrink: 0; /* Ngăn không cho co lại quá nhiều */
+    }
+
+    body {
+        padding-top: 60px; /* Điều chỉnh padding-top cho body khớp với chiều cao navbar mới */
+    }
+}
