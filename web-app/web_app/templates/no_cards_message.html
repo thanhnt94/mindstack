@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoàn thành phiên học - Flashcard App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar Section -->
+    <nav class="navbar">
+        <div class="navbar-brand">Flashcard App</div>
+        <div class="navbar-user-info">
+            {% if session.get('username') %}
+                <span>Xin chào, {{ session.get('username') }}!</span>
+                <a href="{{ url_for('main.logout') }}" class="button logout-button">Đăng xuất</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="button login-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="flashcard-column">
+            <div class="flashcard no-card">
+                <div class="flashcard-content">
+                    {# Hiển thị thông báo dựa trên biến truyền vào #}
+                    {% if wait_time_ts %}
+                        <h2>🎉 Hoàn thành!</h2>
+                        {% if is_midnight_tomorrow %}
+                            <p>Bạn đã hoàn thành tất cả các thẻ cần ôn tập hoặc thẻ mới cho hôm nay.</p>
+                            <p>Hãy quay lại vào ngày mai để tiếp tục học nhé!</p>
+                        {% else %}
+                            <p>Bạn đã ôn hết các thẻ đến hạn hiện tại.</p>
+                            <p>Thẻ tiếp theo sẽ đến hạn vào khoảng <strong>{{ wait_minutes }} phút</strong> nữa.</p>
+                        {% endif %}
+                        <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="button primary">▶️ Tiếp tục (thử lại)</a>
+                    {% else %}
+                        <h2>Không có thẻ nào!</h2>
+                        <p>Không tìm thấy thẻ nào để học trong bộ này.</p>
+                        <a href="{{ url_for('main.select_set_page') }}" class="button primary">Chọn bộ khác</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# THAY ĐỔI: Đặt các nút điều khiển trực tiếp trong flashcard-column, không dùng right-column-container #}
+            <div class="control-panel-below-card">
+                <h3>Bạn muốn làm gì tiếp theo?</h3>
+                <div class="control-button-group">
+                    <a href="{{ url_for('main.select_set_page') }}" class="control-button set-button">📚 Chọn Bộ Khác</a>
+                    <a href="{{ url_for('main.select_mode') }}" class="control-button mode-button">⚡ Đổi Chế Độ</a>
+                </div>
+            </div>
+        </div>
+        {# Các cột khác (image, stats) không hiển thị ở đây #}
+        {# ĐÃ BỎ: right-column-container cũ #}
+    </div>
+
+    {# Không cần audio player hay jsData div ở đây #}
+</body>
+</html>

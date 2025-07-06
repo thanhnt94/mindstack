@@ -1,11 +1,12 @@
-# flashcard-web/start_web_app.py (FILE NÀY NẰM Ở THƯ MỤC GỐC CỦA DỰ ÁN MỚI flashcard-web)
+# flashcard-web/start_web_app.py
 import sys
 import os
 import logging
 from flask import session # Import session để sử dụng SECRET_KEY
 
+# CHỈNH SỬA: Thay đổi cấp độ logging từ INFO thành DEBUG để xem các log chi tiết hơn
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG, # Đã thay đổi từ logging.INFO thành logging.DEBUG
     format='[LAUNCHER_LOG] %(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )

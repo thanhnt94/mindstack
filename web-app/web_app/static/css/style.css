@@ -1,9 +1,9 @@
-/* flashcard-web/web_app/static/css/style.css */
+/* General Body and Container Styles */
 body {
     font-family: 'Inter', sans-serif; /* Sử dụng font Inter */
     background-color: #f4f7f6;
     margin: 0;
-    padding: 20px; /* Padding toàn bộ body */
+    padding: 0; /* Đặt padding toàn bộ body về 0 */
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -13,25 +13,68 @@ body {
 }
 
 /* ========================== Bố cục chính (Main Container) ========================== */
-/* Đã thay đổi: Sử dụng Grid cho bố cục chính trên desktop để kiểm soát tốt hơn */
+/* Quy tắc chung cho main-container, sẽ được ghi đè bởi media queries */
 .main-container {
-    display: grid; /* Chuyển sang Grid layout */
-    /* Đã thay đổi: Điều chỉnh grid-template-columns để flashcard-area không bị cắt và có min-width */
-    grid-template-columns: minmax(600px, 1fr) 380px; /* Cột thẻ (linh hoạt, min 600px), cột bên phải (cố định 380px) */
-    gap: 100px; /* Khoảng cách giữa các cột trên desktop */
+    display: flex; /* Mặc định là flex để dễ dàng chuyển đổi trên mobile */
+    flex-direction: column; /* Mặc định xếp theo cột */
+    align-items: center; /* Mặc định căn giữa */
+    gap: 20px; /* Khoảng cách mặc định giữa các phần tử */
     width: 100%;
     max-width: 2200px; /* Chiều rộng tối đa của toàn bộ nội dung */
-    justify-content: center; /* Căn giữa các khối trong container */
-    align-items: start; /* Căn chỉnh các khối lên đầu */
+    justify-content: center;
+    padding: 0 20px; /* Padding ngang cho main-container */
+    box-sizing: border-box;
+    margin-top: 80px; /* Đẩy nội dung xuống dưới navbar desktop (sẽ được ghi đè trên mobile) */
 }
+
+/* Container cho cột flashcard chính */
+.flashcard-column {
+    width: 100%; /* Mặc định chiếm toàn bộ chiều rộng (trên mobile) */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Container cho cột hình ảnh */
+.flashcard-image-column {
+    width: 100%; /* Mặc định chiếm toàn bộ chiều rộng (trên mobile) */
+    display: flex; /* Mặc định hiển thị trên mobile */
+    flex-direction: column; /* Để căn giữa nội dung theo chiều dọc */
+    justify-content: center; /* Căn giữa theo chiều dọc */
+    align-items: center; /* Căn giữa theo chiều ngang */
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    height: 700px; /* Chiều cao cố định như flashcard (sẽ được ghi đè trên mobile) */
+    overflow: hidden; /* Đảm bảo ảnh không tràn ra ngoài */
+}
+
+.flashcard-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Đảm bảo ảnh vừa vặn trong khung mà không bị cắt */
+    border-radius: 8px; /* Bo tròn góc ảnh */
+}
+
+.flashcard-image-container.no-image-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #888;
+    font-style: italic;
+    font-size: 1.2em;
+}
+
 
 /* Container mới cho cột bên phải (khung điều khiển + bảng thống kê) */
 .right-column-container {
     display: flex;
     flex-direction: column; /* Xếp các phần tử con theo cột */
     gap: 20px; /* Khoảng cách giữa khung điều khiển và bảng thống kê */
-    width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng của cột grid */
-    /* Các thuộc tính flex-shrink, flex-grow không cần trên container này khi dùng Grid */
+    width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng của cột */
 }
 
 /* Khung riêng cho các nút điều khiển (Bộ và Chế độ) */
@@ -123,7 +166,6 @@ body {
 
 /* Khu vực thẻ flashcard */
 .flashcard-area {
-    width: 100%; /* Chiếm toàn bộ chiều rộng của cột grid */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -179,68 +221,158 @@ body {
     border-radius: 12px; /* Bo tròn góc */
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
     width: 100%;
-    padding: 30px; /* Giữ padding để có không gian cho nội dung cuộn */
+    /* Padding chung cho flashcard sẽ được quản lý bởi header/body/footer */
+    padding: 0; /* Đặt padding về 0 ở đây */
     text-align: center;
     display: flex;
     flex-direction: column;
     height: 700px; /* Chiều cao cố định của toàn bộ flashcard trên desktop */
     min-height: unset; /* Đảm bảo không có min-height cũ */
+    position: relative; /* QUAN TRỌNG: Để định vị nút play audio */
+    box-sizing: border-box; /* Đảm bảo padding được tính vào kích thước tổng thể */
 }
 
 .flashcard.no-card {
     background-color: #e6f7ff; /* Màu nền nhẹ nhàng cho trạng thái không có thẻ */
     border: 1px solid #91d5ff;
     color: #1890ff;
+    /* Giữ nguyên flashcard-content cho trạng thái no-card */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px; /* Thêm padding lại cho no-card */
+    height: auto; /* Cho phép chiều cao tự động cho no-card */
+    min-height: 200px; /* Chiều cao tối thiểu cho no-card */
 }
 
 .flashcard.no-card h2 {
     color: #1890ff;
 }
 
-/* Nội dung bên trong thẻ flashcard */
-.flashcard-content {
+/* ========================== Cấu trúc Flashcard Header/Body/Footer ========================== */
+
+.flashcard-header {
+    position: relative; /* Để nút audio có thể absolute trong đây */
     width: 100%;
+    padding: 20px 30px; /* Padding cho header */
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center; /* Căn giữa "Mặt trước/sau" */
+    align-items: center;
+    flex-shrink: 0; /* Ngăn không cho header bị co lại */
+}
+
+.card-side {
+    font-size: 0.85em;
+    color: #888;
+    margin: 0; /* Reset margin */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Nút Play Audio */
+.play-audio-button {
+    position: absolute; /* Vị trí tuyệt đối trong header */
+    top: 50%; /* Căn giữa theo chiều dọc của header */
+    right: 20px; /* Khoảng cách từ phải */
+    transform: translateY(-50%); /* Dịch lên 50% chiều cao của chính nó để căn giữa hoàn hảo */
+    background-color: #3498db; /* Màu xanh dương */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Nút tròn */
+    width: 45px; /* Kích thước nút */
+    height: 45px; /* Kích thước nút */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em; /* Kích thước icon */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    z-index: 10; /* Đảm bảo nút nằm trên các nội dung khác */
+}
+
+.play-audio-button:hover {
+    background-color: #2980b9;
+    transform: translateY(-50%) scale(1.05); /* Giữ căn giữa khi hover */
+}
+
+.play-audio-button:active {
+    transform: translateY(-50%) scale(0.95); /* Giữ căn giữa khi active */
+}
+
+.flashcard-body {
+    flex-grow: 1; /* Cho phép body chiếm hết không gian còn lại */
+    width: 100%;
+    padding: 0 30px; /* Padding ngang cho body */
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Cho phép nội dung co giãn */
-    min-height: 0; /* Đảm bảo flex item có thể co lại */
-    /* Đã thay đổi: Căn giữa các thành phần con theo chiều dọc và đẩy ra hai phía */
-    justify-content: space-between; /* Đẩy nội dung và nút ra hai phía */
-    align-items: center; /* Căn giữa theo chiều ngang */
+    min-height: 0; /* Quan trọng cho nội dung cuộn */
 }
 
 /* Khu vực nội dung thẻ có thể cuộn */
 .scrollable-card-content {
     flex-grow: 1; /* Cho phép nội dung cuộn chiếm không gian còn lại */
     overflow-y: auto; /* Kích hoạt cuộn dọc khi nội dung tràn */
-    margin-bottom: 20px; /* Khoảng cách giữa nội dung cuộn và nút */
-    padding: 0 10px; /* Thêm padding nhỏ để nội dung không dính vào mép khi cuộn */
+    padding: 0; /* Đảm bảo không có padding dọc ở đây */
     box-sizing: border-box;
     min-height: 0; /* Đảm bảo flex item có thể co lại */
-    text-align: center; /* Đảm bảo văn bản được căn giữa trong scrollable-card-content */
-    /* Đã thay đổi: Sử dụng flex để căn giữa chữ bên trong */
+    
+    /* MẶT TRƯỚC: Căn giữa */
     display: flex;
     flex-direction: column;
     justify-content: center; /* Căn giữa nội dung theo chiều dọc */
     align-items: center; /* Căn giữa nội dung theo chiều ngang */
+    text-align: center; /* Căn giữa văn bản */
 }
 
-.card-side {
-    font-size: 0.85em;
-    color: #888;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    flex-shrink: 0; /* Ngăn không cho phần này bị co lại */
+/* MẶT SAU (mặc định - single line): Căn giữa */
+.is-back-side .scrollable-card-content {
+    justify-content: center; /* Căn giữa nội dung theo chiều dọc */
+    align-items: center; /* Căn giữa nội dung theo chiều ngang */
+    text-align: center; /* Căn giữa văn bản */
 }
+
+/* MẶT SAU (multi-line, no overflow): Căn giữa dọc, căn trái ngang */
+.is-back-side.is-multi-line .scrollable-card-content {
+    justify-content: center; /* Căn giữa nội dung theo chiều dọc */
+    align-items: flex-start; /* Căn nội dung sang trái */
+    text-align: left; /* Căn văn bản sang trái */
+}
+
+/* MẶT SAU (khi tràn - có class is-overflow): Căn trên dọc, căn trái ngang */
+.is-back-side.is-overflow .scrollable-card-content {
+    justify-content: flex-start; /* Căn nội dung từ trên xuống */
+    align-items: flex-start; /* Căn nội dung sang trái */
+    text-align: left; /* Căn văn bản sang trái */
+}
+
 
 .card-text {
-    font-size: 2em; /* Kích thước chữ thẻ */
+    font-size: 2em; /* Kích thước chữ thẻ mặc định (áp dụng cho mặt sau) */
     font-weight: bold;
     word-wrap: break-word;
     white-space: pre-wrap; /* Giữ định dạng xuống dòng */
     color: #2c3e50;
-    margin-bottom: 0; /* Bỏ margin-bottom vì đã có margin trên scrollable-card-content */
+    margin: 0; /* Reset margin */
+    width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng */
+}
+
+/* Kích thước chữ cho mặt trước thẻ */
+.flashcard:not(.is-back-side) .card-text {
+    font-size: 2.5em; /* Kích thước lớn hơn cho mặt trước */
+}
+
+.flashcard-footer {
+    width: 100%;
+    padding: 20px 30px; /* Padding cho footer */
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center; /* Căn giữa các nút */
+    align-items: center;
+    flex-shrink: 0; /* Ngăn không cho footer bị co lại */
 }
 
 /* Nhóm các nút đánh giá (Chưa nhớ, Mơ hồ, Nhớ) */
@@ -248,27 +380,15 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    justify-content: center;
-    margin-top: auto; /* Đẩy nhóm nút xuống dưới cùng */
-    padding-top: 10px; /* Khoảng cách trên nhóm nút */
-    flex-shrink: 0; /* Ngăn không cho nhóm nút bị co lại */
-}
-
-/* Container cho nút Lật thẻ */
-.flip-button-container {
-    width: 100%; /* Đảm bảo container chiếm toàn bộ chiều rộng của flashcard-content */
-    display: flex;
-    justify-content: center; /* Đã thay đổi: Căn giữa nút theo chiều ngang */
-    margin-top: auto; /* Đẩy nút xuống dưới cùng của flashcard-content */
-    padding-top: 10px; /* Khoảng cách trên nút */
-    flex-shrink: 0; /* Ngăn không cho container này bị co lại */
+    justify-content: center; /* Đảm bảo các nút được căn giữa */
+    width: 100%; /* Đảm bảo nhóm nút chiếm toàn bộ chiều rộng của footer */
 }
 
 /* Kiểu dáng chung cho tất cả các nút */
 .button {
     display: inline-flex; /* Sử dụng inline-flex để căn chỉnh nội dung và chiều rộng tự động */
     align-items: center; /* Căn giữa nội dung theo chiều dọc */
-    justify-content: center; /* Căn giữa nội dung theo chiều ngang */
+    justify-content: center;
     padding: 12px 25px;
     border-radius: 8px; /* Bo tròn góc */
     text-decoration: none;
@@ -652,26 +772,87 @@ body {
 
 /* ========================== Điều chỉnh Responsive ========================== */
 
-/* Màn hình Desktop (>= 769px) */
-@media (min-width: 769px) {
+/* Màn hình Desktop (>= 1025px) */
+@media (min-width: 1025px) {
     .main-container {
-        grid-template-columns: minmax(600px, 1fr) 380px; /* Cột thẻ (linh hoạt, min 600px), cột bên phải (cố định 380px) */
-        gap: 20px; /* Khoảng cách giữa các cột trên desktop */
-        display: grid; /* Đảm bảo là grid */
-        flex-direction: row; /* Desktop: xếp các khối ngang hàng */
-        flex-wrap: nowrap; /* Ngăn không cho xuống dòng trên desktop */
+        display: grid; /* THAY ĐỔI QUAN TRỌNG: Đảm bảo display: grid */
+        grid-template-columns: minmax(300px, 1fr) auto 380px; /* THAY ĐỔI: Cột thứ 2 dùng 'auto' */
+        gap: 50px; /* Khoảng cách giữa các cột */
+        margin-top: 80px; /* Đẩy nội dung xuống dưới navbar desktop */
+    }
+
+    /* Đặt các cột vào đúng vị trí grid */
+    .flashcard-column {
+        grid-column: 1 / 2; /* Cột đầu tiên cho flashcard */
+        order: 1;
+        overflow: hidden;
+    }
+
+    .flashcard-image-column {
+        grid-column: 2 / 3; /* Cột thứ hai cho hình ảnh */
+        order: 2;
+        display: flex; /* Đảm bảo hiển thị */
+    }
+    
+    .right-column-container {
+        grid-column: 3 / 4; /* Cột thứ ba cho context panel */
+        order: 3;
+        margin-top: 0;
+    }
+}
+
+/* Màn hình Tablet/Trung bình (769px đến 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-container {
+        display: grid;
+        grid-template-columns: 1fr minmax(280px, 0.4fr); /* 2 cột */
+        gap: 30px;
+        max-width: 95%;
+        margin-top: 80px; /* Margin top cho tablet để đẩy nội dung xuống dưới navbar */
+    }
+
+    .flashcard {
+        height: 600px;
+        padding: 20px; /* Giữ padding cho toàn bộ flashcard trên tablet */
+    }
+
+    /* Reset flashcard-content padding-top nếu có */
+    .flashcard-content {
+        padding-top: 0;
     }
 
     .flashcard-area {
-        order: 1; /* Thẻ ở vị trí đầu tiên */
-        /* Đã thêm: Đảm bảo flashcard-area không bị tràn ra ngoài */
-        overflow: hidden;
+        order: 1;
+        grid-column: auto; /* Reset grid-column */
     }
+
+    .flashcard-image-column { /* THAY ĐỔI: Ẩn toàn bộ cột ảnh trên tablet */
+        display: none;
+    }
+    
     .right-column-container {
-        order: 2; /* Cột bên phải ở vị trí thứ hai */
-        margin-top: 0; /* Không có margin-top trên desktop */
+        order: 2;
+        grid-column: auto; /* Reset grid-column */
+    }
+
+    .play-audio-button {
+        top: 50%; /* Căn giữa theo chiều dọc của header */
+        right: 15px;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        font-size: 1em;
+    }
+
+    .card-text {
+        font-size: 1.8em;
+    }
+
+    .context-panel {
+        padding: 20px;
     }
 }
+
 
 /* Màn hình Mobile (<= 768px) */
 @media (max-width: 768px) {
@@ -681,74 +862,79 @@ body {
         flex-direction: column; /* Xếp các khối theo cột */
         align-items: center; /* Căn giữa các khối */
         gap: 20px; /* Khoảng cách giữa các khối trên mobile */
+        padding: 1px; /* Giảm padding toàn bộ container trên mobile */
+        margin-top: 30px; /* Margin-top cho mobile bằng chiều cao navbar mobile */
     }
 
     /* Khu vực thẻ flashcard trên mobile */
-    .flashcard-area {
-        order: 1;
+    .flashcard-column { /* THAY ĐỔI: Sử dụng flashcard-column thay vì flashcard-area */
+        order: 1; /* Flashcard ở trên */
         width: 100%; /* Đảm bảo thẻ chiếm toàn bộ chiều rộng khả dụng */
-        max-width: 90%; /* Giới hạn chiều rộng cho mobile */
+        max-width: 99%; /* Tăng max-width để lề hẹp hơn */
         min-width: unset; /* Bỏ min-width cố định */
-        margin-top: 0; /* Đã thay đổi: Loại bỏ margin-top */
-        margin-bottom: 0; /* Đã thay đổi: Loại bỏ margin-bottom */
-        padding-top: 0; /* Đã thay đổi: Bỏ padding-top */
-        padding-bottom: 0; /* Đã thay đổi: Bỏ padding-bottom */
-        box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        box-sizing: border-box;
     }
-
+    .flashcard-header {
+        position: relative; /* Để nút audio có thể absolute trong đây */
+        width: 100%; /* THAY ĐỔI: Đảm bảo width 100% */
+        padding: 5px 5px; /* Padding cho header */
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center; /* Căn giữa "Mặt trước/sau" */
+        align-items: center;
+        flex-shrink: 0; /* Ngăn không cho header bị co lại */
+    }
     /* Container cột bên phải trên mobile */
     .right-column-container {
-        order: 2;
-        margin-top: 0; /* Đã thay đổi: Bỏ margin-top ở đây để kiểm soát bằng gap của main-container */
-        width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng khả dụng */
-        max-width: 90%; /* Giới hạn chiều rộng cho mobile */
-        min-width: unset; /* Bỏ min-width cố định */
-        flex: 1 1 auto; /* Cho phép co giãn tự động trên mobile */
+        order: 3; /* Context panel ở dưới cùng */
+        margin-top: 0;
+        width: 100%;
+        max-width: 99%; /* Tăng max-width để lề hẹp hơn */
+        min-width: unset;
+        flex: 1 1 auto;
+    }
+
+    /* Container hình ảnh trên mobile */
+    .flashcard-image-column { /* THAY ĐỔI: Sử dụng flashcard-image-column */
+        order: 2; /* Hình ảnh ở giữa flashcard và context panel */
+        width: 100%;
+        max-width: 99%; /* Tăng max-width để lề hẹp hơn */
+        height: auto; /* Chiều cao tự động */
+        min-height: 150px; /* Chiều cao tối thiểu cho ảnh */
+        padding: 10px; /* Padding cho container ảnh */
+        margin-top: 20px; /* Khoảng cách với flashcard */
+        display: flex; /* Đảm bảo hiển thị */
     }
 
     /* Bảng thống kê và khung điều khiển trên mobile */
     .context-panel, .top-controls-frame {
-        max-width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng của right-column-container */
+        max-width: 100%;
         min-width: unset;
         width: 100%;
     }
 
     /* Thẻ flashcard chính trên mobile */
     .flashcard {
-        padding: 15px; /* Giảm padding trên mobile để giảm khoảng cách nội bộ */
-        height: 550px; /* Cố định chiều cao cho mobile */
-        min-height: unset; /* Bỏ min-height cũ */
+        padding: 0px; /* Giữ padding cho toàn bộ flashcard trên mobile */
+        height: 650px;
+        min-height: unset;
     }
 
-    /* Nội dung bên trong thẻ flashcard trên mobile */
+    /* Reset flashcard-content padding-top nếu có */
     .flashcard-content {
-        padding-top: 0; /* Đảm bảo nội dung bắt đầu từ đầu */
-        padding-bottom: 0; /* Đảm bảo nội dung kết thúc đúng chỗ */
-        /* Căn giữa các thành phần con theo chiều dọc và ngang */
-        justify-content: space-between; /* Đảm bảo mặt trước vẫn căn giữa */
-        align-items: center; /* Giữ nguyên căn giữa theo chiều ngang */
-    }
-
-    /* Khu vực nội dung thẻ có thể cuộn trên mobile */
-    .scrollable-card-content {
-        /* Căn giữa nội dung bên trong scrollable-card-content */
-        justify-content: center; /* Đảm bảo mặt trước vẫn căn giữa */
-        align-items: center; /* Căn giữa nội dung theo chiều ngang */
-        text-align: center; /* Giữ nguyên căn giữa văn bản */
-    }
-
-    /* Các quy tắc mới chỉ áp dụng cho mặt sau của thẻ */
-    .is-back-side .flashcard-content {
-        justify-content: flex-start; /* Mặt sau bắt đầu từ trên cùng */
-    }
-
-    .is-back-side .scrollable-card-content {
-        justify-content: flex-start; /* Nội dung cuộn của mặt sau bắt đầu từ trên cùng */
+        padding-top: 0;
+        padding-bottom: 0;
+        justify-content: space-between;
+        align-items: center;
     }
 
     /* Kích thước chữ thẻ trên mobile */
     .card-text {
-        font-size: 1.4em; /* Giảm cỡ chữ cho mobile */
+        font-size: 1.4em;
     }
 
     /* Nút chung trên mobile */
@@ -766,42 +952,47 @@ body {
     /* Nhập liệu form trên mobile */
     .form-group input[type="text"],
     .form-group input[type="password"] {
-        width: calc(100% - 20px); /* Điều chỉnh cho padding */
+        width: calc(100% - 20px);
     }
 
     /* Navbar trên mobile: Luôn một dòng */
     .navbar {
-        flex-direction: row; /* Luôn giữ hàng ngang */
-        flex-wrap: nowrap; /* Ngăn không cho các phần tử con xuống dòng */
-        padding: 10px 15px; /* Giảm padding ngang để có thêm không gian */
-        justify-content: space-between; /* Giữ space-between để đẩy các phần tử ra hai phía */
-        align-items: center; /* Căn giữa theo chiều dọc */
+        padding: 1px 8px; /* THAY ĐỔI: Padding nhỏ hơn cho mobile */
+        height: 30px; /* THAY ĐỔI: Chiều cao nhỏ hơn cho mobile */
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .navbar-brand {
-        margin-bottom: 0; /* Bỏ margin-bottom khi ở chế độ hàng ngang */
-        font-size: 1.4em; /* Giảm kích thước font */
-        flex-shrink: 0; /* Ngăn không cho co lại quá nhiều */
-        padding-right: 10px; /* Thêm padding để tách khỏi user info */
+        margin-bottom: 0;
+        font-size: 1em; /* THAY ĐỔI: Font size nhỏ hơn cho mobile */
+        flex-shrink: 0;
+        padding-right: 10px;
     }
 
     .navbar-user-info {
-        flex-grow: 1; /* Cho phép phần này chiếm hết không gian còn lại */
-        justify-content: flex-end; /* Đẩy tên người dùng và nút sang phải */
-        gap: 8px; /* Giảm khoảng cách giữa tên và nút */
-        min-width: 0; /* Cho phép co lại nếu cần */
+        flex-grow: 1;
+        justify-content: flex-end;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .navbar-user-info span {
+        font-size: 0.8em; /* THAY ĐỔI: Font size nhỏ hơn cho mobile */
     }
 
     .navbar-user-info .logout-button,
     .navbar-user-info .login-button {
-        padding: 5px 10px; /* Giảm padding */
-        font-size: 0.75em; /* Giảm kích thước font */
-        min-width: 60px; /* Giảm min-width */
-        height: 28px; /* Giảm chiều cao */
-        flex-shrink: 0; /* Ngăn không cho co lại quá nhiều */
+        padding: 1px 6px; /* THAY ĐỔI: Padding nhỏ hơn cho mobile */
+        font-size: 0.65em; /* THAY ĐỔI: Font size nhỏ hơn cho mobile */
+        min-width: 40px; /* THAY ĐỔI: Chiều rộng tối thiểu nhỏ hơn cho mobile */
+        height: 20px; /* THAY ĐỔI: Chiều cao nhỏ hơn cho mobile */
+        flex-shrink: 0;
     }
 
     body {
-        padding-top: 60px; /* Điều chỉnh padding-top cho body khớp với chiều cao navbar mới */
+        padding-top: 30px; /* THAY ĐỔI QUAN TRỌNG: Padding-top của body bằng chiều cao navbar mobile */
     }
 }

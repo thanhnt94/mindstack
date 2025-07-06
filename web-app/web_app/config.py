@@ -58,3 +58,30 @@ SETS_PER_PAGE = 8 # Số bộ thẻ hiển thị trên mỗi trang
 
 # --- Hằng số Múi giờ ---
 DEFAULT_TIMEZONE_OFFSET = 7 # Múi giờ mặc định (UTC+7)
+
+# --- Hằng số Audio (MỚI THÊM CHO WEB APP) ---
+# Xác định thư mục gốc của web_app (nơi file config này nằm)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Giả sử thư mục 'media' nằm ở cấp độ 'Flashcard-Proj'
+MEDIA_BASE_DIR = os.path.join(BASE_DIR, "..", "..", "..", "media", "flashcard")
+AUDIO_CACHE_DIR = os.path.join(MEDIA_BASE_DIR, "audio")
+CACHE_GENERATION_DELAY = 1.5 # Độ trễ giữa các lần gọi TTS (giây)
+
+# --- Tạo các thư mục cần thiết (MỚI THÊM CHO WEB APP) ---
+# Đảm bảo thư mục media/flashcard/audio tồn tại
+DIRECTORIES_TO_CREATE = [
+    AUDIO_CACHE_DIR
+]
+
+for dir_path in DIRECTORIES_TO_CREATE:
+    if not dir_path:
+        continue
+    try:
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+            print(f"Đã tạo thư mục: {dir_path}")
+    except OSError as e:
+        print(f"Lỗi: Không thể tạo thư mục {dir_path}: {e}")
+    except Exception as e_create:
+        print(f"Lỗi không mong muốn khi tạo thư mục {dir_path}: {e_create}")
+

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Học Thẻ - Flashcard App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <!-- Navbar Section -->
@@ -21,33 +23,45 @@
     </nav>
 
     <div class="main-container">
-        <!-- Flashcard Area -->
-        <div class="flashcard-area">
+        {# THÊM: Một div mới để bao bọc Flashcard chính #}
+        <div class="flashcard-column">
             {% if flashcard %}
-                <div class="flashcard {% if not is_front %}is-back-side{% endif %}"> {# THAY ĐỔI: Thêm lớp is-back-side nếu là mặt sau #}
-                    <div class="flashcard-content">
-                        {% if is_front %}
-                            <p class="card-side">Mặt trước</p>
-                            {# Added scrollable-card-content div #}
-                            <div class="scrollable-card-content">
-                                <div class="card-text">{{ flashcard.front }}</div>
+                <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
+                    <!-- Flashcard Header -->
+                    <div class="flashcard-header">
+                        <p class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
+                        <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                    </div>
+
+                    <!-- Flashcard Body (Content Area) -->
+                    <div class="flashcard-body">
+                        <div class="scrollable-card-content">
+                            <div class="card-text">
+                                {%- if is_front -%}
+                                    {{- flashcard.front -}}
+                                {%- else -%}
+                                    {{- flashcard.back -}}
+                                {%- endif -%}
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Flashcard Footer (Buttons) -->
+                    <div class="flashcard-footer">
+                        {% if is_front %}
                             <a href="{{ url_for('main.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
                         {% else %}
-                            <p class="card-side">Mặt sau</p>
-                            {# Added scrollable-card-content div #}
-                            <div class="scrollable-card-content">
-                                <div class="card-text">{{ flashcard.back }}</div>
-                            </div>
                             <div class="button-group">
                                 {% if progress.last_reviewed is none %}
                                     <!-- Thẻ mới, chỉ có nút Tiếp tục -->
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response=2) }}" class="button primary">▶️ Tiếp tục</a>
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='continue') }}" class="button primary">▶️ Tiếp tục</a>
                                 {% else %}
                                     <!-- Thẻ đã học, có các nút đánh giá -->
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response=-1) }}" class="button danger">❌ Quên</a>
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response=0) }}" class="button warning">🤔 Mơ hồ</a>
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response=1) }}" class="button success">✅ Nhớ</a>
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='forget') }}" class="button danger">❌ Quên</a>
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='vague') }}" class="button warning">🤔 Mơ hồ</a>
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='remember') }}" class="button success">✅ Nhớ</a>
                                 {% endif %}
                                 <!-- Nút Gợi ý Ghi chú AI (đã tạm gác lại) -->
                                 <!-- <button id="generateSmartNote" class="button ai-button">✨ Gợi ý Ghi chú ✨</button> -->
@@ -78,7 +92,24 @@
                     </div>
                 </div>
             {% endif %}
-        </div>
+        </div> {# KẾT THÚC flashcard-column #}
+
+        {# THÊM: Khu vực hiển thị hình ảnh dưới dạng một cột riêng biệt #}
+        {% set image_src = '' %}
+        {% if is_front and flashcard and flashcard.front_img %}
+            {% set image_src = flashcard.front_img %}
+        {% elif not is_front and flashcard and flashcard.back_img %}
+            {% set image_src = flashcard.back_img %}
+        {% endif %}
+
+        {# THAY ĐỔI QUAN TRỌNG: Chỉ render flashcard-image-column nếu có ảnh #}
+        {% if image_src %}
+        <div class="flashcard-image-column">
+            <div class="flashcard-image-container">
+                <img src="{{ image_src }}" alt="Hình ảnh liên quan đến thẻ" class="flashcard-image" onerror="this.onerror=null;this.src='https://placehold.co/300x200/cccccc/333333?text=Không+có+ảnh'">
+            </div>
+        </div> {# KẾT THÚC flashcard-image-column #}
+        {% endif %}
 
         <!-- New container for the right column elements -->
         <div class="right-column-container">
@@ -141,115 +172,20 @@
         </div>
     </div>
 
-    <!-- Smart Note Modal (đã tạm gác lại) -->
-    <!--
-    <div id="smartNoteModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>✨ Gợi ý Ghi chú Thông minh ✨</h2>
-            <div id="smartNoteContent" class="modal-body">
-                <p>Đang tạo ghi chú...</p>
-            </div>
-            <div class="modal-footer">
-                <button id="copySmartNote" class="button primary">Sao chép</button>
-                <button id="closeSmartNoteModal" class="button secondary">Đóng</button>
-            </div>
-        </div>
+    {# THÊM: Thẻ audio để phát âm thanh #}
+    <audio id="cardAudioPlayer" controls style="display:none;"></audio>
+
+    {# CHỈNH SỬA: Hidden div để lưu trữ các chuỗi JSON đã được xử lý từ Flask #}
+    <div id="jsData"
+        data-flashcard="{{ flashcard_json_string }}"
+        data-is-front="{{ 'true' if is_front else 'false' }}"
+        data-user-audio-settings="{{ user_audio_settings_json_string }}">
     </div>
-    -->
 
-    <!-- Smart Note Script (đã tạm gác lại) -->
-    <!--
-    <script>
-        const generateButton = document.getElementById('generateSmartNote');
-        const smartNoteModal = document.getElementById('smartNoteModal');
-        const smartNoteContent = document.getElementById('smartNoteContent');
-        const closeButton = document.querySelector('.close-button');
-        const copyButton = document.getElementById('copySmartNote');
-        const closeModalButton = document.getElementById('closeSmartNoteModal');
+    {# THAY THẾ: Liên kết đến file JavaScript bên ngoài #}
+    <script src="{{ url_for('static', filename='js/learn_card_audio.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/card_content_adjuster.js') }}"></script> {# THÊM: Liên kết đến file card_content_adjuster.js #}
 
-        const flashcardFront = "{{ flashcard.front | e }}";
-        const flashcardBack = "{{ flashcard.back | e }}";
-
-        if (generateButton) {
-            generateButton.addEventListener('click', async () => {
-                smartNoteModal.style.display = 'block';
-                smartNoteContent.innerHTML = '<p>Đang tạo ghi chú thông minh... Vui lòng chờ.</p><div class="loader"></div>';
-                copyButton.style.display = 'none';
-
-                try {
-                    const response = await fetch('/generate_smart_note', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            front: flashcardFront,
-                            back: flashcardBack
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    if (data.note) {
-                        smartNoteContent.innerHTML = `<p>${data.note}</p>`;
-                        copyButton.style.display = 'inline-block';
-                    } else {
-                        smartNoteContent.innerHTML = '<p>Không thể tạo ghi chú thông minh. Vui lòng thử lại.</p>';
-                    }
-                } catch (error) {
-                    console.error('Lỗi khi tạo ghi chú thông minh:', error);
-                    smartNoteContent.innerHTML = '<p>Đã xảy ra lỗi khi tạo ghi chú. Vui lòng thử lại sau.</p>';
-                }
-            });
-        }
-
-        closeButton.addEventListener('click', () => {
-            smartNoteModal.style.display = 'none';
-        });
-
-        closeModalButton.addEventListener('click', () => {
-            smartNoteModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', (event) => {
-            if (event.target == smartNoteModal) {
-                smartNoteModal.style.display = 'none';
-            }
-        });
-
-        copyButton.addEventListener('click', () => {
-            const textToCopy = smartNoteContent.innerText;
-            const textarea = document.createElement('textarea');
-            textarea.value = textToCopy;
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                alert('Đã sao chép ghi chú vào clipboard!');
-            } catch (err) {
-                console.error('Không thể sao chép văn bản: ', err);
-                alert('Không thể sao chép ghi chú. Vui lòng sao chép thủ công.');
-            }
-            document.body.removeChild(textarea);
-        });
-    </script>
-    -->
-
-    <script>
-        // Debugging: Log progress_id when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            const progressIdElement = document.getElementById('debugProgressId');
-            if (progressIdElement) {
-                console.log('Debug: progress.progress_id from Jinja2:', progressIdElement.dataset.progressId);
-            } else {
-                console.log('Debug: progressIdElement not found. progress object might not be available.');
-            }
-        });
-    </script>
     {% if progress %}
     <div id="debugProgressId" data-progress-id="{{ progress.progress_id }}" style="display:none;"></div>
     {% endif %}
