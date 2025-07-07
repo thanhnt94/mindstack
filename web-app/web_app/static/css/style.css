@@ -994,6 +994,6 @@ body {
     }
 
     body {
-        padding-top: 30px; /* THAY ĐỔI QUAN TRỌNG: Padding-top của body bằng chiều cao navbar mobile */
+        padding-top: 10px; /* THAY ĐỔI QUAN TRỌNG: Padding-top của body bằng chiều cao navbar mobile */
     }
 }
