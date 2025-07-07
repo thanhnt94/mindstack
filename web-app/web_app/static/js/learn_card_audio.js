@@ -10,13 +10,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const flashcardData = JSON.parse(jsDataElement.dataset.flashcard);
     const isFront = jsDataElement.dataset.isFront === 'true';
     const userAudioSettings = JSON.parse(jsDataElement.dataset.userAudioSettings);
+    // Lấy thuộc tính mới để kiểm tra xem có nội dung audio mặt sau hay không
+    const hasBackAudioContent = jsDataElement.dataset.hasBackAudioContent === 'true';
 
     /**
      * Mô tả: Phát âm thanh cho thẻ dựa trên mặt hiện tại và cài đặt của người dùng.
      * Kiểm tra xem có nội dung audio và cài đặt cho phép phát hay không.
      * @param {boolean} forcePlay - Nếu là true, sẽ cố gắng phát audio bất kể cài đặt người dùng (chỉ cho mặt hiện tại).
      */
-    function playCardAudio(forcePlay = false) { // Thêm tham số forcePlay với giá trị mặc định là false
+    function playCardAudio(forcePlay = false) {
         if (!flashcardData) {
             console.warn("Không có dữ liệu flashcard để phát audio.");
             return;
@@ -56,11 +58,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Tự động phát audio khi thẻ được tải (nếu có)
     if (flashcardData) {
-        // Tự động phát audio ở mặt trước khi tải trang (forcePlay = true để bỏ qua cài đặt người dùng cho lần đầu)
         if (isFront) {
-            playCardAudio(true); // Force play for the front side on load
+            // Mặt trước: luôn tự động phát audio khi tải trang
+            playCardAudio(true);
+        } else { // isBackSide
+            // Mặt sau: tự động phát nếu có nội dung audio (được coi là "có cache")
+            if (hasBackAudioContent) {
+                playCardAudio(true);
+            }
+            // Nếu không có nội dung audio mặt sau, sẽ không tự động phát.
+            // Người dùng có thể nhấn nút để phát thủ công (nếu có)
         }
-        // Đối với mặt sau, không tự động phát khi tải trang, chỉ khi người dùng click nút
-        // (logic này đã được xử lý bởi isFront check ở trên và button click listener)
     }
 });

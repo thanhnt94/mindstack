@@ -66,11 +66,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MEDIA_BASE_DIR = os.path.join(BASE_DIR, "..", "..", "..", "media", "flashcard")
 AUDIO_CACHE_DIR = os.path.join(MEDIA_BASE_DIR, "audio")
 CACHE_GENERATION_DELAY = 1.5 # Độ trễ giữa các lần gọi TTS (giây)
+IMAGES_DIR = os.path.join(MEDIA_BASE_DIR, "images")
 
 # --- Tạo các thư mục cần thiết (MỚI THÊM CHO WEB APP) ---
 # Đảm bảo thư mục media/flashcard/audio tồn tại
 DIRECTORIES_TO_CREATE = [
-    AUDIO_CACHE_DIR
+    AUDIO_CACHE_DIR,
+    IMAGES_DIR # THÊM: Đảm bảo thư mục images tồn tại
 ]
 
 for dir_path in DIRECTORIES_TO_CREATE:

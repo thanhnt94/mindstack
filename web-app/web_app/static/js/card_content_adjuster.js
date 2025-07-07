@@ -1,72 +1,81 @@
 // card_content_adjuster.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Lấy các phần tử DOM cần thiết
-    const flashcardElement = document.querySelector('.flashcard');
+    const flashcard = document.querySelector('.flashcard');
     const scrollableContent = document.querySelector('.scrollable-card-content');
     const cardText = document.querySelector('.card-text');
 
+    if (!flashcard || !scrollableContent || !cardText) {
+        console.warn("Thiếu các phần tử flashcard, scrollable-card-content hoặc card-text. Không thể điều chỉnh nội dung thẻ.");
+        return;
+    }
+
     /**
-     * Mô tả: Kiểm tra và áp dụng class CSS phù hợp cho mặt sau thẻ
-     * dựa trên số lượng dòng và trạng thái tràn (overflow) của nội dung.
-     *
-     * - Nếu mặt sau chỉ có 1 dòng: Thêm class 'is-single-line' (để CSS căn giữa hoàn toàn).
-     * - Nếu mặt sau có nhiều dòng nhưng không tràn: Thêm class 'is-multi-line' (để CSS căn giữa dọc, căn trái ngang).
-     * - Nếu mặt sau có nhiều dòng và bị tràn (có scroll): Thêm class 'is-overflow' (để CSS căn trên dọc, căn trái ngang).
+     * Mô tả: Kiểm tra xem nội dung thẻ có bị tràn hay không.
+     * @returns {boolean} True nếu nội dung bị tràn, ngược lại là False.
      */
-    function adjustBackSideContentLayout() {
-        if (!flashcardElement || !scrollableContent || !cardText) {
-            console.warn("Không tìm thấy các phần tử cần thiết để điều chỉnh layout nội dung thẻ.");
-            return;
-        }
+    function isContentOverflowing() {
+        return scrollableContent.scrollHeight > scrollableContent.clientHeight;
+    }
 
-        // Chỉ áp dụng logic này cho mặt sau thẻ
-        if (flashcardElement.classList.contains('is-back-side')) {
-            // Xóa tất cả các class liên quan đến layout mặt sau trước khi áp dụng cái mới
-            flashcardElement.classList.remove('is-single-line', 'is-multi-line', 'is-overflow');
+    /**
+     * Mô tả: Điều chỉnh kích thước font của nội dung thẻ để vừa với khung.
+     * Nếu nội dung tràn, giảm font size cho đến khi vừa hoặc đạt kích thước tối thiểu.
+     * Nếu không tràn, tăng font size cho đến khi đạt kích thước tối đa hoặc vừa khung.
+     */
+    function adjustFontSize() {
+        // Chỉ điều chỉnh font size cho mặt sau khi nó bị tràn
+        if (flashcard.classList.contains('is-back-side')) {
+            let currentFontSize = parseFloat(window.getComputedStyle(cardText).fontSize);
+            const minFontSize = 16; // Kích thước font tối thiểu cho mặt sau
+            const maxFontSize = 32; // Kích thước font tối đa cho mặt sau (nếu không tràn)
 
-            // Tính toán chiều cao của một dòng văn bản (ước lượng)
-            // Có thể lấy line-height hoặc ước lượng từ font-size
-            const lineHeight = parseFloat(getComputedStyle(cardText).lineHeight) || parseFloat(getComputedStyle(cardText).fontSize) * 1.2;
-            
-            // Lấy chiều cao hiển thị của container và chiều cao đầy đủ của nội dung
-            const contentDisplayHeight = scrollableContent.clientHeight;
-            const contentFullHeight = cardText.scrollHeight;
-
-            // Ước tính số dòng
-            const estimatedLines = contentFullHeight / lineHeight;
-
-            if (contentFullHeight <= contentDisplayHeight) {
-                // Nội dung không bị tràn (không có scrollbar)
-                if (estimatedLines <= 1.5) { // Dùng 1.5 để linh hoạt hơn cho 1 dòng
-                    // Nội dung chỉ có 1 dòng (hoặc rất ít)
-                    flashcardElement.classList.add('is-single-line');
-                } else {
-                    // Nội dung có nhiều dòng nhưng không tràn
-                    flashcardElement.classList.add('is-multi-line');
+            // Kiểm tra tràn và điều chỉnh font size
+            if (isContentOverflowing()) {
+                // Nếu tràn, giảm font size
+                while (isContentOverflowing() && currentFontSize > minFontSize) {
+                    currentFontSize -= 1;
+                    cardText.style.fontSize = `${currentFontSize}px`;
                 }
+                flashcard.classList.add('is-overflow'); // Thêm class để CSS căn chỉnh
+                flashcard.classList.remove('is-multi-line'); // Đảm bảo không có class multi-line
             } else {
-                // Nội dung bị tràn (có scrollbar)
-                flashcardElement.classList.add('is-overflow');
+                // Nếu không tràn, kiểm tra xem có phải là nội dung nhiều dòng không
+                // và điều chỉnh căn chỉnh
+                if (cardText.innerText.includes('\n') || cardText.innerText.length > 50) { // Giả định nhiều dòng nếu có xuống dòng hoặc dài
+                    flashcard.classList.add('is-multi-line'); // Thêm class để CSS căn chỉnh
+                    flashcard.classList.remove('is-overflow'); // Đảm bảo không có class overflow
+                } else {
+                    flashcard.classList.remove('is-multi-line');
+                    flashcard.classList.remove('is-overflow');
+                }
+
+                // Cố gắng tăng font size nếu có không gian và chưa đạt max
+                while (!isContentOverflowing() && currentFontSize < maxFontSize) {
+                    currentFontSize += 1;
+                    cardText.style.fontSize = `${currentFontSize}px`;
+                    if (isContentOverflowing()) { // Nếu vừa tăng mà bị tràn thì quay lại 1px
+                        currentFontSize -= 1;
+                        cardText.style.fontSize = `${currentFontSize}px`;
+                        break;
+                    }
+                }
             }
+        } else {
+            // Đối với mặt trước, đặt font size cố định (hoặc theo quy tắc CSS)
+            // và đảm bảo không có các class điều chỉnh tràn/multi-line
+            cardText.style.fontSize = ''; // Reset về font size mặc định của CSS
+            flashcard.classList.remove('is-overflow');
+            flashcard.classList.remove('is-multi-line');
         }
     }
 
-    // Chạy điều chỉnh khi tải trang
-    adjustBackSideContentLayout();
+    // Gọi hàm điều chỉnh font size khi tải trang và khi cửa sổ thay đổi kích thước
+    adjustFontSize();
+    window.addEventListener('resize', adjustFontSize);
 
-    // Thêm lắng nghe sự kiện resize để điều chỉnh lại khi kích thước cửa sổ thay đổi
-    // Điều này quan trọng vì layout có thể thay đổi và gây ra/mất overflow hoặc thay đổi số dòng
-    window.addEventListener('resize', adjustBackSideContentLayout);
-
-    // Thêm lắng nghe sự kiện khi hình ảnh hoặc nội dung động tải xong (nếu có)
-    // (ví dụ: nếu flashcard.back có chứa hình ảnh hoặc được render động)
-    // Đây là một ví dụ, có thể cần tinh chỉnh tùy thuộc vào cách nội dung được tải
-    const images = flashcardElement.querySelectorAll('img');
-    images.forEach(img => {
-        if (!img.complete) {
-            img.addEventListener('load', adjustBackSideContentLayout);
-            img.addEventListener('error', adjustBackSideContentLayout); // Xử lý lỗi tải ảnh
-        }
-    });
+    // Sử dụng MutationObserver để phát hiện thay đổi nội dung của card-text
+    // Điều này quan trọng khi nội dung thẻ thay đổi mà không tải lại trang (ví dụ: lật thẻ)
+    const observer = new MutationObserver(adjustFontSize);
+    observer.observe(cardText, { childList: true, subtree: true, characterData: true });
 });

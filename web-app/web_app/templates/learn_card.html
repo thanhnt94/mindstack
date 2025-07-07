@@ -94,15 +94,19 @@
             {% endif %}
         </div> {# KẾT THÚC flashcard-column #}
 
-        {# THÊM: Khu vực hiển thị hình ảnh dưới dạng một cột riêng biệt #}
+        {# BẮT ĐẦU THAY ĐỔI: Logic hiển thị hình ảnh #}
         {% set image_src = '' %}
-        {% if is_front and flashcard and flashcard.front_img %}
-            {% set image_src = flashcard.front_img %}
-        {% elif not is_front and flashcard and flashcard.back_img %}
-            {% set image_src = flashcard.back_img %}
+        {% if flashcard %}
+            {% if is_front and flashcard.front_img and user.front_image_enabled == 1 %}
+                {# Tạo URL đầy đủ cho ảnh mặt trước nếu có và được bật #}
+                {% set image_src = url_for('main.serve_image', filename=flashcard.front_img) %}
+            {% elif not is_front and flashcard.back_img and user.back_image_enabled == 1 %}
+                {# Tạo URL đầy đủ cho ảnh mặt sau nếu có và được bật #}
+                {% set image_src = url_for('main.serve_image', filename=flashcard.back_img) %}
+            {% endif %}
         {% endif %}
 
-        {# THAY ĐỔI QUAN TRỌNG: Chỉ render flashcard-image-column nếu có ảnh #}
+        {# CHỈNH SỬA: Chỉ render flashcard-image-column nếu có ảnh để hiển thị #}
         {% if image_src %}
         <div class="flashcard-image-column">
             <div class="flashcard-image-container">
@@ -110,6 +114,7 @@
             </div>
         </div> {# KẾT THÚC flashcard-image-column #}
         {% endif %}
+        {# KẾT THÚC THAY ĐỔI #}
 
         <!-- New container for the right column elements -->
         <div class="right-column-container">
@@ -179,7 +184,9 @@
     <div id="jsData"
         data-flashcard="{{ flashcard_json_string }}"
         data-is-front="{{ 'true' if is_front else 'false' }}"
-        data-user-audio-settings="{{ user_audio_settings_json_string }}">
+        data-user-audio-settings="{{ user_audio_settings_json_string }}"
+        {# THÊM MỚI: Thuộc tính để kiểm tra xem có nội dung audio mặt sau hay không #}
+        data-has-back-audio-content="{{ 'true' if flashcard and flashcard.back_audio_content else 'false' }}">
     </div>
 
     {# THAY THẾ: Liên kết đến file JavaScript bên ngoài #}

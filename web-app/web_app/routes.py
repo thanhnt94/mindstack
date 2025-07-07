@@ -10,7 +10,7 @@ import json # Để chuyển đổi đối tượng Python thành JSON string
 # Import individual services from the new structure
 from .services import learning_logic_service, user_service, stats_service, audio_service
 from .models import db, User, VocabularySet, Flashcard, UserFlashcardProgress # Still need models for queries
-from .config import LEARNING_MODE_DISPLAY_NAMES # Still need config for display names
+from .config import LEARNING_MODE_DISPLAY_NAMES, IMAGES_DIR # ĐÃ THÊM IMAGES_DIR TỪ CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ def _serialize_flashcard(flashcard_obj):
     """
     Mô tả: Chuyển đổi một đối tượng Flashcard SQLAlchemy thành một dictionary
            có thể được JSON serialize.
+           Đã cập nhật để tạo URL đầy đủ cho hình ảnh.
     Args:
         flashcard_obj (Flashcard): Đối tượng Flashcard cần chuyển đổi.
     Returns:
@@ -28,20 +29,42 @@ def _serialize_flashcard(flashcard_obj):
     """
     if not flashcard_obj:
         return {}
+    
+    # BẮT ĐẦU THAY ĐỔI: Xử lý đường dẫn hình ảnh
+    front_img_url = None
+    if flashcard_obj.front_img:
+        # Tạo URL cho hình ảnh bằng route mới 'serve_image'
+        # url_for sẽ tạo ra /images/<filename>
+        front_img_url = url_for('main.serve_image', filename=flashcard_obj.front_img)
+
+    back_img_url = None
+    if flashcard_obj.back_img:
+        # Tạo URL cho hình ảnh bằng route mới 'serve_image'
+        back_img_url = url_for('main.serve_image', filename=flashcard_obj.back_img)
+    # KẾT THÚC THAY ĐỔI
+
     return {
         'flashcard_id': flashcard_obj.flashcard_id,
         'front': flashcard_obj.front,
         'back': flashcard_obj.back,
         'front_audio_content': flashcard_obj.front_audio_content,
         'back_audio_content': flashcard_obj.back_audio_content,
-        'front_img': flashcard_obj.front_img,
-        'back_img': flashcard_obj.back_img,
+        'front_img': front_img_url, # ĐÃ THAY ĐỔI: Sử dụng URL đã xử lý
+        'back_img': back_img_url,   # ĐÃ THAY ĐỔI: Sử dụng URL đã xử lý
         'notification_text': flashcard_obj.notification_text,
         'set_id': flashcard_obj.set_id
     }
 
 # --- Decorator to check login ---
 def login_required(f):
+    """
+    Mô tả: Decorator để kiểm tra xem người dùng đã đăng nhập hay chưa.
+           Nếu chưa, chuyển hướng về trang đăng nhập.
+    Args:
+        f (function): Hàm route cần bảo vệ.
+    Returns:
+        function: Hàm đã được bọc với logic kiểm tra đăng nhập.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -52,7 +75,9 @@ def login_required(f):
 
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    # Mô tả: Xử lý logic đăng nhập người dùng.
+    """
+    Mô tả: Xử lý logic đăng nhập người dùng.
+    """
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password'].strip()
@@ -84,7 +109,9 @@ def login():
 
 @main_bp.route('/logout')
 def logout():
-    # Mô tả: Xử lý logic đăng xuất người dùng.
+    """
+    Mô tả: Xử lý logic đăng xuất người dùng.
+    """
     logger.info(f"Người dùng {session.get('username', 'N/A')} (ID: {session.get('user_id', 'N/A')}) đã đăng xuất.")
     session.pop('user_id', None)
     session.pop('username', None)
@@ -95,7 +122,9 @@ def logout():
 @main_bp.route('/')
 @login_required
 def index():
-    # Mô tả: Hiển thị trang chọn bộ thẻ cho người dùng.
+    """
+    Mô tả: Hiển thị trang chọn bộ thẻ cho người dùng.
+    """
     logger.info("Truy cập trang chủ (index route).")
     
     user_id = session.get('user_id')
@@ -127,7 +156,9 @@ def index():
 @main_bp.route('/learn/<int:set_id>')
 @login_required
 def learn_set(set_id):
-    # Mô tả: Bắt đầu phiên học cho một bộ thẻ cụ thể, hiển thị mặt trước thẻ.
+    """
+    Mô tả: Bắt đầu phiên học cho một bộ thẻ cụ thể, hiển thị mặt trước thẻ.
+    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     if not user:
@@ -220,7 +251,9 @@ def learn_set(set_id):
 @main_bp.route('/flip/<int:progress_id>')
 @login_required
 def flip_card(progress_id):
-    # Mô tả: Lật thẻ để hiển thị mặt sau.
+    """
+    Mô tả: Lật thẻ để hiển thị mặt sau.
+    """
     user_id = session.get('user_id')
     if not user_id:
         flash("Vui lòng đăng nhập lại.", "error")
@@ -261,7 +294,9 @@ def flip_card(progress_id):
 @main_bp.route('/rate/<int:progress_id>/<string:response_str>') # THAY ĐỔI TỪ <int:response> SANG <string:response_str>
 @login_required
 def rate_card(progress_id, response_str):
-    # Mô tả: Xử lý đánh giá của người dùng cho một thẻ và chuyển sang thẻ tiếp theo.
+    """
+    Mô tả: Xử lý đánh giá của người dùng cho một thẻ và chuyển sang thẻ tiếp theo.
+    """
     user_id = session.get('user_id')
     if not user_id:
         flash("Vui lòng đăng nhập lại.", "error")
@@ -317,7 +352,9 @@ def rate_card(progress_id, response_str):
 @main_bp.route('/select_mode')
 @login_required
 def select_mode():
-    # Mô tả: Hiển thị trang chọn chế độ học tập.
+    """
+    Mô tả: Hiển thị trang chọn chế độ học tập.
+    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     if not user:
@@ -334,7 +371,9 @@ def select_mode():
 @main_bp.route('/set_learning_mode/<string:mode_code>')
 @login_required
 def set_learning_mode(mode_code):
-    # Mô tả: Đặt chế độ học tập mới cho người dùng.
+    """
+    Mô tả: Đặt chế độ học tập mới cho người dùng.
+    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     if not user:
@@ -367,13 +406,17 @@ def set_learning_mode(mode_code):
 @main_bp.route('/select_set_page')
 @login_required
 def select_set_page():
-    # Mô tả: Chuyển hướng về trang chọn bộ thẻ.
+    """
+    Mô tả: Chuyển hướng về trang chọn bộ thẻ.
+    """
     return redirect(url_for('main.index'))
 
 @main_bp.route('/api/card_audio/<int:flashcard_id>/<string:side>')
 @login_required
 def get_card_audio(flashcard_id, side):
-    # Mô tả: API endpoint để lấy và phục vụ file audio cho mặt trước hoặc mặt sau của thẻ.
+    """
+    Mô tả: API endpoint để lấy và phục vụ file audio cho mặt trước hoặc mặt sau của thẻ.
+    """
     user_id = session.get('user_id')
     if not user_id:
         return {"error": "Unauthorized"}, 401
@@ -413,3 +456,33 @@ def get_card_audio(flashcard_id, side):
     except Exception as e:
         logger.error(f"API Audio: Lỗi không mong muốn khi phục vụ audio cho Flashcard ID {flashcard_id}, side '{side}': {e}", exc_info=True)
         return {"error": "Internal server error"}, 500
+
+@main_bp.route('/images/<path:filename>')
+def serve_image(filename):
+    """
+    Mô tả: Phục vụ các tệp hình ảnh từ thư mục IMAGES_DIR.
+           Route này cho phép trình duyệt truy cập các hình ảnh được lưu trữ
+           ngoài thư mục 'static' mặc định của Flask.
+    Args:
+        filename (str): Tên tệp hình ảnh (bao gồm cả đường dẫn con nếu có).
+    Returns:
+        Response: Tệp hình ảnh được gửi về trình duyệt.
+    """
+    try:
+        # Đảm bảo đường dẫn file là an toàn và nằm trong thư mục IMAGES_DIR
+        # os.path.join sẽ nối IMAGES_DIR với filename
+        # send_file sẽ kiểm tra tính an toàn của đường dẫn
+        full_path = os.path.join(IMAGES_DIR, filename)
+        
+        # Kiểm tra xem file có tồn tại không
+        if not os.path.exists(full_path):
+            logger.warning(f"File ảnh không tìm thấy: {full_path}")
+            # Có thể trả về một hình ảnh placeholder hoặc lỗi 404
+            return "Image not found", 404
+            
+        logger.info(f"Đang phục vụ file ảnh: {full_path}")
+        return send_file(full_path, mimetype='image/jpeg') # Có thể cần điều chỉnh mimetype tùy loại ảnh (png, jpg, webp...)
+    except Exception as e:
+        logger.error(f"Lỗi khi phục vụ ảnh '{filename}': {e}", exc_info=True)
+        return "Internal server error", 500
+

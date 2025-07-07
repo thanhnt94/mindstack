@@ -39,6 +39,7 @@ body {
 /* Container cho cột hình ảnh */
 .flashcard-image-column {
     width: 100%; /* Mặc định chiếm toàn bộ chiều rộng (trên mobile) */
+    max-width: 600px;
     display: flex; /* Mặc định hiển thị trên mobile */
     flex-direction: column; /* Để căn giữa nội dung theo chiều dọc */
     justify-content: center; /* Căn giữa theo chiều dọc */
