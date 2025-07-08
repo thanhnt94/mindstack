@@ -1,8 +1,0 @@
-python-dotenv
-python-telegram-bot[job-queue] # Đảm bảo có job-queue, bạn có thể thay >=20.0 bằng phiên bản cụ thể bạn muốn
-openpyxl> # Cho việc đọc/ghi file Excel
-gTTS # Cho Text-to-Speech
-pydub # Để xử lý, ghép file audio
-numpy # Cho các tính toán số học, đặc biệt là với biểu đồ và moving average
-matplotlib # Để vẽ biểu đồ
-pandas # Để tính toán thống kê, ví dụ moving average mượt hơn (tùy chọn nhưng khuyến nghị)

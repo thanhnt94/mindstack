@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm thành viên mới - Flashcard Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar Section -->
+    <nav class="navbar">
+        <div class="navbar-brand">Flashcard Admin</div>
+        <div class="navbar-user-info">
+            {% if session.get('username') %}
+                <span>Xin chào, {{ session.get('username') }} (Admin)!</span>
+                <a href="{{ url_for('main.logout') }}" class="button logout-button">Đăng xuất</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="button login-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-user-plus"></i> Thêm thành viên mới</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <div class="admin-panel">
+            <form method="POST" action="{{ url_for('main.add_user') }}">
+                <div class="form-group">
+                    <label for="username">Tên đăng nhập (Username):</label>
+                    <input type="text" id="username" name="username" value="{{ user_data.username or '' }}">
+                    <small>Để trống nếu không muốn đặt tên đăng nhập.</small>
+                </div>
+                <div class="form-group">
+                    <label for="telegram_id">Telegram ID: <span class="required-field">*</span></label>
+                    <input type="number" id="telegram_id" name="telegram_id" value="{{ user_data.telegram_id or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mật khẩu: <span class="required-field">*</span></label>
+                    <input type="password" id="password" name="password" value="{{ user_data.password or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="user_role">Vai trò:</label>
+                    <select id="user_role" name="user_role" required>
+                        {% for role in roles %}
+                            <option value="{{ role }}" {% if user_data.user_role == role %}selected{% endif %}>{{ role | capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="daily_new_limit">Giới hạn thẻ mới hàng ngày:</label>
+                    <input type="number" id="daily_new_limit" name="daily_new_limit" value="{{ user_data.daily_new_limit }}" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="timezone_offset">Múi giờ (UTC offset):</label>
+                    <input type="number" id="timezone_offset" name="timezone_offset" value="{{ user_data.timezone_offset }}" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="button primary"><i class="fas fa-user-plus"></i> Thêm thành viên</button>
+                    <a href="{{ url_for('main.manage_users') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="footer">
+            <p>Flashcard Web App - Phiên bản thử nghiệm</p>
+        </div>
+    </div>
+</body>
+</html>

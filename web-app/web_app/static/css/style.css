@@ -679,7 +679,9 @@ body {
 }
 
 .form-group input[type="text"],
-.form-group input[type="password"] {
+.form-group input[type="password"],
+.form-group input[type="number"], /* THÊM: Kiểu cho input type="number" */
+.form-group select { /* THÊM: Kiểu cho select */
     width: calc(100% - 20px); /* Điều chỉnh cho padding */
     padding: 10px;
     border: 1px solid #ddd;
@@ -688,11 +690,28 @@ body {
 }
 
 .form-group input[type="text"]:focus,
-.form-group input[type="password"]:focus {
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus, /* THÊM: Kiểu focus cho input type="number" */
+.form-group select:focus { /* THÊM: Kiểu focus cho select */
     border-color: #007bff;
     outline: none;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
+
+/* BẮT ĐẦU THÊM: Kiểu cho trường bắt buộc */
+.required-field {
+    color: #dc3545; /* Màu đỏ cho dấu * */
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #888;
+    font-size: 0.85em;
+}
+/* KẾT THÚC THÊM */
 
 /* Kiểu cho Navbar */
 .navbar {
@@ -771,6 +790,84 @@ body {
     padding-top: 80px; /* Điều chỉnh dựa trên chiều cao navbar */
 }
 
+/* Kiểu dáng cho trang quản trị viên */
+.admin-panel {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 1200px; /* Giới hạn chiều rộng để bảng không quá rộng */
+    margin-top: 20px;
+    text-align: left; /* Căn trái nội dung trong panel */
+    box-sizing: border-box;
+}
+
+.admin-panel h1 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-size: 2em;
+    text-align: center; /* Căn giữa tiêu đề chính */
+}
+
+.admin-panel h1 .fas {
+    margin-right: 10px;
+    color: #3498db; /* Màu icon */
+}
+
+.table-responsive {
+    overflow-x: auto; /* Cho phép cuộn ngang nếu bảng quá rộng */
+    margin-top: 20px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse; /* Gộp các đường viền bảng */
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    min-width: 700px; /* Đảm bảo bảng không quá nhỏ trên màn hình nhỏ */
+}
+
+.data-table th, .data-table td {
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.data-table th {
+    background-color: #f2f2f2;
+    color: #333;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85em;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Màu nền xen kẽ cho hàng */
+}
+
+.data-table tbody tr:hover {
+    background-color: #eef; /* Hiệu ứng hover cho hàng */
+}
+
+.data-table td {
+    color: #555;
+}
+
+/* Nút nhỏ trong bảng */
+.small-button {
+    padding: 5px 10px;
+    font-size: 0.75em;
+    border-radius: 5px;
+    margin-right: 5px; /* Khoảng cách giữa các nút */
+}
+
+.small-button .fas {
+    margin-right: 5px;
+}
+
+
 /* ========================== Điều chỉnh Responsive ========================== */
 
 /* Màn hình Desktop (>= 1025px) */
@@ -799,6 +896,12 @@ body {
         grid-column: 3 / 4; /* Cột thứ ba cho context panel */
         order: 3;
         margin-top: 0;
+    }
+
+    /* Điều chỉnh cho admin panel trên desktop */
+    .container {
+        max-width: 1200px; /* Tăng giới hạn chiều rộng cho container chung trên desktop */
+        margin-top: 80px; /* Đẩy xuống để không bị navbar che */
     }
 }
 
@@ -851,6 +954,12 @@ body {
 
     .context-panel {
         padding: 20px;
+    }
+
+    /* Điều chỉnh cho admin panel trên tablet */
+    .container {
+        max-width: 95%; /* Tăng giới hạn chiều rộng cho container chung trên tablet */
+        margin-top: 80px;
     }
 }
 
@@ -995,5 +1104,32 @@ body {
 
     body {
         padding-top: 10px; /* THAY ĐỔI QUAN TRỌNG: Padding-top của body bằng chiều cao navbar mobile */
+    }
+
+    /* Điều chỉnh cho admin panel trên mobile */
+    .admin-panel {
+        padding: 15px; /* Giảm padding */
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .admin-panel h1 {
+        font-size: 1.5em; /* Giảm font size */
+        margin-bottom: 15px;
+    }
+
+    .data-table {
+        font-size: 0.8em; /* Giảm font size cho bảng */
+        min-width: 500px; /* Giữ min-width để bảng không quá hẹp */
+    }
+
+    .data-table th, .data-table td {
+        padding: 8px 10px; /* Giảm padding cho ô bảng */
+    }
+
+    .small-button {
+        padding: 3px 6px;
+        font-size: 0.65em;
+        margin-right: 3px;
     }
 }
