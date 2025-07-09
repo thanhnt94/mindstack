@@ -10,7 +10,13 @@ import json # Để chuyển đổi đối tượng Python thành JSON string
 # Import individual services from the new structure
 from .services import learning_logic_service, user_service, stats_service, audio_service
 from .models import db, User, VocabularySet, Flashcard, UserFlashcardProgress # Still need models for queries
-from .config import LEARNING_MODE_DISPLAY_NAMES, IMAGES_DIR
+from .config import (
+    LEARNING_MODE_DISPLAY_NAMES, IMAGES_DIR,
+    # BẮT ĐẦU THAY ĐỔI: Import các hằng số chế độ mới và mặc định
+    DEFAULT_LEARNING_MODE,
+    MODE_AUTOPLAY_REVIEW
+    # KẾT THÚC THAY ĐỔI
+)
 
 logger = logging.getLogger(__name__)
 
@@ -158,15 +164,22 @@ def index():
         session.pop('user_id', None)
         return redirect(url_for('main.login'))
 
+    # BẮT ĐẦU THAY ĐỔI: Đảm bảo current_mode của user là một trong các mode mới
+    if user.current_mode not in LEARNING_MODE_DISPLAY_NAMES:
+        logger.warning(f"User {user.user_id} có current_mode '{user.current_mode}' không hợp lệ. Đặt lại về mặc định: {DEFAULT_LEARNING_MODE}.")
+        user.current_mode = DEFAULT_LEARNING_MODE
+        db.session.commit()
+    # KẾT THÚC THAY ĐỔI
+
     all_sets = VocabularySet.query.order_by(VocabularySet.title).all()
     
     # Lấy ID của các bộ thẻ mà người dùng đã có tiến trình (ít nhất 1 flashcard có progress)
-    # Sử dụng subquery để tìm các set_id có flashcard_id trong UserFlashcardProgress của user
+    progressed_flashcard_ids = db.session.query(UserFlashcardProgress.flashcard_id).\
+        filter(UserFlashcardProgress.user_id == user.user_id).all()
+    progressed_flashcard_ids = {f.flashcard_id for f in progressed_flashcard_ids}
+
     progressed_set_ids = db.session.query(Flashcard.set_id).\
-        join(UserFlashcardProgress).\
-        filter(UserFlashcardProgress.user_id == user.user_id).\
-        distinct().\
-        all()
+        filter(Flashcard.flashcard_id.in_(progressed_flashcard_ids)).distinct().all()
     progressed_set_ids = {s.set_id for s in progressed_set_ids}
 
     # Các danh sách để phân loại bộ thẻ
@@ -279,6 +292,10 @@ def learn_set(set_id):
     session['current_set_id'] = set_id
     session['learning_mode'] = user.current_mode
 
+    # BẮT ĐẦU THAY ĐỔI: Thêm cờ is_autoplay_mode cho template
+    is_autoplay_mode = (user.current_mode == MODE_AUTOPLAY_REVIEW)
+    # KẾT THÚC THAY ĐỔI
+
     return render_template(
         'flashcard/learn_card.html',
         user=user,
@@ -289,7 +306,8 @@ def learn_set(set_id):
         wait_time_ts=None,
         user_audio_settings=user_audio_settings,
         flashcard_json_string=flashcard_json_string,
-        user_audio_settings_json_string=user_audio_settings_json_string
+        user_audio_settings_json_string=user_audio_settings_json_string,
+        is_autoplay_mode=is_autoplay_mode # TRUYỀN CỜ MỚI
     )
 
 
@@ -320,6 +338,10 @@ def flip_card(progress_id):
     flashcard_json_string = json.dumps(_serialize_flashcard(progress.flashcard))
     user_audio_settings_json_string = json.dumps(user_audio_settings)
 
+    # BẮT ĐẦU THAY ĐỔI: Thêm cờ is_autoplay_mode cho template
+    is_autoplay_mode = (user.current_mode == MODE_AUTOPLAY_REVIEW)
+    # KẾT THÚC THAY ĐỔI
+
     return render_template(
         'flashcard/learn_card.html',
         user=user,
@@ -329,7 +351,8 @@ def flip_card(progress_id):
         is_front=False,
         user_audio_settings=user_audio_settings,
         flashcard_json_string=flashcard_json_string,
-        user_audio_settings_json_string=user_audio_settings_json_string
+        user_audio_settings_json_string=user_audio_settings_json_string,
+        is_autoplay_mode=is_autoplay_mode # TRUYỀN CỜ MỚI
     )
 
 @main_bp.route('/rate/<int:progress_id>/<string:response_str>')
@@ -347,7 +370,10 @@ def rate_card(progress_id, response_str):
         'forget': -1,
         'vague': 0,
         'remember': 1,
-        'continue': 2
+        'continue': 2,
+        # BẮT ĐẦU THAY ĐỔI: Thêm phản hồi 'next' cho chế độ Autoplay
+        'next': 3 # Một giá trị mới cho Autoplay, không ảnh hưởng đến SRS
+        # KẾT THÚC THAY ĐỔI
     }
     response = response_mapping.get(response_str)
 

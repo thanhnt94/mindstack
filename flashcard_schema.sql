@@ -15,7 +15,7 @@ CREATE TABLE "UserFlashcardProgress" ( "progress_id" INTEGER PRIMARY KEY AUTOINC
 
 --- Bảng: Users
 CREATE TABLE "Users" (
-                user_id INTEGER PRIMARY KEY AUTOINCREMENT, telegram_id INTEGER NOT NULL UNIQUE,
+                user_id INTEGER PRIMARY KEY AUTOINCREMENT, telegram_id INTEGER UNIQUE,
                 current_set_id INTEGER, default_side INTEGER DEFAULT 0,
                 daily_new_limit INTEGER DEFAULT 10, user_role TEXT DEFAULT 'user',
                 timezone_offset INTEGER DEFAULT 7, username TEXT UNIQUE,

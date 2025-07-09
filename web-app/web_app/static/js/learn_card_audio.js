@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const userAudioSettings = JSON.parse(jsDataElement.dataset.userAudioSettings);
     // Lấy thuộc tính mới để kiểm tra xem có nội dung audio mặt sau hay không
     const hasBackAudioContent = jsDataElement.dataset.hasBackAudioContent === 'true';
+    // BẮT ĐẦU THAY ĐỔI: Lấy cờ isAutoplayMode
+    const isAutoplayMode = jsDataElement.dataset.isAutoplayMode === 'true';
+    // KẾT THÚC THAY ĐỔI
 
     /**
      * Mô tả: Phát âm thanh cho thẻ dựa trên mặt hiện tại và cài đặt của người dùng.
@@ -30,11 +33,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isFront) {
             audioContent = flashcardData.front_audio_content;
             // Kích hoạt phát nếu forcePlay là true HOẶC cài đặt của người dùng cho phép
-            audioEnabled = forcePlay || userAudioSettings.front_audio_enabled;
+            // BẮT ĐẦU THAY ĐỔI: Luôn bật audio nếu là chế độ Autoplay
+            audioEnabled = forcePlay || userAudioSettings.front_audio_enabled || isAutoplayMode;
+            // KẾT THÚC THAY ĐỔI
         } else { // isBackSide
             audioContent = flashcardData.back_audio_content;
             // Kích hoạt phát nếu forcePlay là true HOẶC cài đặt của người dùng cho phép
-            audioEnabled = forcePlay || userAudioSettings.back_audio_enabled;
+            // BẮT ĐẦU THAY ĐỔI: Luôn bật audio nếu là chế độ Autoplay
+            audioEnabled = forcePlay || userAudioSettings.back_audio_enabled || isAutoplayMode;
+            // KẾT THÚC THAY ĐỔI
         }
 
         if (audioContent && audioEnabled) {
@@ -58,16 +65,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Tự động phát audio khi thẻ được tải (nếu có)
     if (flashcardData) {
-        if (isFront) {
-            // Mặt trước: luôn tự động phát audio khi tải trang
-            playCardAudio(true);
+        // BẮT ĐẦU THAY ĐỔI: Luôn tự động phát audio nếu là chế độ Autoplay, hoặc theo cài đặt người dùng
+        if (isAutoplayMode) {
+            playCardAudio(true); // Luôn forcePlay trong Autoplay
+        } else if (isFront) {
+            // Mặt trước: tự động phát nếu cài đặt người dùng cho phép
+            playCardAudio(false); // Không forcePlay, tôn trọng cài đặt
         } else { // isBackSide
-            // Mặt sau: tự động phát nếu có nội dung audio (được coi là "có cache")
-            if (hasBackAudioContent) {
-                playCardAudio(true);
+            // Mặt sau: tự động phát nếu có nội dung audio (được coi là "có cache") VÀ cài đặt cho phép
+            if (hasBackAudioContent && userAudioSettings.back_audio_enabled) {
+                playCardAudio(false); // Không forcePlay, tôn trọng cài đặt
             }
-            // Nếu không có nội dung audio mặt sau, sẽ không tự động phát.
-            // Người dùng có thể nhấn nút để phát thủ công (nếu có)
         }
+        // KẾT THÚC THAY ĐỔI
     }
 });

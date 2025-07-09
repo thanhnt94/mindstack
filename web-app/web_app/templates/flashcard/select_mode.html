@@ -7,17 +7,6 @@
         <h1>⚡ Chọn Chế độ Học</h1>
         <p>Chọn chế độ học tập phù hợp với bạn:</p>
         
-        {# Flash messages đã được chuyển vào includes/flashes.html và được include trong base.html #}
-        {# {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %} #}
-
         {% if modes %}
             <ul class="mode-list">
                 {% for mode_code, mode_name in modes.items() %}
@@ -38,10 +27,5 @@
         <div class="button-group">
             <a href="{{ url_for('main.index') }}" class="button secondary">🔙 Quay lại Chọn bộ</a>
         </div>
-
-        {# Footer đã được chuyển vào includes/footer.html và được include trong base.html #}
-        {# <div class="footer">
-            <p>Flashcard Web App - Phiên bản thử nghiệm</p>
-        </div> #}
     </div>
 {% endblock %}
