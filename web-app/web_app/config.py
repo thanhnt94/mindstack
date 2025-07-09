@@ -2,7 +2,13 @@
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 DATABASE_PATH = os.path.join(BASE_DIR, "..", "..", "database", "flashcard.db")
+MEDIA_BASE_DIR = os.path.join(BASE_DIR, "..", "..", "media", "flashcard")
+AUDIO_CACHE_DIR = os.path.join(MEDIA_BASE_DIR, "audio")
+CACHE_GENERATION_DELAY = 1.5 # Độ trễ giữa các lần gọi TTS (giây)
+IMAGES_DIR = os.path.join(MEDIA_BASE_DIR, "images")
+TEMP_CHARTS_DIR = os.path.join(BASE_DIR, 'temp_charts')
 
 SQLALCHEMY_DATABASE_URI = f'sqlite:///{DATABASE_PATH}'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -50,11 +56,7 @@ LEADERBOARD_LIMIT = 50
 DEFAULT_TIMEZONE_OFFSET = 7
 
 # --- Hằng số Audio (MỚI THÊM CHO WEB APP) ---
-MEDIA_BASE_DIR = os.path.join(BASE_DIR, "..", "..", "..", "media", "flashcard")
-AUDIO_CACHE_DIR = os.path.join(MEDIA_BASE_DIR, "audio")
-CACHE_GENERATION_DELAY = 1.5 # Độ trễ giữa các lần gọi TTS (giây)
-IMAGES_DIR = os.path.join(MEDIA_BASE_DIR, "images")
-TEMP_CHARTS_DIR = os.path.join(BASE_DIR, 'temp_charts')
+
 
 # BẮT ĐẦU THAY ĐỔI: Hằng số cho Autoplay
 AUTOPLAY_CARD_DELAY_MS = 2000 # Khoảng thời gian chờ sau khi audio mặt sau kết thúc (miligiây)

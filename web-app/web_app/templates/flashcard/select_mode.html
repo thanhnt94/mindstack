@@ -12,7 +12,8 @@
                 {% for mode_code, mode_name in modes.items() %}
                     <li>
                         <a href="{{ url_for('main.set_learning_mode', mode_code=mode_code) }}" class="button mode-button">
-                            {{ mode_name }}
+                            <span class="button-text">{{ mode_name }}</span>
+                            
                             {% if mode_code == current_mode %}
                                 <span class="current-mode-indicator"> (Hiện tại)</span>
                             {% endif %}

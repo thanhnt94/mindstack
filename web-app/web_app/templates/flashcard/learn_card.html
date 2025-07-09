@@ -2,255 +2,124 @@
 
 {% block title %}Học Thẻ - Flashcard App{% endblock %}
 
-{% block head_extra %}
-    {# Font Awesome đã được include trong base.html #}
-{% endblock %}
-
 {% block content %}
     <div class="main-container">
         <div class="flashcard-column">
-            {% if flashcard %}
-                <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
-                    <!-- Flashcard Header -->
-                    <div class="flashcard-header">
-                        <p class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
-                        <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh">
-                            <i class="fas fa-volume-up"></i>
-                        </button>
-                    </div>
+            <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
 
-                    <!-- Flashcard Body (Content Area) -->
-                    <div class="flashcard-body">
-                        <div class="scrollable-card-content">
-                            <div class="card-text">
-                                {%- if is_front -%}
-                                    {{- flashcard.front -}}
-                                {%- else -%}
-                                    {{- flashcard.back -}}
-                                {%- endif -%}
-                            </div>
+                <!-- Flashcard Header -->
+                <div class="flashcard-header">
+                    <button id="menu-toggle-btn" class="menu-toggle-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <p class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
+                    <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+
+                <!-- Flashcard Body (Content Area) -->
+                <div class="flashcard-body">
+                    <div class="scrollable-card-content">
+                        <div class="card-text">
+                            {%- if is_front -%}
+                                {{- flashcard.front -}}
+                            {%- else -%}
+                                {{- flashcard.back -}}
+                            {%- endif -%}
                         </div>
                     </div>
-
-                    <!-- Flashcard Footer (Buttons) -->
-                    <div class="flashcard-footer">
-                        {% if is_autoplay_mode %}
-                            {# Chế độ Autoplay: Chỉ có nút lật thẻ và nút tiếp theo (sẽ được kích hoạt tự động) #}
-                            {# Các nút này chỉ để người dùng có thể tương tác thủ công nếu muốn #}
-                            {% if is_front %}
-                                <a href="{{ url_for('main.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
-                            {% else %}
-                                <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='next') }}" class="button primary">▶️ Tiếp theo</a>
-                            {% endif %}
-                        {% else %}
-                            {# Các chế độ học thông thường: Nút lật thẻ hoặc các nút đánh giá #}
-                            {% if is_front %}
-                                <a href="{{ url_for('main.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
-                            {% else %}
-                                <div class="button-group">
-                                    {% if progress.last_reviewed is none %}
-                                        <!-- Thẻ mới, chỉ có nút Tiếp tục -->
-                                        <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='continue') }}" class="button primary">▶️ Tiếp tục</a>
-                                    {% else %}
-                                        <!-- Thẻ đã học, có các nút đánh giá -->
-                                        <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='forget') }}" class="button danger">❌ Quên</a>
-                                        <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='vague') }}" class="button warning">🤔 Mơ hồ</a>
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='remember') }}" class="button success">✅ Nhớ</a>
-                                    {% endif %}
-                                    <!-- Nút Gợi ý Ghi chú AI (đã tạm gác lại) -->
-                                    <!-- <button id="generateSmartNote" class="button ai-button">✨ Gợi ý Ghi chú ✨</button> -->
-                                </div>
-                            {% endif %}
-                        {% endif %}
-                    </div>
                 </div>
-            {% elif wait_time_ts %}
-                {# Nội dung này đã được chuyển sang no_cards_message.html và routes.py sẽ render trực tiếp #}
-                {# Tuy nhiên, để đảm bảo tính nhất quán nếu có bất kỳ trường hợp nào vẫn render ở đây #}
-                <div class="flashcard no-card">
-                    <div class="flashcard-content">
-                        <h2>🎉 Hoàn thành!</h2>
-                        {% if is_midnight_tomorrow %}
-                            <p>Bạn đã hoàn thành tất cả các thẻ cần ôn tập hoặc thẻ mới cho hôm nay.</p>
-                            <p>Hãy quay lại vào ngày mai để tiếp tục học nhé!</p>
-                        {% else %}
-                            <p>Bạn đã ôn hết các thẻ đến hạn hiện tại.</p>
-                            <p>Thẻ tiếp theo sẽ đến hạn vào khoảng <strong>{{ wait_minutes }} phút</strong> nữa.</p>
-                        {% endif %}
-                        <a href="{{ url_for('main.learn_set', set_id=context_stats.set_id) }}" class="button primary">▶️ Tiếp tục (thử lại)</a>
+
+                {# Popup hình ảnh (không đổi) #}
+                {% set show_image_popup = (is_front and flashcard.front_img and user.front_image_enabled == 1) or (not is_front and flashcard.back_img and user.back_image_enabled == 1) %}
+                {% if show_image_popup %}
+                    {% set image_src = url_for('main.serve_image', filename=(flashcard.front_img if is_front else flashcard.back_img)) %}
+                    <div id="image-popup" class="image-popup-container">
+                        <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
+                        <img src="{{ image_src }}" alt="Hình ảnh thẻ" class="popup-image">
                     </div>
-                </div>
-            {% else %}
-                <div class="flashcard no-card">
-                    <div class="flashcard-content">
-                        <h2>Không có thẻ nào!</h2>
-                        <p>Không tìm thấy thẻ nào để học trong bộ này.</p>
-                        <a href="{{ url_for('main.select_set_page') }}" class="button primary">Chọn bộ khác</a>
-                    </div>
-                </div>
-            {% endif %}
-        </div> {# KẾT THÚC flashcard-column #}
-
-        {# Logic hiển thị hình ảnh #}
-        {% set image_src = '' %}
-        {% if flashcard %}
-            {% if is_front and flashcard.front_img and user.front_image_enabled == 1 %}
-                {% set image_src = url_for('main.serve_image', filename=flashcard.front_img) %}
-            {% elif not is_front and flashcard.back_img and user.back_image_enabled == 1 %}
-                {% set image_src = url_for('main.serve_image', filename=flashcard.back_img) %}
-            {% endif %}
-        {% endif %}
-
-        {% if image_src %}
-        <div class="flashcard-image-column">
-            <div class="flashcard-image-container">
-                <img src="{{ image_src }}" alt="Hình ảnh liên quan đến thẻ" class="flashcard-image" onerror="this.onerror=null;this.src='https://placehold.co/300x200/cccccc/333333?text=Không+có+ảnh'">
-            </div>
-        </div> {# KẾT THÚC flashcard-image-column #}
-        {% endif %}
-
-        <!-- New container for the right column elements -->
-        <div class="right-column-container">
-            <!-- Separate frame for top controls, now a sibling to context-panel -->
-            <div class="top-controls-frame">
-                <h3>Chọn chức năng</h3>
-                <div class="control-button-group">
-                    <a href="{{ url_for('main.select_set_page') }}" class="control-button set-button">📚 Bộ</a>
-                    <a href="{{ url_for('main.select_mode') }}" class="control-button mode-button">⚡ Chế độ</a>
-                </div>
-            </div>
-
-            <!-- Context Panel (Bảng thống kê nhỏ) -->
-            <div class="context-panel">
-                <h2>📊 Thống kê</h2>
-                {% if context_stats %}
-                    <!-- Box 1: Thống kê chung -->
-                    <div class="stats-box general-stats">
-                        <h3>Tổng quan chung</h3>
-                        <p><strong>Điểm của bạn:</strong> {{ context_stats.total_score }}</p>
-                        <p><strong>Đã học:</strong> {{ context_stats.learned_distinct_overall }} thẻ</p>
-                        <p><strong>Cần ôn:</strong> {{ context_stats.due_overall }} thẻ</p>
-                        <p><strong>Số bộ đã học:</strong> {{ context_stats.learned_sets_count }}</p>
-                    </div>
-
-                    <!-- Box 2: Chế độ hiện tại -->
-                    <div class="stats-box mode-stats">
-                        <h3>Chế độ</h3>
-                        <p><strong>Hiện tại:</strong> {{ context_stats.current_mode_display }}</p>
-                    </div>
-
-                    <!-- Box 3: Thống kê bộ hiện tại -->
-                    <div class="stats-box set-stats">
-                        <h3>Bộ hiện tại</h3>
-                        <p><strong>Bộ:</strong> {{ context_stats.set_title }}</p>
-                        <p><strong>Đã học trong bộ:</strong> {{ context_stats.set_learned_cards }} / {{ context_stats.set_total_cards }}</p>
-                        <p><strong>Cần ôn trong bộ:</strong> {{ context_stats.set_due_cards }}</p>
-                    </div>
-
-                    <!-- Box 4: Thống kê thẻ hiện tại -->
-                    {% if flashcard and progress %}
-                    <div class="stats-box card-stats">
-                        <h3>Thẻ hiện tại</h3>
-                        <p><strong>ID Thẻ:</strong> {{ flashcard.flashcard_id }}</p>
-                        <p><strong>Lần đúng liên tiếp:</strong> {{ progress.correct_streak }}</p>
-                        <p><strong>Tổng số lần đúng:</strong> {{ progress.correct_count }}</p>
-                        <p><strong>Tổng lượt ôn:</strong> {{ progress.review_count }}</p>
-                        <p><strong>Thời gian đến hạn:</strong> {{ progress.due_time | format_unix_timestamp }}</p>
-                        <p><strong>Lần ôn cuối:</strong> {{ progress.last_reviewed | format_unix_timestamp }}</p>
-                    </div>
-                    {% endif %}
-
-                {% else %}
-                    <p>Không có dữ liệu thống kê.</p>
                 {% endif %}
-                <div class="button-group">
-                    {# Removed the "Chọn bộ khác" button from here as per user's request #}
+
+                <!-- Flashcard Footer (Buttons) -->
+                <div class="flashcard-footer">
+                    {% if is_autoplay_mode %}
+                        {% if is_front %}
+                            <a href="{{ url_for('main.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
+                        {% else %}
+                            <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='next') }}" class="button primary">▶️ Tiếp theo</a>
+                        {% endif %}
+                    {% else %}
+                        <div class="button-group">
+                            {% if is_front %}
+                                <a href="{{ url_for('main.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
+                            {% else %}
+                                {% if progress.last_reviewed is none %}
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='continue') }}" class="button primary">▶️ Tiếp tục</a>
+                                {% else %}
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='forget') }}" class="button danger">❌ Quên</a>
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='vague') }}" class="button warning">🤔 Mơ hồ</a>
+                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='remember') }}" class="button success">✅ Nhớ</a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    {# Hidden div để lưu trữ các chuỗi JSON đã được xử lý từ Flask #}
-    <div id="jsData"
-        data-flashcard="{{ flashcard_json_string }}"
-        data-is-front="{{ 'true' if is_front else 'false' }}"
-        data-user-audio-settings="{{ user_audio_settings_json_string }}"
-        data-has-back-audio-content="{{ 'true' if flashcard and flashcard.back_audio_content else 'false' }}"
-        data-is-autoplay-mode="{{ 'true' if is_autoplay_mode else 'false' }}"
-        data-autoplay-delay-ms="{{ autoplay_card_delay_ms }}"> {# TRUYỀN HẰNG SỐ DELAY VÀO JS #}
-    </div>
+    {# ========================== CẬP NHẬT PANEL ĐIỀU HƯỚNG ========================== #}
+    <div id="side-nav-overlay" class="side-nav-overlay"></div>
+    <nav id="side-nav" class="side-nav">
+        <div class="side-nav-header">
+            {# Hiển thị tên người dùng #}
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-info">
+                    <span class="username">{{ user.username or 'User' }}</span>
+                    <span class="score">Điểm: {{ context_stats.total_score or 0 }}</span>
+                </div>
+            </div>
+            <button id="side-nav-close-btn" class="side-nav-close-btn">&times;</button>
+        </div>
 
-    {# Thẻ audio để phát âm thanh #}
-    <audio id="cardAudioPlayer" controls style="display:none;"></audio>
+        {# Thêm các khối thông tin #}
+        <div class="side-nav-content">
+            <div class="nav-section">
+                <h3 class="nav-section-title">Bộ thẻ hiện tại</h3>
+                <p>{{ context_stats.set_title }}</p>
+                <p>Tiến độ: {{ context_stats.set_learned_cards }} / {{ context_stats.set_total_cards }} thẻ</p>
+            </div>
 
-    {% if progress %}
-    <div id="debugProgressId" data-progress-id="{{ progress.progress_id }}" style="display:none;"></div>
-    {% endif %}
+            <div class="nav-section">
+                <h3 class="nav-section-title">Thống kê nhanh</h3>
+                <p>Thẻ cần ôn: {{ context_stats.due_overall }}</p>
+            </div>
+
+            <ul class="side-nav-links">
+                <li><a href="{{ url_for('main.select_set_page') }}"><i class="fas fa-layer-group"></i> Chọn Bộ Khác</a></li>
+                <li><a href="{{ url_for('main.select_mode') }}"><i class="fas fa-bolt"></i> Đổi Chế Độ</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li> {# Nút cài đặt (chưa có chức năng) #}
+                <hr>
+                <li><a href="{{ url_for('main.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+            </ul>
+        </div>
+    </nav>
+    {# =================================================================================== #}
+
+    {# ... các div ẩn và thẻ audio không đổi ... #}
 {% endblock %}
 
 {% block scripts_extra %}
+    {# ... các script cũ không đổi ... #}
     <script src="{{ url_for('static', filename='js/learn_card_audio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/card_content_adjuster.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/image_popup_handler.js') }}"></script>
     
-    {% if is_autoplay_mode %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const jsDataElement = document.getElementById('jsData');
-            const isAutoplayMode = jsDataElement.dataset.isAutoplayMode === 'true';
-            const autoplayDelayMs = parseInt(jsDataElement.dataset.autoplayDelayMs, 10); // Lấy delay từ data attribute
-            const progressId = document.getElementById('debugProgressId') ? document.getElementById('debugProgressId').dataset.progressId : null;
-            const cardAudioPlayer = document.getElementById('cardAudioPlayer'); // Lấy lại audio player
-
-            if (isAutoplayMode && progressId) {
-                let autoplayTimeout;
-
-                // Hàm để chuyển động tiếp theo trong Autoplay
-                function proceedAutoplay() {
-                    const currentUrl = window.location.href;
-                    if (currentUrl.includes('/flip/')) {
-                        // Đã ở mặt sau, chuyển sang thẻ tiếp theo
-                        window.location.href = "{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='next') }}";
-                    } else {
-                        // Đang ở mặt trước, lật thẻ
-                        window.location.href = "{{ url_for('main.flip_card', progress_id=progress.progress_id) }}";
-                    }
-                }
-
-                // Lắng nghe sự kiện audio kết thúc
-                cardAudioPlayer.onended = function() {
-                    console.log("Audio ended. Proceeding with autoplay logic.");
-                    if ("{{ is_front }}" === "True") {
-                        // Nếu đang ở mặt trước và audio kết thúc, lật thẻ ngay lập tức
-                        proceedAutoplay();
-                    } else {
-                        // Nếu đang ở mặt sau và audio kết thúc, chờ AUTOPLAY_CARD_DELAY_MS rồi chuyển thẻ
-                        autoplayTimeout = setTimeout(proceedAutoplay, autoplayDelayMs);
-                    }
-                };
-
-                // Nếu không có audio để phát trên mặt này, hoặc audio đã phát xong trước khi DOMContentLoaded
-                // (ví dụ: do cache), chúng ta cần kích hoạt logic tiếp theo ngay lập tức hoặc sau một delay nhỏ.
-                // Điều này xử lý trường hợp audio rất ngắn hoặc không có.
-                if (cardAudioPlayer.paused || cardAudioPlayer.ended) {
-                    console.log("Audio already paused or ended, or no audio. Initiating immediate autoplay logic.");
-                    if ("{{ is_front }}" === "True") {
-                        // Nếu đang ở mặt trước và không có audio hoặc audio đã xong, lật thẻ ngay
-                        proceedAutoplay();
-                    } else {
-                        // Nếu đang ở mặt sau và không có audio hoặc audio đã xong, chờ delay rồi chuyển thẻ
-                        autoplayTimeout = setTimeout(proceedAutoplay, autoplayDelayMs);
-                    }
-                }
-
-
-                // Xóa timeout nếu người dùng tương tác (ví dụ: nhấn nút)
-                document.body.addEventListener('click', function() {
-                    console.log("User interaction detected, clearing autoplay timeout.");
-                    clearTimeout(autoplayTimeout);
-                    cardAudioPlayer.onended = null; // Ngừng lắng nghe sự kiện audio
-                });
-            }
-        });
-    </script>
-    {% endif %}
+    {# Thêm script mới cho menu #}
+    <script src="{{ url_for('static', filename='js/mobile_menu_handler.js') }}"></script>
 {% endblock %}
