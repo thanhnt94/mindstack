@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 class User(db.Model):
     __tablename__ = 'Users'
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    telegram_id = db.Column(db.Integer, unique=True, nullable=False)
+    # BẮT ĐẦU THAY ĐỔI: telegram_id không còn là nullable=False
+    telegram_id = db.Column(db.Integer, unique=True, nullable=True)
+    # KẾT THÚC THAY ĐỔI
     current_set_id = db.Column(db.Integer, db.ForeignKey('VocabularySets.set_id', ondelete='SET NULL'))
     default_side = db.Column(db.Integer, default=0)
     daily_new_limit = db.Column(db.Integer, default=10)

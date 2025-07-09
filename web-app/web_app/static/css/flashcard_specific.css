@@ -1,0 +1,223 @@
+/*
+ * flashcard_specific.css
+ * Mô tả: Chứa các kiểu CSS chi tiết dành riêng cho việc hiển thị và tương tác với thẻ flashcard.
+ * Bao gồm kiểu dáng cho flashcard chính, header, body, footer, nút phát âm thanh,
+ * và các điều chỉnh cho nội dung thẻ (text, cuộn).
+ */
+
+/* Thẻ flashcard chính */
+.flashcard {
+    background-color: #ffffff;
+    border-radius: 12px; /* Bo tròn góc */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    width: 100%;
+    /* Padding chung cho flashcard sẽ được quản lý bởi header/body/footer */
+    padding: 0; /* Đặt padding về 0 ở đây */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    height: 700px; /* Chiều cao cố định của toàn bộ flashcard trên desktop */
+    min-height: unset; /* Đảm bảo không có min-height cũ */
+    position: relative; /* QUAN TRỌNG: Để định vị nút play audio */
+    box-sizing: border-box; /* Đảm bảo padding được tính vào kích thước tổng thể */
+}
+
+.flashcard.no-card {
+    background-color: #e6f7ff; /* Màu nền nhẹ nhàng cho trạng thái không có thẻ */
+    border: 1px solid #91d5ff;
+    color: #1890ff;
+    /* Giữ nguyên flashcard-content cho trạng thái no-card */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px; /* Thêm padding lại cho no-card */
+    height: auto; /* Cho phép chiều cao tự động cho no-card */
+    min-height: 200px; /* Chiều cao tối thiểu cho no-card */
+}
+
+.flashcard.no-card h2 {
+    color: #1890ff;
+}
+
+/* ========================== Cấu trúc Flashcard Header/Body/Footer ========================== */
+
+.flashcard-header {
+    position: relative; /* Để nút audio có thể absolute trong đây */
+    width: 100%;
+    padding: 20px 30px; /* Padding cho header */
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center; /* Căn giữa "Mặt trước/sau" */
+    align-items: center;
+    flex-shrink: 0; /* Ngăn không cho header bị co lại */
+}
+
+.card-side {
+    font-size: 0.85em;
+    color: #888;
+    margin: 0; /* Reset margin */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Nút Play Audio */
+.play-audio-button {
+    position: absolute; /* Vị trí tuyệt đối trong header */
+    top: 50%; /* Căn giữa theo chiều dọc của header */
+    right: 20px; /* Khoảng cách từ phải */
+    transform: translateY(-50%); /* Dịch lên 50% chiều cao của chính nó để căn giữa hoàn hảo */
+    background-color: #3498db; /* Màu xanh dương */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Nút tròn */
+    width: 45px; /* Kích thước nút */
+    height: 45px; /* Kích thước nút */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em; /* Kích thước icon */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    z-index: 10; /* Đảm bảo nút nằm trên các nội dung khác */
+}
+
+.play-audio-button:hover {
+    background-color: #2980b9;
+    transform: translateY(-50%) scale(1.05); /* Giữ căn giữa khi hover */
+}
+
+.play-audio-button:active {
+    transform: translateY(-50%) scale(0.95); /* Giữ căn giữa khi active */
+}
+
+.flashcard-body {
+    flex-grow: 1; /* Cho phép body chiếm hết không gian còn lại */
+    width: 100%;
+    padding: 0 30px; /* Padding ngang cho body */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Quan trọng cho nội dung cuộn */
+}
+
+/* Khu vực nội dung thẻ có thể cuộn */
+.scrollable-card-content {
+    flex-grow: 1; /* Cho phép nội dung cuộn chiếm không gian còn lại */
+    overflow-y: auto; /* Kích hoạt cuộn dọc khi nội dung tràn */
+    padding: 0; /* Đảm bảo không có padding dọc ở đây */
+    box-sizing: border-box;
+    min-height: 0; /* Đảm bảo flex item có thể co lại */
+    
+    /* MẶT TRƯỚC: Căn giữa */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Căn giữa nội dung theo chiều dọc */
+    align-items: center; /* Căn giữa nội dung theo chiều ngang */
+    text-align: center; /* Căn giữa văn bản */
+}
+
+/* MẶT SAU (mặc định - single line): Căn giữa */
+.is-back-side .scrollable-card-content {
+    justify-content: center; /* Căn giữa nội dung theo chiều dọc */
+    align-items: center; /* Căn giữa nội dung theo chiều ngang */
+    text-align: center; /* Căn giữa văn bản */
+}
+
+/* MẶT SAU (multi-line, no overflow): Căn giữa dọc, căn trái ngang */
+.is-back-side.is-multi-line .scrollable-card-content {
+    justify-content: center; /* Căn giữa nội dung theo chiều dọc */
+    align-items: flex-start; /* Căn nội dung sang trái */
+    text-align: left; /* Căn văn bản sang trái */
+}
+
+/* MẶT SAU (khi tràn - có class is-overflow): Căn trên dọc, căn trái ngang */
+.is-back-side.is-overflow .scrollable-card-content {
+    justify-content: flex-start; /* Căn nội dung từ trên xuống */
+    align-items: flex-start; /* Căn nội dung sang trái */
+    text-align: left; /* Căn văn bản sang trái */
+}
+
+
+.card-text {
+    font-size: 2em; /* Kích thước chữ thẻ mặc định (áp dụng cho mặt sau) */
+    font-weight: bold;
+    word-wrap: break-word;
+    white-space: pre-wrap; /* Giữ định dạng xuống dòng */
+    color: #2c3e50;
+    margin: 0; /* Reset margin */
+    width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng */
+}
+
+/* Kích thước chữ cho mặt trước thẻ */
+.flashcard:not(.is-back-side) .card-text {
+    font-size: 2.5em; /* Kích thước lớn hơn cho mặt trước */
+}
+
+.flashcard-footer {
+    width: 100%;
+    padding: 20px 30px; /* Padding cho footer */
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center; /* Căn giữa các nút */
+    align-items: center;
+    flex-shrink: 0; /* Ngăn không cho footer bị co lại */
+}
+
+/* Điều chỉnh responsive cho flashcard */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .flashcard {
+        height: 600px;
+        padding: 20px; /* Giữ padding cho toàn bộ flashcard trên tablet */
+    }
+
+    /* Reset flashcard-content padding-top nếu có */
+    .flashcard-content {
+        padding-top: 0;
+    }
+
+    .play-audio-button {
+        top: 50%;
+        right: 15px;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        font-size: 1em;
+    }
+
+    .card-text {
+        font-size: 1.8em;
+    }
+}
+
+@media (max-width: 768px) {
+    .flashcard-header {
+        position: relative;
+        width: 100%;
+        padding: 5px 5px;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .flashcard {
+        padding: 0px;
+        height: 650px;
+        min-height: unset;
+    }
+
+    /* Reset flashcard-content padding-top nếu có */
+    .flashcard-content {
+        padding-top: 0;
+        padding-bottom: 0;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-text {
+        font-size: 1.4em;
+    }
+}

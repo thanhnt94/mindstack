@@ -1,27 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hoàn thành phiên học - Flashcard App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
-    <!-- Navbar Section -->
-    <nav class="navbar">
-        <div class="navbar-brand">Flashcard App</div>
-        <div class="navbar-user-info">
-            {% if session.get('username') %}
-                <span>Xin chào, {{ session.get('username') }}!</span>
-                <a href="{{ url_for('main.logout') }}" class="button logout-button">Đăng xuất</a>
-            {% else %}
-                <a href="{{ url_for('main.login') }}" class="button login-button">Đăng nhập</a>
-            {% endif %}
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
+{% block title %}Hoàn thành phiên học - Flashcard App{% endblock %}
+
+{% block content %}
     <div class="main-container">
         <div class="flashcard-column">
             <div class="flashcard no-card">
@@ -45,7 +26,7 @@
                 </div>
             </div>
 
-            {# THAY ĐỔI: Đặt các nút điều khiển trực tiếp trong flashcard-column, không dùng right-column-container #}
+            {# Đặt các nút điều khiển trực tiếp trong flashcard-column, không dùng right-column-container #}
             <div class="control-panel-below-card">
                 <h3>Bạn muốn làm gì tiếp theo?</h3>
                 <div class="control-button-group">
@@ -55,9 +36,5 @@
             </div>
         </div>
         {# Các cột khác (image, stats) không hiển thị ở đây #}
-        {# ĐÃ BỎ: right-column-container cũ #}
     </div>
-
-    {# Không cần audio player hay jsData div ở đây #}
-</body>
-</html>
+{% endblock %}

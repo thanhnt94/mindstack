@@ -1,0 +1,26 @@
+/*
+ * messages.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho việc hiển thị các thông báo flash (flash messages)
+ * trong ứng dụng, bao gồm các kiểu cho thông báo thành công và lỗi.
+ */
+
+.flashes {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.flashes li {
+    background-color: #d4edda; /* Màu nền cho thông báo thành công */
+    color: #155724; /* Màu chữ cho thông báo thành công */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #c3e6cb;
+}
+
+.flashes li.error {
+    background-color: #f8d7da; /* Màu nền cho thông báo lỗi */
+    color: #721c24; /* Màu chữ cho thông báo lỗi */
+    border-color: #f5c6cb;
+}

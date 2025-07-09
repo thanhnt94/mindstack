@@ -1,0 +1,63 @@
+/*
+ * forms.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho các phần tử form trong ứng dụng.
+ * Bao gồm kiểu dáng cho các nhóm form, nhãn, các trường input (text, password, number),
+ * select box, và các chỉ báo trường bắt buộc.
+ */
+
+/* Kiểu cho form đăng nhập và các form khác */
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group select {
+    width: calc(100% - 20px); /* Điều chỉnh cho padding */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Kiểu cho trường bắt buộc */
+.required-field {
+    color: #dc3545; /* Màu đỏ cho dấu * */
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #888;
+    font-size: 0.85em;
+}
+
+/* Điều chỉnh responsive cho form */
+@media (max-width: 768px) {
+    .form-group input[type="text"],
+    .form-group input[type="password"],
+    .form-group input[type="number"],
+    .form-group select {
+        width: calc(100% - 20px);
+    }
+}

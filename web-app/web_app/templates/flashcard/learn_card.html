@@ -1,27 +1,12 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học Thẻ - Flashcard App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
-    <!-- Navbar Section -->
-    <nav class="navbar">
-        <div class="navbar-brand">Flashcard App</div>
-        <div class="navbar-user-info">
-            {% if session.get('username') %}
-                <span>Xin chào, {{ session.get('username') }}!</span>
-                <a href="{{ url_for('main.logout') }}" class="button logout-button">Đăng xuất</a>
-            {% else %}
-                <a href="{{ url_for('main.login') }}" class="button login-button">Đăng nhập</a>
-            {% endif %}
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
+{% block title %}Học Thẻ - Flashcard App{% endblock %}
+
+{% block head_extra %}
+    {# Font Awesome đã được include trong base.html #}
+{% endblock %}
+
+{% block content %}
     <div class="main-container">
         {# THÊM: Một div mới để bao bọc Flashcard chính #}
         <div class="flashcard-column">
@@ -70,6 +55,10 @@
                     </div>
                 </div>
             {% elif wait_time_ts %}
+                {# Nội dung này đã được chuyển sang no_cards_message.html #}
+                {# Tuy nhiên, để đảm bảo tính nhất quán với logic hiện tại của routes.py,
+                   chúng ta vẫn giữ cấu trúc này ở đây, nhưng lý tưởng là routes.py
+                   sẽ render trực tiếp no_cards_message.html khi flashcard_obj là None. #}
                 <div class="flashcard no-card">
                     <div class="flashcard-content">
                         <h2>🎉 Hoàn thành!</h2>
@@ -177,10 +166,7 @@
         </div>
     </div>
 
-    {# THÊM: Thẻ audio để phát âm thanh #}
-    <audio id="cardAudioPlayer" controls style="display:none;"></audio>
-
-    {# CHỈNH SỬA: Hidden div để lưu trữ các chuỗi JSON đã được xử lý từ Flask #}
+    {# Hidden div để lưu trữ các chuỗi JSON đã được xử lý từ Flask #}
     <div id="jsData"
         data-flashcard="{{ flashcard_json_string }}"
         data-is-front="{{ 'true' if is_front else 'false' }}"
@@ -189,12 +175,16 @@
         data-has-back-audio-content="{{ 'true' if flashcard and flashcard.back_audio_content else 'false' }}">
     </div>
 
-    {# THAY THẾ: Liên kết đến file JavaScript bên ngoài #}
-    <script src="{{ url_for('static', filename='js/learn_card_audio.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/card_content_adjuster.js') }}"></script> {# THÊM: Liên kết đến file card_content_adjuster.js #}
+    {# Thẻ audio để phát âm thanh #}
+    <audio id="cardAudioPlayer" controls style="display:none;"></audio>
 
     {% if progress %}
     <div id="debugProgressId" data-progress-id="{{ progress.progress_id }}" style="display:none;"></div>
     {% endif %}
-</body>
-</html>
+{% endblock %}
+
+{% block scripts_extra %}
+    {# THAY THẾ: Liên kết đến file JavaScript bên ngoài #}
+    <script src="{{ url_for('static', filename='js/learn_card_audio.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/card_content_adjuster.js') }}"></script>
+{% endblock %}

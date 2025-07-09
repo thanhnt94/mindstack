@@ -90,9 +90,21 @@ class UserService:
                 elif not new_username: # Cho phép đặt username về NULL
                     user.username = None
 
-            # Cập nhật telegram_id
-            if 'telegram_id' in data and data['telegram_id'] is not None:
-                user.telegram_id = int(data['telegram_id'])
+            # BẮT ĐẦU THAY ĐỔI: Xử lý telegram_id là tùy chọn
+            if 'telegram_id' in data:
+                new_telegram_id_str = data['telegram_id']
+                if new_telegram_id_str is not None and new_telegram_id_str != '':
+                    new_telegram_id = int(new_telegram_id_str)
+                    if new_telegram_id != user.telegram_id:
+                        # Kiểm tra trùng lặp telegram_id nếu có thay đổi và không phải là None
+                        existing_user_by_telegram_id = User.query.filter(User.telegram_id == new_telegram_id, User.user_id != user_id).first()
+                        if existing_user_by_telegram_id:
+                            logger.warning(f"{log_prefix} Telegram ID '{new_telegram_id}' đã tồn tại cho người dùng khác.")
+                            return None, "telegram_id_exists"
+                        user.telegram_id = new_telegram_id
+                else:
+                    user.telegram_id = None # Nếu giá trị rỗng, đặt là None
+            # KẾT THÚC THAY ĐỔI
 
             # Cập nhật user_role
             if 'user_role' in data and data['user_role'] is not None:
@@ -152,34 +164,40 @@ class UserService:
             logger.error(f"{log_prefix} Lỗi không mong muốn khi xóa người dùng ID: {user_id}: {e}", exc_info=True)
             return False, "error"
 
-    # BẮT ĐẦU THÊM: Hàm tạo người dùng mới
     def create_user(self, data):
         """
         Mô tả: Tạo một người dùng mới trong cơ sở dữ liệu.
         Args:
             data (dict): Từ điển chứa thông tin người dùng mới.
-                         Bắt buộc phải có 'telegram_id' và 'password'.
-                         Có thể có 'username', 'user_role', 'daily_new_limit', 'timezone_offset'.
+                         Bắt buộc phải có 'password'. 'telegram_id' không còn bắt buộc.
+                         Có thể có 'username', 'telegram_id', 'user_role', 'daily_new_limit', 'timezone_offset'.
         Returns:
             tuple: (User, "success") nếu tạo thành công.
                    (None, "username_exists") nếu username đã tồn tại.
-                   (None, "telegram_id_exists") nếu telegram_id đã tồn tại.
-                   (None, "missing_required_fields") nếu thiếu trường bắt buộc.
+                   (None, "telegram_id_exists") nếu telegram_id đã tồn tại và không phải None.
+                   (None, "missing_required_fields") nếu thiếu trường bắt buộc (password).
                    (None, "invalid_data") nếu dữ liệu không hợp lệ.
                    (None, "error") nếu có lỗi khác.
         """
         log_prefix = "[USER_SERVICE|CreateUser]"
         logger.info(f"{log_prefix} Đang cố gắng tạo người dùng mới.")
 
-        # Kiểm tra các trường bắt buộc
-        if 'telegram_id' not in data or 'password' not in data:
-            logger.warning(f"{log_prefix} Thiếu trường bắt buộc (telegram_id hoặc password).")
+        # BẮT ĐẦU THAY ĐỔI: Chỉ password là bắt buộc
+        if 'password' not in data:
+            logger.warning(f"{log_prefix} Thiếu trường bắt buộc (password).")
             return None, "missing_required_fields"
+        # KẾT THÚC THAY ĐỔI
 
         try:
             new_username = data.get('username', '').strip()
-            new_telegram_id = int(data['telegram_id'])
             new_password = data['password'].strip()
+            
+            # BẮT ĐẦU THAY ĐỔI: Xử lý telegram_id là tùy chọn
+            new_telegram_id = None
+            telegram_id_str = data.get('telegram_id', '').strip()
+            if telegram_id_str: # Nếu có giá trị (không rỗng)
+                new_telegram_id = int(telegram_id_str)
+            # KẾT THÚC THAY ĐỔI
 
             # Kiểm tra trùng lặp username (nếu có)
             if new_username:
@@ -190,15 +208,17 @@ class UserService:
             else:
                 new_username = None # Đảm bảo là None nếu rỗng để lưu vào DB
 
-            # Kiểm tra trùng lặp telegram_id
-            existing_user_by_telegram_id = User.query.filter_by(telegram_id=new_telegram_id).first()
-            if existing_user_by_telegram_id:
-                logger.warning(f"{log_prefix} Telegram ID '{new_telegram_id}' đã tồn tại.")
-                return None, "telegram_id_exists"
+            # BẮT ĐẦU THAY ĐỔI: Kiểm tra trùng lặp telegram_id chỉ khi nó có giá trị (không phải None)
+            if new_telegram_id is not None:
+                existing_user_by_telegram_id = User.query.filter_by(telegram_id=new_telegram_id).first()
+                if existing_user_by_telegram_id:
+                    logger.warning(f"{log_prefix} Telegram ID '{new_telegram_id}' đã tồn tại.")
+                    return None, "telegram_id_exists"
+            # KẾT THÚC THAY ĐỔI
 
             new_user = User(
                 username=new_username,
-                telegram_id=new_telegram_id,
+                telegram_id=new_telegram_id, # Đã xử lý là None nếu rỗng
                 password=new_password, # CẢNH BÁO: Trong ứng dụng thực tế, hãy hash mật khẩu!
                 user_role=data.get('user_role', 'user').strip(),
                 daily_new_limit=int(data.get('daily_new_limit', 10)),
@@ -228,4 +248,3 @@ class UserService:
             db.session.rollback()
             logger.error(f"{log_prefix} Lỗi không mong muốn khi tạo người dùng mới: {e}", exc_info=True)
             return None, "error"
-    # KẾT THÚC THÊM

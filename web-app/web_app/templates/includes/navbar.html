@@ -1,0 +1,14 @@
+<nav class="navbar">
+    <div class="navbar-brand">Flashcard App</div>
+    <div class="navbar-user-info">
+        {% if session.get('username') %}
+            <span>Xin chào, {{ session.get('username') }}!</span>
+            {% if session.get('user_role') == 'admin' %}
+                <a href="{{ url_for('main.manage_users') }}" class="button login-button">Admin Panel</a>
+            {% endif %}
+            <a href="{{ url_for('main.logout') }}" class="button logout-button">Đăng xuất</a>
+        {% else %}
+            <a href="{{ url_for('main.login') }}" class="button login-button">Đăng nhập</a>
+        {% endif %}
+    </div>
+</nav>

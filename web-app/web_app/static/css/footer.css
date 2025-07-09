@@ -1,0 +1,10 @@
+/*
+ * footer.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho phần chân trang (footer) của ứng dụng.
+ */
+
+.footer {
+    margin-top: 30px;
+    font-size: 0.9em;
+    color: #999;
+}

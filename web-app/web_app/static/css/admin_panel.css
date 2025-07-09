@@ -1,0 +1,93 @@
+/*
+ * admin_panel.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho các trang quản trị viên (admin panel).
+ * Bao gồm kiểu dáng cho panel chính, tiêu đề, bảng dữ liệu, và các nút nhỏ trong bảng.
+ */
+
+/* Kiểu dáng cho trang quản trị viên */
+.admin-panel {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 1200px; /* Giới hạn chiều rộng để bảng không quá rộng */
+    margin-top: 20px;
+    text-align: left; /* Căn trái nội dung trong panel */
+    box-sizing: border-box;
+}
+
+.admin-panel h1 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-size: 2em;
+    text-align: center; /* Căn giữa tiêu đề chính */
+}
+
+.admin-panel h1 .fas {
+    margin-right: 10px;
+    color: #3498db; /* Màu icon */
+}
+
+.table-responsive {
+    overflow-x: auto; /* Cho phép cuộn ngang nếu bảng quá rộng */
+    margin-top: 20px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse; /* Gộp các đường viền bảng */
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    min-width: 700px; /* Đảm bảo bảng không quá nhỏ trên màn hình nhỏ */
+}
+
+.data-table th, .data-table td {
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.data-table th {
+    background-color: #f2f2f2;
+    color: #333;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85em;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Màu nền xen kẽ cho hàng */
+}
+
+.data-table tbody tr:hover {
+    background-color: #eef; /* Hiệu ứng hover cho hàng */
+}
+
+.data-table td {
+    color: #555;
+}
+
+/* Điều chỉnh responsive cho admin panel */
+@media (max-width: 768px) {
+    .admin-panel {
+        padding: 15px; /* Giảm padding */
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .admin-panel h1 {
+        font-size: 1.5em; /* Giảm font size */
+        margin-bottom: 15px;
+    }
+
+    .data-table {
+        font-size: 0.8em; /* Giảm font size cho bảng */
+        min-width: 500px; /* Giữ min-width để bảng không quá hẹp */
+    }
+
+    .data-table th, .data-table td {
+        padding: 8px 10px; /* Giảm padding cho ô bảng */
+    }
+}

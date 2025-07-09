@@ -10,7 +10,7 @@ import json # Để chuyển đổi đối tượng Python thành JSON string
 # Import individual services from the new structure
 from .services import learning_logic_service, user_service, stats_service, audio_service
 from .models import db, User, VocabularySet, Flashcard, UserFlashcardProgress # Still need models for queries
-from .config import LEARNING_MODE_DISPLAY_NAMES, IMAGES_DIR # ĐÃ THÊM IMAGES_DIR TỪ CONFIG
+from .config import LEARNING_MODE_DISPLAY_NAMES, IMAGES_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -116,17 +116,17 @@ def login():
         elif status == "user_not_found":
             flash("Tên đăng nhập không tồn tại.", "error")
             logger.warning(f"Đăng nhập thất bại: Username '{username}' không tồn tại.")
-            return render_template('login.html')
+            return render_template('auth/login.html')
         elif status == "incorrect_password":
             flash("Mật khẩu không đúng.", "error")
             logger.warning(f"Đăng nhập thất bại: Mật khẩu sai cho username '{username}'.")
-            return render_template('login.html')
+            return render_template('auth/login.html')
         else:
             flash("Đã có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại.", "error")
             logger.error(f"Đăng nhập thất bại với trạng thái không xác định: {status} cho username '{username}'.")
-            return render_template('login.html')
+            return render_template('auth/login.html')
     
-    return render_template('login.html')
+    return render_template('auth/login.html')
 
 @main_bp.route('/logout')
 def logout():
@@ -146,6 +146,8 @@ def logout():
 def index():
     """
     Mô tả: Hiển thị trang chọn bộ thẻ cho người dùng.
+           Liệt kê tất cả các bộ thẻ, ưu tiên các bộ đang học, sau đó là các bộ đã có tiến trình (đang dở),
+           cuối cùng là các bộ chưa học.
     """
     logger.info("Truy cập trang chủ (index route).")
     
@@ -156,24 +158,52 @@ def index():
         session.pop('user_id', None)
         return redirect(url_for('main.login'))
 
-    created_sets = VocabularySet.query.filter_by(creator_user_id=user.user_id).order_by(VocabularySet.title).all()
-
+    all_sets = VocabularySet.query.order_by(VocabularySet.title).all()
+    
+    # Lấy ID của các bộ thẻ mà người dùng đã có tiến trình (ít nhất 1 flashcard có progress)
+    # Sử dụng subquery để tìm các set_id có flashcard_id trong UserFlashcardProgress của user
     progressed_set_ids = db.session.query(Flashcard.set_id).\
         join(UserFlashcardProgress).\
         filter(UserFlashcardProgress.user_id == user.user_id).\
         distinct().\
         all()
-    progressed_set_ids = [s.set_id for s in progressed_set_ids]
-    
-    progressed_sets = VocabularySet.query.filter(VocabularySet.set_id.in_(progressed_set_ids)).order_by(VocabularySet.title).all()
+    progressed_set_ids = {s.set_id for s in progressed_set_ids}
 
-    all_available_sets = {s.set_id: s for s in created_sets}
-    for s in progressed_sets:
-        all_available_sets[s.set_id] = s
-    
-    sorted_sets = sorted(all_available_sets.values(), key=lambda s: s.title)
+    # Các danh sách để phân loại bộ thẻ
+    current_learning_set = None
+    in_progress_sets = []
+    not_started_sets = []
 
-    return render_template('select_set.html', user=user, sets=sorted_sets)
+    for s in all_sets:
+        if user.current_set_id == s.set_id:
+            current_learning_set = s
+        elif s.set_id in progressed_set_ids:
+            in_progress_sets.append(s)
+        else:
+            not_started_sets.append(s)
+    
+    # Sắp xếp các danh sách con theo tiêu đề
+    in_progress_sets.sort(key=lambda s: s.title)
+    not_started_sets.sort(key=lambda s: s.title)
+
+    # Xây dựng danh sách cuối cùng để truyền vào template
+    # Đảm bảo bộ đang học luôn đứng đầu
+    final_sets_list = []
+    if current_learning_set:
+        final_sets_list.append({'set': current_learning_set, 'status': 'current'})
+        # Loại bỏ bộ đang học khỏi danh sách in_progress_sets nếu nó cũng nằm trong đó
+        in_progress_sets = [s for s in in_progress_sets if s.set_id != current_learning_set.set_id]
+    
+    # Thêm các bộ đang dở
+    for s in in_progress_sets:
+        final_sets_list.append({'set': s, 'status': 'in_progress'})
+    
+    # Thêm các bộ chưa học
+    for s in not_started_sets:
+        final_sets_list.append({'set': s, 'status': 'not_started'})
+
+    # Truyền danh sách đã phân loại và trạng thái vào template
+    return render_template('flashcard/select_set.html', user=user, sets_data=final_sets_list)
 
 @main_bp.route('/learn/<int:set_id>')
 @login_required
@@ -234,7 +264,7 @@ def learn_set(set_id):
                 is_midnight_tomorrow = True
         
         return render_template(
-            'no_cards_message.html',
+            'flashcard/no_cards_message.html',
             wait_time_ts=wait_time_ts,
             wait_minutes=wait_minutes,
             is_midnight_tomorrow=is_midnight_tomorrow,
@@ -250,7 +280,7 @@ def learn_set(set_id):
     session['learning_mode'] = user.current_mode
 
     return render_template(
-        'learn_card.html',
+        'flashcard/learn_card.html',
         user=user,
         flashcard=flashcard_obj,
         progress=progress_obj,
@@ -291,7 +321,7 @@ def flip_card(progress_id):
     user_audio_settings_json_string = json.dumps(user_audio_settings)
 
     return render_template(
-        'learn_card.html',
+        'flashcard/learn_card.html',
         user=user,
         flashcard=progress.flashcard,
         progress=progress,
@@ -356,7 +386,7 @@ def select_mode():
         return redirect(url_for('main.login'))
     
     return render_template(
-        'select_mode.html',
+        'flashcard/select_mode.html',
         modes=LEARNING_MODE_DISPLAY_NAMES,
         current_mode=user.current_mode
     )
@@ -393,6 +423,7 @@ def set_learning_mode(mode_code):
     if current_set_id:
         return redirect(url_for('main.learn_set', set_id=current_set_id))
     else:
+        flash("Phiên học đã kết thúc hoặc không xác định được bộ thẻ.", "info")
         return redirect(url_for('main.index'))
 
 
@@ -499,7 +530,7 @@ def edit_user(user_id):
     if request.method == 'POST':
         data = {
             'username': request.form.get('username'),
-            'telegram_id': request.form.get('telegram_id'),
+            'telegram_id': request.form.get('telegram_id', '').strip(), 
             'user_role': request.form.get('user_role'),
             'daily_new_limit': request.form.get('daily_new_limit'),
             'timezone_offset': request.form.get('timezone_offset'),
@@ -518,6 +549,9 @@ def edit_user(user_id):
         elif status == "username_exists":
             flash("Tên đăng nhập này đã tồn tại. Vui lòng chọn tên khác.", "error")
             logger.warning(f"Admin cố gắng cập nhật người dùng ID: {user_id} với username đã tồn tại.")
+        elif status == "telegram_id_exists":
+            flash("Telegram ID này đã tồn tại cho người dùng khác. Vui lòng nhập ID khác.", "error")
+            logger.warning(f"Admin cố gắng cập nhật người dùng ID: {user_id} với Telegram ID đã tồn tại.")
         elif status == "invalid_data":
             flash("Dữ liệu nhập vào không hợp lệ. Vui lòng kiểm tra lại.", "error")
             logger.warning(f"Admin cố gắng cập nhật người dùng ID: {user_id} với dữ liệu không hợp lệ.")
@@ -561,9 +595,9 @@ def delete_user(user_id):
     
     return redirect(url_for('main.manage_users'))
 
-# BẮT ĐẦU THÊM: Route để thêm người dùng mới
+# Route để thêm người dùng mới
 @main_bp.route('/admin/users/add', methods=['GET', 'POST'])
-@admin_required # Chỉ admin mới có thể truy cập route này
+@admin_required
 def add_user():
     """
     Mô tả: Hiển thị form thêm người dùng mới và xử lý việc tạo người dùng.
@@ -573,7 +607,7 @@ def add_user():
     if request.method == 'POST':
         data = {
             'username': request.form.get('username'),
-            'telegram_id': request.form.get('telegram_id'),
+            'telegram_id': request.form.get('telegram_id', '').strip(),
             'password': request.form.get('password'),
             'user_role': request.form.get('user_role'),
             'daily_new_limit': request.form.get('daily_new_limit'),
@@ -593,7 +627,7 @@ def add_user():
             flash("Telegram ID này đã tồn tại. Vui lòng nhập ID khác.", "error")
             logger.warning(f"Admin cố gắng thêm người dùng với Telegram ID đã tồn tại: {data.get('telegram_id')}.")
         elif status == "missing_required_fields":
-            flash("Vui lòng điền đầy đủ các trường bắt buộc (Telegram ID, Mật khẩu).", "error")
+            flash("Vui lòng điền đầy đủ các trường bắt buộc (Mật khẩu).", "error")
             logger.warning(f"Admin cố gắng thêm người dùng nhưng thiếu trường bắt buộc.")
         elif status == "invalid_data":
             flash("Dữ liệu nhập vào không hợp lệ. Vui lòng kiểm tra lại.", "error")
@@ -602,19 +636,15 @@ def add_user():
             flash("Đã có lỗi xảy ra khi thêm người dùng. Vui lòng thử lại.", "error")
             logger.error(f"Lỗi không xác định khi thêm người dùng. Trạng thái: {status}")
         
-        # Nếu có lỗi, render lại form với dữ liệu đã nhập (để người dùng không phải nhập lại)
         return render_template('admin/add_user.html', user_data=data, roles=roles)
 
-    # GET request: Hiển thị form trống để thêm người dùng mới
     logger.info("Admin truy cập trang thêm người dùng mới.")
-    # Cung cấp một dictionary rỗng hoặc với giá trị mặc định cho form
     default_user_data = {
         'username': '',
         'telegram_id': '',
         'password': '',
-        'user_role': 'user', # Mặc định là 'user'
+        'user_role': 'user',
         'daily_new_limit': 10,
         'timezone_offset': 7
     }
     return render_template('admin/add_user.html', user_data=default_user_data, roles=roles)
-# KẾT THÚC THÊM

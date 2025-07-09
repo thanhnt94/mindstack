@@ -1,0 +1,24 @@
+/*
+ * general.css
+ * Mô tả: Chứa các kiểu CSS chung nhất cho toàn bộ ứng dụng Flashcard Web App.
+ * Bao gồm các thiết lập cơ bản cho body như font-family, màu nền, màu chữ, box-sizing,
+ * và các thuộc tính để căn giữa nội dung trang và đảm bảo footer ở cuối.
+ */
+body {
+    font-family: 'Inter', sans-serif; /* Sử dụng font Inter cho toàn bộ văn bản */
+    background-color: #f4f7f6; /* Màu nền nhẹ nhàng cho body */
+    color: #333; /* Màu chữ mặc định tối */
+    box-sizing: border-box; /* Đảm bảo padding và border được tính vào chiều rộng/cao */
+    
+    display: flex;
+    flex-direction: column; /* BẮT ĐẦU THAY ĐỔI: Sắp xếp các mục con theo cột */
+    justify-content: flex-start; /* Căn trên cùng */
+    align-items: center; /* Căn giữa theo chiều ngang */
+    min-height: 100vh; /* Đảm bảo body chiếm toàn bộ chiều cao của viewport */
+}
+
+/* Reset margin và padding mặc định cho tất cả các phần tử */
+* {
+    margin: 0;
+    padding: 0;
+}

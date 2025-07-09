@@ -1,0 +1,164 @@
+/*
+ * selection_lists.css
+ * Mô tả: Chứa các kiểu CSS dành cho danh sách chọn bộ thẻ và danh sách chọn chế độ học.
+ */
+
+/* Container chung và footer cho select_set.html */
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    margin-top: 50px; /* Đẩy xuống một chút */
+    margin-left: auto; /* Căn giữa theo chiều ngang */
+    margin-right: auto; /* Căn giữa theo chiều ngang */
+}
+
+.container h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.container p {
+    color: #666;
+    line-height: 1.6;
+}
+
+.set-list, .mode-list { /* Áp dụng cho cả danh sách bộ và chế độ */
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.set-list li, .mode-list li {
+    background-color: #e9e9e9;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: left;
+}
+
+.set-list li a, .mode-list li a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    display: block;
+}
+
+.set-list li a:hover, .mode-list li a:hover {
+    color: #0056b3;
+}
+
+/* Kiểu cho các nút chọn chế độ */
+.mode-list .button.mode-button {
+    width: 100%; /* Làm cho nút chiếm toàn bộ chiều rộng */
+    text-align: left;
+    padding: 15px 20px;
+    font-size: 1.1em;
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+    box-shadow: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    display: flex; /* Sử dụng flex để căn chỉnh chỉ báo */
+    justify-content: space-between; /* Đẩy chỉ báo sang phải */
+    align-items: center;
+}
+
+.mode-list .button.mode-button:hover {
+    background-color: #e0e0e0;
+    border-color: #ccc;
+    transform: none; /* Bỏ translateY cho các nút này */
+    box-shadow: none;
+}
+
+.current-mode-indicator {
+    font-weight: normal;
+    color: #28a745; /* Màu xanh lá cây cho chế độ hiện tại */
+    font-size: 0.9em;
+    background-color: #d4edda;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Kiểu cho bộ thẻ đang học (current) */
+.set-list li.set-item-current {
+    background-color: #fff3cd; /* Màu nền vàng nhạt */
+    border: 1px solid #ffeeba;
+}
+
+.set-list li.set-item-current a {
+    color: #856404; /* Màu chữ đậm hơn */
+}
+
+.set-status-indicator {
+    font-weight: bold;
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-left: 8px; /* Khoảng cách với tiêu đề bộ thẻ */
+    white-space: nowrap; /* Ngăn xuống dòng */
+}
+
+.set-status-indicator.current-set-indicator {
+    color: #856404; /* Màu chữ cho chỉ báo */
+    background-color: #ffeeba;
+}
+
+/* BẮT ĐẦU THÊM: Kiểu cho bộ thẻ đang dở (in_progress) */
+.set-list li.set-item-in_progress {
+    background-color: #e0f7fa; /* Màu nền xanh lam nhạt */
+    border: 1px solid #b2ebf2;
+}
+
+.set-list li.set-item-in_progress a {
+    color: #00838f; /* Màu chữ đậm hơn */
+}
+
+.set-status-indicator.in-progress-set-indicator {
+    color: #00838f;
+    background-color: #b2ebf2;
+}
+/* KẾT THÚC THÊM */
+
+/* BẮT ĐẦU THÊM: Kiểu cho bộ thẻ chưa học (not_started) */
+.set-list li.set-item-not_started {
+    background-color: #f0f4c3; /* Màu nền xanh lá cây nhạt */
+    border: 1px solid #dce775;
+}
+
+.set-list li.set-item-not_started a {
+    color: #558b2f; /* Màu chữ đậm hơn */
+}
+
+.set-status-indicator.not-started-set-indicator {
+    color: #558b2f;
+    background-color: #dce775;
+}
+/* KẾT THÚC THÊM */
+
+
+/* Điều chỉnh responsive cho container chung */
+@media (min-width: 1025px) {
+    .container {
+        max-width: 1200px; /* Tăng giới hạn chiều rộng cho container chung trên desktop */
+        margin-top: 80px; /* Đẩy xuống để không bị navbar che */
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        max-width: 95%; /* Tăng giới hạn chiều rộng cho container chung trên tablet */
+        margin-top: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+        margin-top: 20px;
+    }
+}
