@@ -7,9 +7,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {% block head_extra %}{% endblock %}
 </head>
-<body>
+<!-- BẮT ĐẦU SỬA: Thêm block 'body_class' để các template con có thể thêm class -->
+<body class="{% block body_class %}{% endblock %}">
+<!-- KẾT THÚC SỬA -->
     {# Navbar sẽ được include từ file riêng #}
     {% include 'includes/navbar.html' %}
 

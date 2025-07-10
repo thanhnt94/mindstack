@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Bảng điều khiển - Thống kê{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1 class="dashboard-header"><i class="fas fa-chart-pie"></i> Bảng điều khiển Thống kê</h1>
+
+    <!-- Phần Thống kê tổng quan -->
+    <div class="stats-section">
+        <h2 class="section-title">Tổng quan</h2>
+        <div class="stat-cards-grid">
+            <div class="stat-card">
+                <div class="stat-card-icon score"><i class="fas fa-star"></i></div>
+                <div class="stat-card-info">
+                    <span class="stat-card-value">{{ dashboard_data.total_score }}</span>
+                    <span class="stat-card-label">Tổng điểm</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon learned"><i class="fas fa-graduation-cap"></i></div>
+                <div class="stat-card-info">
+                    <span class="stat-card-value">{{ dashboard_data.learned_distinct_overall }}</span>
+                    <span class="stat-card-label">Thẻ đã học</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon sets"><i class="fas fa-layer-group"></i></div>
+                <div class="stat-card-info">
+                    <span class="stat-card-value">{{ dashboard_data.learned_sets_count }}</span>
+                    <span class="stat-card-label">Bộ đã học</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phần Biểu đồ hoạt động -->
+    <div class="stats-section">
+        <h2 class="section-title">Hoạt động 30 ngày qua</h2>
+        <div class="chart-container">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Phần Thống kê chi tiết theo bộ -->
+    <div class="stats-section">
+        <h2 class="section-title">Chi tiết theo bộ</h2>
+        {% if dashboard_data.sets_stats %}
+            <div class="set-selector-container">
+                <label for="setSelector">Chọn một bộ để xem chi tiết:</label>
+                <select id="setSelector" class="form-control">
+                    <option value="">-- Chọn bộ thẻ --</option>
+                    {% for set_id, set_data in dashboard_data.sets_stats.items() %}
+                        <option value="{{ set_id }}">{{ set_data.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="set-details-container" class="set-details-container" style="display: none;">
+                <div class="chart-container pie-chart-container">
+                    <canvas id="setPieChart"></canvas>
+                </div>
+                <div id="set-details-text" class="set-details-text">
+                    <!-- Nội dung chi tiết sẽ được điền bởi JavaScript -->
+                </div>
+            </div>
+        {% else %}
+            <p>Bạn chưa học bộ thẻ nào để xem thống kê chi tiết.</p>
+        {% endif %}
+    </div>
+    
+    <div class="button-group" style="margin-top: 30px;">
+        <a href="{{ url_for('flashcard.index') }}" class="button secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    </div>
+
+</div>
+
+<!-- Nhúng dữ liệu JSON vào một thẻ script để JS có thể truy cập -->
+<script id="dashboard-data" type="application/json">
+    {{ dashboard_data_json | safe }}
+</script>
+{% endblock %}
+
+{% block scripts_extra %}
+    <script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,162 @@
+/*
+ * dashboard.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho trang thống kê (dashboard).
+ * Thiết kế theo phương pháp Mobile-First.
+ */
+
+.dashboard-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.dashboard-header {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-size: 1.8em;
+}
+
+.dashboard-header .fas {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.stats-section {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+}
+
+.section-title {
+    font-size: 1.3em;
+    color: #34495e;
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+/* Lưới cho các thẻ thống kê */
+.stat-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* 1 cột trên mobile */
+    gap: 15px;
+}
+
+.stat-card {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid #e9ecef;
+}
+
+.stat-card-icon {
+    font-size: 1.8em;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+.stat-card-icon.score { background-color: #f1c40f; }
+.stat-card-icon.learned { background-color: #2ecc71; }
+.stat-card-icon.sets { background-color: #3498db; }
+
+.stat-card-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card-value {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.stat-card-label {
+    font-size: 0.9em;
+    color: #7f8c8d;
+}
+
+/* Container cho biểu đồ */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 250px; /* Chiều cao cố định cho mobile */
+}
+
+/* Dropdown chọn bộ thẻ */
+.set-selector-container {
+    margin-bottom: 20px;
+}
+
+.set-selector-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+    background-color: #fff;
+}
+
+/* Container cho chi tiết bộ thẻ */
+.set-details-container {
+    margin-top: 20px;
+}
+
+.pie-chart-container {
+    max-width: 250px;
+    margin: 0 auto 20px auto;
+}
+
+.set-details-text {
+    text-align: center;
+    font-size: 1.1em;
+    color: #333;
+}
+
+/* Responsive cho màn hình lớn hơn */
+@media (min-width: 576px) {
+    .stat-cards-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 cột trên màn hình lớn hơn */
+    }
+}
+
+@media (min-width: 768px) {
+    .dashboard-container {
+        padding: 20px;
+    }
+    .chart-container {
+        height: 300px; /* Biểu đồ cao hơn trên desktop */
+    }
+    .set-details-container {
+        display: flex !important; /* Luôn hiển thị flex trên desktop */
+        align-items: center;
+        gap: 20px;
+    }
+    .pie-chart-container {
+        flex: 1;
+        margin-bottom: 0;
+    }
+    .set-details-text {
+        flex: 1;
+        text-align: left;
+    }
+}

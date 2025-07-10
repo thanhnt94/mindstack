@@ -17,8 +17,7 @@ html, body {
     width: 100%;
     margin: 0;
     padding: 0;
-    /* Ngăn chặn cuộn trang không mong muốn trên mobile */
-    overflow: hidden;
+    /* Dòng 'overflow: hidden;' đã được xóa khỏi đây để cho phép cuộn mặc định */
 }
 
 body {
@@ -30,8 +29,17 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Căn giữa nội dung chính (.main-container) */
+    /* 'justify-content' đã được xóa để nội dung dài có thể cuộn */
 }
+
+/* --- BẮT ĐẦU THÊM: Lớp CSS mới để vô hiệu hóa cuộn --- */
+/* Lớp này sẽ chỉ được áp dụng cho trang học thẻ */
+body.no-scroll {
+    overflow: hidden;
+    justify-content: center; /* Căn giữa lại nội dung khi không cuộn */
+}
+/* --- KẾT THÚC THÊM --- */
+
 
 /* Áp dụng box-sizing cho tất cả các phần tử để tính toán kích thước dễ dàng hơn */
 * {

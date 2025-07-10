@@ -45,6 +45,29 @@ def index():
 
     return render_template('flashcard/select_set.html', user=user, sets_data=sets_data)
 
+# --- BẮT ĐẦU THÊM: Route cho trang Dashboard ---
+@flashcard_bp.route('/dashboard')
+@login_required
+def dashboard():
+    """
+    Mô tả: Hiển thị trang thống kê cá nhân của người dùng.
+    """
+    user_id = session.get('user_id')
+    dashboard_data = stats_service.get_dashboard_stats(user_id)
+
+    if not dashboard_data:
+        flash("Không thể tải dữ liệu thống kê.", "error")
+        return redirect(url_for('flashcard.index'))
+
+    # Chuyển đổi dữ liệu sang chuỗi JSON để JavaScript có thể đọc
+    # Điều này an toàn hơn là truyền trực tiếp vào thẻ <script>
+    dashboard_data_json = json.dumps(dashboard_data)
+
+    return render_template('dashboard.html', 
+                           dashboard_data=dashboard_data,
+                           dashboard_data_json=dashboard_data_json)
+# --- KẾT THÚC THÊM ---
+
 @flashcard_bp.route('/learn/<int:set_id>')
 @login_required
 def learn_set(set_id):
@@ -151,9 +174,7 @@ def set_learning_mode(mode_code):
     db.session.commit()
     flash(f"Chế độ học đã được thay đổi thành '{LEARNING_MODE_DISPLAY_NAMES[mode_code]}'.", "success")
     
-    # --- BẮT ĐẦU SỬA LỖI: Lấy ID bộ thẻ từ đối tượng user, không phải từ session ---
     current_set_id = user.current_set_id 
-    # --- KẾT THÚC SỬA LỖI ---
     
     if current_set_id:
         return redirect(url_for('flashcard.learn_set', set_id=current_set_id))
