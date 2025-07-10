@@ -106,6 +106,7 @@
     padding: 15px 20px;
     background-color: #f8f9fa;
     border-bottom: 1px solid #eee;
+    flex-shrink: 0; /* Không cho header co lại */
 }
 
 /* Thêm kiểu cho phần profile người dùng */
@@ -147,17 +148,32 @@
     cursor: pointer;
 }
 
+/* SỬA LỖI: Dùng Flexbox để đẩy footer xuống dưới */
 .side-nav-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Cho phép content co giãn để chiếm hết không gian còn lại */
     padding: 15px;
     overflow-y: auto;
-    flex-grow: 1;
 }
+
+.side-nav-main {
+    flex-shrink: 0; /* Không cho phần main co lại */
+}
+
+.side-nav-footer {
+    margin-top: auto; /* QUAN TRỌNG: Đẩy footer xuống dưới cùng */
+    padding-top: 15px; /* Thêm khoảng cách với nội dung bên trên */
+    border-top: 1px solid #eee; /* Thêm đường kẻ phân cách */
+}
+
 
 .nav-section {
     background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Tăng khoảng cách giữa các khung */
 }
 
 .nav-section-title {
@@ -174,6 +190,34 @@
     color: #555;
 }
 
+/* Kiểu cho khu vực chứa nút hành động bên trong khung */
+.nav-section-actions {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #ced4da;
+    text-align: center;
+}
+
+/* Kiểu cho nút hành động bên trong khung */
+.nav-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 0.95em;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.nav-action-button:hover {
+    background-color: #e9ecef;
+}
+
 
 .side-nav-links {
     list-style: none;
@@ -185,10 +229,10 @@
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 15px 20px;
+    padding: 12px 20px; /* Giảm padding cho các link này */
     text-decoration: none;
     color: #444;
-    font-size: 1.1em;
+    font-size: 1em; /* Giảm font size một chút */
     transition: background-color 0.2s;
     border-radius: 8px;
 }
@@ -203,7 +247,8 @@
     color: #888;
 }
 
-.side-nav-links hr {
+/* Đường kẻ ngăn cách giữa các nhóm chức năng */
+.nav-separator {
     border: none;
     border-top: 1px solid #eee;
     margin: 15px 0;

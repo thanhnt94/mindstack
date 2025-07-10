@@ -32,13 +32,12 @@
                     </div>
                 </div>
 
-                {# Popup hình ảnh (không đổi) #}
-                {% set show_image_popup = (is_front and flashcard.front_img and user.front_image_enabled == 1) or (not is_front and flashcard.back_img and user.back_image_enabled == 1) %}
-                {% if show_image_popup %}
-                    {% set image_src = url_for('main.serve_image', filename=(flashcard.front_img if is_front else flashcard.back_img)) %}
+                {# Popup hình ảnh #}
+                {% set image_to_show = flashcard.front_img if is_front else flashcard.back_img %}
+                {% if image_to_show %}
                     <div id="image-popup" class="image-popup-container">
                         <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
-                        <img src="{{ image_src }}" alt="Hình ảnh thẻ" class="popup-image">
+                        <img src="{{ url_for('main.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image">
                     </div>
                 {% endif %}
 
@@ -70,15 +69,12 @@
         </div>
     </div>
 
-    {# ========================== CẬP NHẬT PANEL ĐIỀU HƯỚNG ========================== #}
+    {# Menu điều hướng bên cạnh #}
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
     <nav id="side-nav" class="side-nav">
         <div class="side-nav-header">
-            {# Hiển thị tên người dùng #}
             <div class="user-profile">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
+                <div class="user-avatar"><i class="fas fa-user"></i></div>
                 <div class="user-info">
                     <span class="username">{{ user.username or 'User' }}</span>
                     <span class="score">Điểm: {{ context_stats.total_score or 0 }}</span>
@@ -86,40 +82,53 @@
             </div>
             <button id="side-nav-close-btn" class="side-nav-close-btn">&times;</button>
         </div>
-
-        {# Thêm các khối thông tin #}
         <div class="side-nav-content">
-            <div class="nav-section">
-                <h3 class="nav-section-title">Bộ thẻ hiện tại</h3>
-                <p>{{ context_stats.set_title }}</p>
-                <p>Tiến độ: {{ context_stats.set_learned_cards }} / {{ context_stats.set_total_cards }} thẻ</p>
+            <div class="side-nav-main">
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Bộ thẻ hiện tại</h3>
+                    <p>{{ context_stats.set_title }}</p>
+                    <p>Tiến độ: {{ context_stats.set_learned_cards }} / {{ context_stats.set_total_cards }} thẻ</p>
+                    <p>Cần ôn: {{ context_stats.set_due_cards }} thẻ</p>
+                    <div class="nav-section-actions">
+                        <a href="{{ url_for('main.select_set_page') }}" class="nav-action-button"><i class="fas fa-layer-group"></i> Chọn Bộ Khác</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Chế độ học</h3>
+                    <p>{{ context_stats.current_mode_display }}</p>
+                    <div class="nav-section-actions">
+                        <a href="{{ url_for('main.select_mode') }}" class="nav-action-button"><i class="fas fa-bolt"></i> Đổi Chế Độ</a>
+                    </div>
+                </div>
+                <hr class="nav-separator">
+                <ul class="side-nav-links">
+                    <li><a href="#"><i class="fas fa-chart-bar"></i> Thống kê</a></li>
+                    <li><a href="#"><i class="fas fa-trophy"></i> Bảng xếp hạng</a></li>
+                </ul>
             </div>
-
-            <div class="nav-section">
-                <h3 class="nav-section-title">Thống kê nhanh</h3>
-                <p>Thẻ cần ôn: {{ context_stats.due_overall }}</p>
+            <div class="side-nav-footer">
+                <ul class="side-nav-links">
+                    <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
+                    <li><a href="{{ url_for('main.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                </ul>
             </div>
-
-            <ul class="side-nav-links">
-                <li><a href="{{ url_for('main.select_set_page') }}"><i class="fas fa-layer-group"></i> Chọn Bộ Khác</a></li>
-                <li><a href="{{ url_for('main.select_mode') }}"><i class="fas fa-bolt"></i> Đổi Chế Độ</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li> {# Nút cài đặt (chưa có chức năng) #}
-                <hr>
-                <li><a href="{{ url_for('main.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
-            </ul>
         </div>
     </nav>
-    {# =================================================================================== #}
-
-    {# ... các div ẩn và thẻ audio không đổi ... #}
+    
+    {# Thẻ audio ẩn và div truyền dữ liệu #}
+    <audio id="cardAudioPlayer" hidden></audio>
+    <div id="jsData"
+         data-is-autoplay-mode="{{ 'true' if is_autoplay_mode else 'false' }}"
+         data-user-audio-settings='{{ user_audio_settings_json_string | safe }}'
+         data-is-front="{{ 'true' if is_front else 'false' }}"
+         data-has-back-audio-content="{{ 'true' if has_back_audio_content else 'false' }}"
+         data-audio-url="{{ audio_url or '' }}">
+    </div>
 {% endblock %}
 
 {% block scripts_extra %}
-    {# ... các script cũ không đổi ... #}
     <script src="{{ url_for('static', filename='js/learn_card_audio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/card_content_adjuster.js') }}"></script>
     <script src="{{ url_for('static', filename='js/image_popup_handler.js') }}"></script>
-    
-    {# Thêm script mới cho menu #}
     <script src="{{ url_for('static', filename='js/mobile_menu_handler.js') }}"></script>
 {% endblock %}

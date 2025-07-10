@@ -1,6 +1,7 @@
 /*
  * selection_lists.css
  * Mô tả: Chứa các kiểu CSS dành cho danh sách chọn bộ thẻ và danh sách chọn chế độ học.
+ * PHIÊN BẢN SỬA LỖI DỨT ĐIỂM THEO HƯỚNG ĐỘC LẬP HÓA.
  */
 
 /* Container chung */
@@ -12,9 +13,7 @@
     width: 100%;
     max-width: 600px;
     text-align: center;
-    margin-top: 50px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 50px auto;
 }
 
 .container h1 {
@@ -27,7 +26,7 @@
     line-height: 1.6;
 }
 
-/* ========================== SỬA LỖI CĂN GIỮA (ĐƠN GIẢN HÓA) ========================== */
+/* Danh sách chung */
 .set-list, .mode-list {
     list-style: none;
     padding: 0;
@@ -36,67 +35,57 @@
 
 .set-list li, .mode-list li {
     margin-bottom: 10px;
-    padding: 0;
-    background-color: transparent;
 }
 
-/* Style chung cho tất cả các mục trong danh sách */
-.set-list li a, .mode-list li a.button {
+/* Style chung cho các mục trong danh sách */
+.set-list li a, .mode-list li a {
     text-decoration: none;
     font-weight: bold;
-    display: block; /* Hiển thị dạng khối */
+    display: block;
     width: 100%;
     padding: 15px 20px;
     border-radius: 8px;
     transition: background-color 0.2s ease, border-color 0.2s ease;
-    position: relative; /* Làm mỏ neo cho indicator */
-}
-
-/* Style RIÊNG cho danh sách BỘ THẺ */
-.set-list li a {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
-    color: #007bff;
-    /* Dùng flex để đẩy 2 phần tử ra xa nhau */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    position: relative;
+    cursor: pointer;
+}
+
+.set-list li a:hover, .mode-list li a:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+/* 1. Trang Chọn Bộ Thẻ: Dùng Flexbox, căn đều 2 bên (hoạt động tốt) */
+.set-list li a {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: #007bff;
 }
 
-.set-list li a:hover {
-    background-color: #e9ecef;
-}
-
-/* Style RIÊNG cho danh sách CHẾ ĐỘ */
-.mode-list .button.mode-button {
+/* 2. Trang Chọn Chế Độ: Độc lập hoàn toàn, không dùng flex */
+.mode-list li a.mode-button {
+    text-align: center; /* Phương pháp căn giữa đơn giản và hiệu quả nhất */
     font-size: 1.1em;
-    background-color: #f8f9fa;
     color: #333;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    /* THAY ĐỔI QUAN TRỌNG: Dùng text-align để căn giữa, bỏ flex */
-    text-align: center;
 }
 
-.mode-list .button.mode-button:hover {
-    background-color: #e9ecef;
-    border-color: #ced4da;
-    transform: none;
-}
 
-/* Style cho nhãn "(Hiện tại)" */
+/* Style cho nhãn "(Hiện tại)" - Định vị tuyệt đối so với thẻ <a> cha */
 .current-mode-indicator {
     position: absolute;
-    right: 20px;
+    right: 15px;
     top: 50%;
     transform: translateY(-50%);
     font-weight: normal;
     color: #28a745;
-    font-size: 0.9em;
+    font-size: 0.85em;
     background-color: #d4edda;
     padding: 4px 8px;
     border-radius: 4px;
-    white-space: nowrap;
 }
 
 /* Các style cho trạng thái bộ thẻ (không đổi) */
@@ -141,23 +130,8 @@
     color: #558b2f;
     background-color: #dce775;
 }
-/* ========================== KẾT THÚC SỬA LỖI ========================== */
 
 /* Responsive (không đổi) */
-@media (min-width: 1025px) {
-    .container {
-        max-width: 1200px;
-        margin-top: 80px;
-    }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-    .container {
-        max-width: 95%;
-        margin-top: 80px;
-    }
-}
-
 @media (max-width: 768px) {
     .container {
         padding: 20px;

@@ -1,82 +1,100 @@
 // learn_card_audio.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Lấy các phần tử DOM cần thiết
-    const playAudioButton = document.getElementById('playAudioButton');
+    // --- Lấy các phần tử và dữ liệu cần thiết từ DOM ---
     const cardAudioPlayer = document.getElementById('cardAudioPlayer');
+    const playAudioButton = document.getElementById('playAudioButton');
     const jsDataElement = document.getElementById('jsData');
 
-    // Lấy dữ liệu từ các thuộc tính data của div jsData
-    const flashcardData = JSON.parse(jsDataElement.dataset.flashcard);
-    const isFront = jsDataElement.dataset.isFront === 'true';
-    const userAudioSettings = JSON.parse(jsDataElement.dataset.userAudioSettings);
-    // Lấy thuộc tính mới để kiểm tra xem có nội dung audio mặt sau hay không
-    const hasBackAudioContent = jsDataElement.dataset.hasBackAudioContent === 'true';
-    // BẮT ĐẦU THAY ĐỔI: Lấy cờ isAutoplayMode
+    if (!cardAudioPlayer || !playAudioButton || !jsDataElement) {
+        console.error("Thiếu các phần tử HTML cần thiết.");
+        return;
+    }
+
+    // --- Trích xuất dữ liệu từ các thuộc tính data-* ---
+    const audioUrl = jsDataElement.dataset.audioUrl;
     const isAutoplayMode = jsDataElement.dataset.isAutoplayMode === 'true';
-    // KẾT THÚC THAY ĐỔI
+    const userAudioSettings = JSON.parse(jsDataElement.dataset.userAudioSettings);
+    const isFront = jsDataElement.dataset.isFront === 'true';
+    const hasBackAudioContent = jsDataElement.dataset.hasBackAudioContent === 'true';
 
     /**
-     * Mô tả: Phát âm thanh cho thẻ dựa trên mặt hiện tại và cài đặt của người dùng.
-     * Kiểm tra xem có nội dung audio và cài đặt cho phép phát hay không.
-     * @param {boolean} forcePlay - Nếu là true, sẽ cố gắng phát audio bất kể cài đặt người dùng (chỉ cho mặt hiện tại).
+     * Mô tả: Hàm cốt lõi để phát audio.
+     * Nó chỉ thực hiện một việc: gán src và play.
      */
-    function playCardAudio(forcePlay = false) {
-        if (!flashcardData) {
-            console.warn("Không có dữ liệu flashcard để phát audio.");
-            return;
-        }
-
-        let audioContent = null;
-        let audioEnabled = false;
-
-        if (isFront) {
-            audioContent = flashcardData.front_audio_content;
-            // Kích hoạt phát nếu forcePlay là true HOẶC cài đặt của người dùng cho phép
-            // BẮT ĐẦU THAY ĐỔI: Luôn bật audio nếu là chế độ Autoplay
-            audioEnabled = forcePlay || userAudioSettings.front_audio_enabled || isAutoplayMode;
-            // KẾT THÚC THAY ĐỔI
-        } else { // isBackSide
-            audioContent = flashcardData.back_audio_content;
-            // Kích hoạt phát nếu forcePlay là true HOẶC cài đặt của người dùng cho phép
-            // BẮT ĐẦU THAY ĐỔI: Luôn bật audio nếu là chế độ Autoplay
-            audioEnabled = forcePlay || userAudioSettings.back_audio_enabled || isAutoplayMode;
-            // KẾT THÚC THAY ĐỔI
-        }
-
-        if (audioContent && audioEnabled) {
-            // Gọi API để lấy file audio
-            const audioUrl = `/api/card_audio/${flashcardData.flashcard_id}/${isFront ? 'front' : 'back'}`;
+    function playAudio() {
+        if (audioUrl) {
+            // SỬA LỖI: Reset trình phát trước khi gán nguồn mới
+            // để tránh lỗi trạng thái "kẹt" trên một số trình duyệt.
+            cardAudioPlayer.load(); 
             cardAudioPlayer.src = audioUrl;
             cardAudioPlayer.play().catch(error => {
-                console.error("Lỗi khi cố gắng phát audio:", error);
-                // Hiển thị thông báo lỗi thân thiện với người dùng nếu cần
+                console.error("Lỗi khi phát audio:", error);
             });
         } else {
-            console.log("Audio không được bật hoặc không có nội dung audio cho mặt này.");
+            console.log("Không có URL audio để phát.");
         }
     }
 
-    // Gắn sự kiện click cho nút play audio
-    if (playAudioButton) {
-        // Khi click nút, không forcePlay, để nó tôn trọng cài đặt người dùng
-        playAudioButton.addEventListener('click', () => playCardAudio(false));
-    }
+    // --- Gắn sự kiện cho nút bấm thủ công ---
+    // Logic này đảm bảo nút bấm luôn hoạt động ở mọi chế độ.
+    playAudioButton.addEventListener('click', playAudio);
 
-    // Tự động phát audio khi thẻ được tải (nếu có)
-    if (flashcardData) {
-        // BẮT ĐẦU THAY ĐỔI: Luôn tự động phát audio nếu là chế độ Autoplay, hoặc theo cài đặt người dùng
-        if (isAutoplayMode) {
-            playCardAudio(true); // Luôn forcePlay trong Autoplay
-        } else if (isFront) {
-            // Mặt trước: tự động phát nếu cài đặt người dùng cho phép
-            playCardAudio(false); // Không forcePlay, tôn trọng cài đặt
-        } else { // isBackSide
-            // Mặt sau: tự động phát nếu có nội dung audio (được coi là "có cache") VÀ cài đặt cho phép
-            if (hasBackAudioContent && userAudioSettings.back_audio_enabled) {
-                playCardAudio(false); // Không forcePlay, tôn trọng cài đặt
+    // ===================================================================
+    // LOGIC RIÊNG BIỆT CHO CHẾ ĐỘ AUTOPLAY
+    // ===================================================================
+    if (isAutoplayMode) {
+        const POST_AUDIO_DELAY_MS = 1500;
+        const MASTER_TIMEOUT_MS = 10000;
+        let actionTriggered = false;
+        let masterTimeoutId = null;
+
+        function performRedirect() {
+            if (actionTriggered) return;
+            actionTriggered = true;
+            if (masterTimeoutId) clearTimeout(masterTimeoutId);
+
+            const targetLink = isFront ? 
+                document.querySelector('.flashcard-footer a.button') : 
+                document.querySelector('.flashcard-footer a.button.primary');
+
+            if (targetLink) {
+                window.location.href = targetLink.href;
             }
         }
-        // KẾT THÚC THAY ĐỔI
+
+        function handleAudioEnd() {
+            setTimeout(performRedirect, POST_AUDIO_DELAY_MS);
+        }
+
+        cardAudioPlayer.addEventListener('ended', handleAudioEnd);
+
+        // Bắt đầu chu trình Autoplay
+        setTimeout(() => {
+            masterTimeoutId = setTimeout(performRedirect, MASTER_TIMEOUT_MS);
+            
+            if (audioUrl) {
+                playAudio();
+            } else {
+                // Nếu không có audio, chuyển ngay
+                handleAudioEnd();
+            }
+        }, 1000);
+    } 
+    // ===================================================================
+    // LOGIC TỰ ĐỘNG PHÁT CHO CHẾ ĐỘ THƯỜNG
+    // ===================================================================
+    else {
+        let shouldAutoplayOnLoad = false;
+        if (isFront) {
+            shouldAutoplayOnLoad = userAudioSettings.front_audio_enabled;
+        } else {
+            // Mặt sau chỉ tự phát khi có cài đặt và có cache
+            shouldAutoplayOnLoad = userAudioSettings.back_audio_enabled && hasBackAudioContent;
+        }
+
+        if (shouldAutoplayOnLoad && audioUrl) {
+            setTimeout(playAudio, 300);
+        }
     }
 });
