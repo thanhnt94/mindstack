@@ -17,9 +17,9 @@
 /env.bak/
 database/
 media/
-/media/flashcard
-media/flashcard/audio/
-/media/flashcard/images/
+# /media/flashcard
+# media/flashcard/audio/
+# /media/flashcard/images/
 
 # --- Thư mục cache của Python ---
 # Bỏ qua các thư mục chứa file bytecode đã được biên dịch.
