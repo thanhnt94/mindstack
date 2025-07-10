@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request
 import logging
 import json
-from ..services import learning_logic_service, stats_service
+from ..services import learning_logic_service, stats_service, note_service
 from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress
 from ..config import LEARNING_MODE_DISPLAY_NAMES, MODE_AUTOPLAY_REVIEW
 from .decorators import login_required
@@ -65,6 +65,9 @@ def learn_set(set_id):
     audio_url = url_for('api.get_card_audio', flashcard_id=flashcard_obj.flashcard_id, side='front') if flashcard_obj.front_audio_content else None
     context_stats = stats_service.get_user_stats_for_context(user_id, set_id)
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
+    
+    note = note_service.get_note_by_flashcard_id(user_id, flashcard_obj.flashcard_id)
+    note_content = note.note if note else ""
 
     return render_template(
         'flashcard/learn_card.html', user=user, flashcard=flashcard_obj, progress=progress_obj,
@@ -72,7 +75,8 @@ def learn_set(set_id):
         flashcard_json_string=json.dumps(_serialize_flashcard(flashcard_obj)),
         user_audio_settings_json_string=json.dumps(user_audio_settings),
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
-        audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content)
+        audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
+        note_content=note_content
     )
 
 @flashcard_bp.route('/flip/<int:progress_id>')
@@ -90,13 +94,17 @@ def flip_card(progress_id):
     context_stats = stats_service.get_user_stats_for_context(user.user_id, flashcard_obj.set_id)
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
 
+    note = note_service.get_note_by_flashcard_id(user.user_id, flashcard_obj.flashcard_id)
+    note_content = note.note if note else ""
+
     return render_template(
         'flashcard/learn_card.html', user=user, flashcard=flashcard_obj, progress=progress,
         context_stats=context_stats, is_front=False,
         flashcard_json_string=json.dumps(_serialize_flashcard(flashcard_obj)),
         user_audio_settings_json_string=json.dumps(user_audio_settings),
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
-        audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content)
+        audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
+        note_content=note_content
     )
 
 @flashcard_bp.route('/rate/<int:progress_id>/<string:response_str>')
@@ -143,7 +151,10 @@ def set_learning_mode(mode_code):
     db.session.commit()
     flash(f"Chế độ học đã được thay đổi thành '{LEARNING_MODE_DISPLAY_NAMES[mode_code]}'.", "success")
     
-    current_set_id = session.get('current_set_id')
+    # --- BẮT ĐẦU SỬA LỖI: Lấy ID bộ thẻ từ đối tượng user, không phải từ session ---
+    current_set_id = user.current_set_id 
+    # --- KẾT THÚC SỬA LỖI ---
+    
     if current_set_id:
         return redirect(url_for('flashcard.learn_set', set_id=current_set_id))
     return redirect(url_for('flashcard.index'))

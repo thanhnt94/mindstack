@@ -18,6 +18,8 @@
 @import url("messages.css");
 /* Nhập các kiểu cho thẻ flashcard cụ thể */
 @import url("flashcard_specific.css");
+/* Nhập các kiểu cho chức năng ghi chú */
+@import url("note.css"); /* THÊM MỚI */
 /* BẮT ĐẦU THÊM: Nhập các kiểu CSS còn lại */
 @import url("stats_panel.css");
 @import url("selection_lists.css");
@@ -34,6 +36,7 @@
  * - buttons.css: Các kiểu nút chung và biến thể.
  * - messages.css: Các kiểu cho tin nhắn flash.
  * - flashcard_specific.css: Các kiểu chi tiết cho thẻ flashcard.
+ * - note.css: Các kiểu cho chức năng ghi chú.
  * - stats_panel.css: Các kiểu cho bảng thống kê và khung điều khiển.
  * - selection_lists.css: Các kiểu cho danh sách chọn bộ thẻ và chế độ.
  * - modal.css: Các kiểu cho hộp thoại modal.

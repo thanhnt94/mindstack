@@ -6,6 +6,9 @@
             <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
                 <div class="flashcard-header">
                     <button id="menu-toggle-btn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
+                    <!-- BẮT ĐẦU THÊM: Nút mở Ghi chú -->
+                    <button id="open-note-btn" class="note-button" aria-label="Mở ghi chú"><i class="fas fa-pencil-alt"></i></button>
+                    <!-- KẾT THÚC THÊM -->
                     <p class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
                     <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh"><i class="fas fa-volume-up"></i></button>
                 </div>
@@ -93,8 +96,25 @@
             </div>
         </div>
     </nav>
+
+    <!-- BẮT ĐẦU THÊM: Modal để chỉnh sửa ghi chú -->
+    <div id="note-modal" class="note-modal">
+        <div class="note-modal-content">
+            <span id="note-modal-close-btn" class="note-modal-close-btn">&times;</span>
+            <h2>Ghi chú cá nhân</h2>
+            <p>Nội dung bạn viết ở đây sẽ chỉ hiển thị cho riêng bạn.</p>
+            <textarea id="note-textarea" placeholder="Viết ghi chú của bạn vào đây..."></textarea>
+            <div class="note-modal-footer">
+                <span id="note-save-status"></span>
+                <button id="save-note-btn" class="button primary">Lưu Ghi chú</button>
+            </div>
+        </div>
+    </div>
+    <!-- KẾT THÚC THÊM -->
+
     <audio id="cardAudioPlayer" hidden></audio>
     <div id="jsData"
+         data-flashcard-id="{{ flashcard.flashcard_id }}"
          data-is-autoplay-mode="{{ 'true' if is_autoplay_mode else 'false' }}"
          data-user-audio-settings='{{ user_audio_settings_json_string | safe }}'
          data-is-front="{{ 'true' if is_front else 'false' }}"
@@ -107,4 +127,7 @@
     <script src="{{ url_for('static', filename='js/card_content_adjuster.js') }}"></script>
     <script src="{{ url_for('static', filename='js/image_popup_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/mobile_menu_handler.js') }}"></script>
+    <!-- BẮT ĐẦU THÊM: Script xử lý ghi chú -->
+    <script src="{{ url_for('static', filename='js/note_handler.js') }}"></script>
+    <!-- KẾT THÚC THÊM -->
 {% endblock %}

@@ -1,0 +1,109 @@
+/*
+ * note.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho chức năng ghi chú (note) trên trang học thẻ.
+ */
+
+/* --- Nút bấm để mở modal ghi chú --- */
+.note-button {
+    position: absolute;
+    top: 50%;
+    left: 70px; /* Đặt cạnh nút menu */
+    transform: translateY(-50%);
+    background-color: transparent;
+    color: #888;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    z-index: 10;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.note-button:hover {
+    color: #3498db; /* Đổi màu khi hover */
+}
+
+/* --- Modal Ghi chú (dựa trên modal.css nhưng có tùy chỉnh) --- */
+.note-modal {
+    display: none; /* Ẩn theo mặc định */
+    position: fixed;
+    z-index: 1003; /* Phải cao hơn side-nav-overlay (1001) */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    /* Dòng 'display: flex;' đã được xóa. JavaScript sẽ xử lý việc hiển thị. */
+    align-items: center;
+    justify-content: center;
+}
+
+/* Nội dung của modal */
+.note-modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    animation-name: animatetop; /* Hiệu ứng trượt từ trên xuống */
+    animation-duration: 0.4s;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Nút đóng modal */
+.note-modal-close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.note-modal-close-btn:hover,
+.note-modal-close-btn:focus {
+    color: black;
+}
+
+/* Vùng nhập liệu ghi chú */
+#note-textarea {
+    width: 100%;
+    height: 250px; /* Chiều cao lớn hơn cho việc ghi chú */
+    padding: 15px;
+    font-family: 'Inter', sans-serif;
+    font-size: 1em;
+    line-height: 1.6;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: vertical; /* Cho phép người dùng thay đổi chiều cao */
+    box-sizing: border-box;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+#note-textarea:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Chân modal chứa nút lưu */
+.note-modal-footer {
+    text-align: right;
+}
+
+/* Thông báo lưu (ẩn theo mặc định) */
+#note-save-status {
+    display: inline-block;
+    margin-right: 15px;
+    color: #28a745;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
