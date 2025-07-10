@@ -1,65 +1,46 @@
 {% extends 'base.html' %}
-
 {% block title %}Học Thẻ - Flashcard App{% endblock %}
-
 {% block content %}
     <div class="main-container">
         <div class="flashcard-column">
             <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
-
-                <!-- Flashcard Header -->
                 <div class="flashcard-header">
-                    <button id="menu-toggle-btn" class="menu-toggle-btn">
-                        <i class="fas fa-bars"></i>
-                    </button>
-
+                    <button id="menu-toggle-btn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
                     <p class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
-                    <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
+                    <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh"><i class="fas fa-volume-up"></i></button>
                 </div>
-
-                <!-- Flashcard Body (Content Area) -->
                 <div class="flashcard-body">
                     <div class="scrollable-card-content">
                         <div class="card-text">
-                            {%- if is_front -%}
-                                {{- flashcard.front -}}
-                            {%- else -%}
-                                {{- flashcard.back -}}
-                            {%- endif -%}
+                            {%- if is_front -%}{{ flashcard.front }}{%- else -%}{{ flashcard.back }}{%- endif -%}
                         </div>
                     </div>
                 </div>
-
-                {# Popup hình ảnh #}
                 {% set image_to_show = flashcard.front_img if is_front else flashcard.back_img %}
                 {% if image_to_show %}
                     <div id="image-popup" class="image-popup-container">
                         <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
-                        <img src="{{ url_for('main.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image">
+                        <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image">
                     </div>
                 {% endif %}
-
-                <!-- Flashcard Footer (Buttons) -->
                 <div class="flashcard-footer">
                     {% if is_autoplay_mode %}
                         {% if is_front %}
-                            <a href="{{ url_for('main.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
+                            <a href="{{ url_for('flashcard.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
                         {% else %}
-                            <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='next') }}" class="button primary">▶️ Tiếp theo</a>
+                            <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='next') }}" class="button primary">▶️ Tiếp theo</a>
                         {% endif %}
                     {% else %}
                         <div class="button-group">
                             {% if is_front %}
-                                <a href="{{ url_for('main.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
+                                <a href="{{ url_for('flashcard.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
                             {% else %}
                                 {% if progress.last_reviewed is none %}
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='continue') }}" class="button primary">▶️ Tiếp tục</a>
+                                    <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='continue') }}" class="button primary">▶️ Tiếp tục</a>
                                 {% else %}
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='forget') }}" class="button danger">❌ Quên</a>
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='vague') }}" class="button warning">🤔 Mơ hồ</a>
-                                    <a href="{{ url_for('main.rate_card', progress_id=progress.progress_id, response_str='remember') }}" class="button success">✅ Nhớ</a>
+                                    <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='forget') }}" class="button danger">❌ Quên</a>
+                                    <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='vague') }}" class="button warning">🤔 Mơ hồ</a>
+                                    <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='remember') }}" class="button success">✅ Nhớ</a>
                                 {% endif %}
                             {% endif %}
                         </div>
@@ -68,8 +49,6 @@
             </div>
         </div>
     </div>
-
-    {# Menu điều hướng bên cạnh #}
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
     <nav id="side-nav" class="side-nav">
         <div class="side-nav-header">
@@ -90,14 +69,14 @@
                     <p>Tiến độ: {{ context_stats.set_learned_cards }} / {{ context_stats.set_total_cards }} thẻ</p>
                     <p>Cần ôn: {{ context_stats.set_due_cards }} thẻ</p>
                     <div class="nav-section-actions">
-                        <a href="{{ url_for('main.select_set_page') }}" class="nav-action-button"><i class="fas fa-layer-group"></i> Chọn Bộ Khác</a>
+                        <a href="{{ url_for('flashcard.select_set_page') }}" class="nav-action-button"><i class="fas fa-layer-group"></i> Chọn Bộ Khác</a>
                     </div>
                 </div>
                 <div class="nav-section">
                     <h3 class="nav-section-title">Chế độ học</h3>
                     <p>{{ context_stats.current_mode_display }}</p>
                     <div class="nav-section-actions">
-                        <a href="{{ url_for('main.select_mode') }}" class="nav-action-button"><i class="fas fa-bolt"></i> Đổi Chế Độ</a>
+                        <a href="{{ url_for('flashcard.select_mode') }}" class="nav-action-button"><i class="fas fa-bolt"></i> Đổi Chế Độ</a>
                     </div>
                 </div>
                 <hr class="nav-separator">
@@ -109,13 +88,11 @@
             <div class="side-nav-footer">
                 <ul class="side-nav-links">
                     <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
-                    <li><a href="{{ url_for('main.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
                 </ul>
             </div>
         </div>
     </nav>
-    
-    {# Thẻ audio ẩn và div truyền dữ liệu #}
     <audio id="cardAudioPlayer" hidden></audio>
     <div id="jsData"
          data-is-autoplay-mode="{{ 'true' if is_autoplay_mode else 'false' }}"
@@ -125,7 +102,6 @@
          data-audio-url="{{ audio_url or '' }}">
     </div>
 {% endblock %}
-
 {% block scripts_extra %}
     <script src="{{ url_for('static', filename='js/learn_card_audio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/card_content_adjuster.js') }}"></script>

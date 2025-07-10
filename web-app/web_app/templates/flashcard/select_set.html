@@ -1,19 +1,16 @@
 {% extends 'base.html' %}
-
 {% block title %}Chọn Bộ Thẻ - Flashcard App{% endblock %}
-
 {% block content %}
     <div class="container">
         <h1>Chào mừng, {{ user.username or user.telegram_id }}!</h1>
         <p>Chọn một bộ thẻ để bắt đầu học:</p>
-        
-        {% if sets_data %} {# Đã đổi biến từ 'sets' sang 'sets_data' #}
+        {% if sets_data %}
             <ul class="set-list">
-                {% for item in sets_data %} {# Lặp qua từng item chứa set và status #}
+                {% for item in sets_data %}
                     {% set set = item.set %}
                     {% set status = item.status %}
-                    <li class="set-item-{{ status }}"> {# Thêm class dựa trên trạng thái #}
-                        <a href="{{ url_for('main.learn_set', set_id=set.set_id) }}">
+                    <li class="set-item-{{ status }}">
+                        <a href="{{ url_for('flashcard.learn_set', set_id=set.set_id) }}">
                             {{ set.title }} (ID: {{ set.set_id }})
                             {% if status == 'current' %}
                                 <span class="set-status-indicator current-set-indicator"> (Đang học)</span>

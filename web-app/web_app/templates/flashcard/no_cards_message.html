@@ -1,40 +1,27 @@
 {% extends 'base.html' %}
-
 {% block title %}Hoàn thành phiên học - Flashcard App{% endblock %}
-
 {% block content %}
     <div class="main-container">
         <div class="flashcard-column">
             <div class="flashcard no-card">
                 <div class="flashcard-content">
-                    {# Hiển thị thông báo dựa trên biến truyền vào #}
                     {% if wait_time_ts %}
                         <h2>🎉 Hoàn thành!</h2>
-                        {% if is_midnight_tomorrow %}
-                            <p>Bạn đã hoàn thành tất cả các thẻ cần ôn tập hoặc thẻ mới cho hôm nay.</p>
-                            <p>Hãy quay lại vào ngày mai để tiếp tục học nhé!</p>
-                        {% else %}
-                            <p>Bạn đã ôn hết các thẻ đến hạn hiện tại.</p>
-                            <p>Thẻ tiếp theo sẽ đến hạn vào khoảng <strong>{{ wait_minutes }} phút</strong> nữa.</p>
-                        {% endif %}
-                        <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="button primary">▶️ Tiếp tục (thử lại)</a>
+                        <p>Bạn đã ôn hết các thẻ đến hạn hiện tại.</p>
                     {% else %}
                         <h2>Không có thẻ nào!</h2>
                         <p>Không tìm thấy thẻ nào để học trong bộ này.</p>
-                        <a href="{{ url_for('main.select_set_page') }}" class="button primary">Chọn bộ khác</a>
                     {% endif %}
+                    <a href="{{ url_for('flashcard.learn_set', set_id=set_id) }}" class="button primary">▶️ Tiếp tục (thử lại)</a>
                 </div>
             </div>
-
-            {# Đặt các nút điều khiển trực tiếp trong flashcard-column, không dùng right-column-container #}
             <div class="control-panel-below-card">
                 <h3>Bạn muốn làm gì tiếp theo?</h3>
                 <div class="control-button-group">
-                    <a href="{{ url_for('main.select_set_page') }}" class="control-button set-button">📚 Chọn Bộ Khác</a>
-                    <a href="{{ url_for('main.select_mode') }}" class="control-button mode-button">⚡ Đổi Chế Độ</a>
+                    <a href="{{ url_for('flashcard.select_set_page') }}" class="control-button set-button">📚 Chọn Bộ Khác</a>
+                    <a href="{{ url_for('flashcard.select_mode') }}" class="control-button mode-button">⚡ Đổi Chế Độ</a>
                 </div>
             </div>
         </div>
-        {# Các cột khác (image, stats) không hiển thị ở đây #}
     </div>
 {% endblock %}

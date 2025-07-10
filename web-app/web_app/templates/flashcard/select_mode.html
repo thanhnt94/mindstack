@@ -1,20 +1,15 @@
 {% extends 'base.html' %}
-
 {% block title %}Chọn Chế độ Học - Flashcard App{% endblock %}
-
 {% block content %}
     <div class="container">
         <h1>⚡ Chọn Chế độ Học</h1>
         <p>Chọn chế độ học tập phù hợp với bạn:</p>
-        
         {% if modes %}
             <ul class="mode-list">
                 {% for mode_code, mode_name in modes.items() %}
                     <li>
-                        {# ĐÃ XÓA class "button" để loại bỏ xung đột với buttons.css #}
-                        <a href="{{ url_for('main.set_learning_mode', mode_code=mode_code) }}" class="mode-button">
+                        <a href="{{ url_for('flashcard.set_learning_mode', mode_code=mode_code) }}" class="mode-button">
                             {{ mode_name }}
-                            
                             {% if mode_code == current_mode %}
                                 <span class="current-mode-indicator"> (Hiện tại)</span>
                             {% endif %}
@@ -25,9 +20,8 @@
         {% else %}
             <p>Không có chế độ học nào khả dụng.</p>
         {% endif %}
-
         <div class="button-group">
-            <a href="{{ url_for('main.index') }}" class="button secondary">🔙 Quay lại Chọn bộ</a>
+            <a href="{{ url_for('flashcard.index') }}" class="button secondary">🔙 Quay lại Chọn bộ</a>
         </div>
     </div>
 {% endblock %}
