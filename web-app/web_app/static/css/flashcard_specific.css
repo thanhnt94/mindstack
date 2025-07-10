@@ -65,21 +65,7 @@
     padding: 10px;
 }
 
-/* ========================== CẬP NHẬT CSS CHO MENU ĐIỀU HƯỚNG ========================== */
-.menu-toggle-btn {
-    position: absolute;
-    top: 50%;
-    left: 20px; /* Đặt ở góc trái */
-    transform: translateY(-50%);
-    background: transparent;
-    color: #888;
-    border: none;
-    font-size: 1.5em; /* Tăng kích thước icon */
-    cursor: pointer;
-    z-index: 10;
-    padding: 5px;
-}
-
+/* ========================== MENU ĐIỀU HƯỚNG ========================== */
 .side-nav {
     position: fixed;
     top: 0;
@@ -88,15 +74,15 @@
     height: 100%;
     background-color: #fff;
     box-shadow: 2px 0 15px rgba(0,0,0,0.15);
-    transform: translateX(-100%); /* Ẩn sang bên trái */
+    transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
-    z-index: 1002; /* Nằm trên lớp phủ */
+    z-index: 1002;
     display: flex;
     flex-direction: column;
 }
 
 .side-nav.open {
-    transform: translateX(0); /* Hiện ra */
+    transform: translateX(0);
 }
 
 .side-nav-header {
@@ -106,10 +92,9 @@
     padding: 15px 20px;
     background-color: #f8f9fa;
     border-bottom: 1px solid #eee;
-    flex-shrink: 0; /* Không cho header co lại */
+    flex-shrink: 0;
 }
 
-/* Thêm kiểu cho phần profile người dùng */
 .user-profile {
     display: flex;
     align-items: center;
@@ -148,32 +133,30 @@
     cursor: pointer;
 }
 
-/* SỬA LỖI: Dùng Flexbox để đẩy footer xuống dưới */
 .side-nav-content {
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Cho phép content co giãn để chiếm hết không gian còn lại */
+    flex-grow: 1; 
     padding: 15px;
     overflow-y: auto;
 }
 
 .side-nav-main {
-    flex-shrink: 0; /* Không cho phần main co lại */
+    flex-shrink: 0; 
 }
 
 .side-nav-footer {
-    margin-top: auto; /* QUAN TRỌNG: Đẩy footer xuống dưới cùng */
-    padding-top: 15px; /* Thêm khoảng cách với nội dung bên trên */
-    border-top: 1px solid #eee; /* Thêm đường kẻ phân cách */
+    margin-top: auto; 
+    padding-top: 15px; 
+    border-top: 1px solid #eee; 
 }
-
 
 .nav-section {
     background-color: #f8f9fa;
     border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 15px;
-    margin-bottom: 15px; /* Tăng khoảng cách giữa các khung */
+    margin-bottom: 15px; 
 }
 
 .nav-section-title {
@@ -190,7 +173,6 @@
     color: #555;
 }
 
-/* Kiểu cho khu vực chứa nút hành động bên trong khung */
 .nav-section-actions {
     margin-top: 15px;
     padding-top: 10px;
@@ -198,7 +180,6 @@
     text-align: center;
 }
 
-/* Kiểu cho nút hành động bên trong khung */
 .nav-action-button {
     display: inline-flex;
     align-items: center;
@@ -218,7 +199,6 @@
     background-color: #e9ecef;
 }
 
-
 .side-nav-links {
     list-style: none;
     padding: 0;
@@ -229,10 +209,10 @@
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 12px 20px; /* Giảm padding cho các link này */
+    padding: 12px 20px; 
     text-decoration: none;
     color: #444;
-    font-size: 1em; /* Giảm font size một chút */
+    font-size: 1em; 
     transition: background-color 0.2s;
     border-radius: 8px;
 }
@@ -247,7 +227,6 @@
     color: #888;
 }
 
-/* Đường kẻ ngăn cách giữa các nhóm chức năng */
 .nav-separator {
     border: none;
     border-top: 1px solid #eee;
@@ -273,7 +252,83 @@
     transition: opacity 0.3s ease-in-out;
 }
 
-/* ========================== CÁC STYLE CŨ ========================== */
+/* ========================== HEADER CỦA THẺ ========================== */
+.flashcard-header {
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between; /* Quan trọng */
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1; /* Cho 2 bên chiếm không gian bằng nhau */
+}
+
+.header-right {
+    justify-content: flex-end; /* Căn phải các nút bên phải */
+}
+
+.header-center {
+    flex: 2; /* Cho phần giữa rộng hơn */
+    text-align: center;
+}
+
+.card-side {
+    font-size: 0.85em;
+    color: #888;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+.header-icon-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 8px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.header-icon-btn:hover {
+    color: #3498db;
+}
+
+.edit-button:hover {
+    color: #f39c12;
+}
+
+.play-audio-button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.play-audio-button:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
+
+/* ========================== BODY VÀ FOOTER CỦA THẺ ========================== */
 .flashcard.no-card {
     background-color: #e6f7ff;
     border: 1px solid #91d5ff;
@@ -289,51 +344,6 @@
 
 .flashcard.no-card h2 {
     color: #1890ff;
-}
-
-.flashcard-header {
-    position: relative;
-    width: 100%;
-    padding: 20px 30px;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.card-side {
-    font-size: 0.85em;
-    color: #888;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.play-audio-button {
-    position: absolute;
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%);
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2em;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    z-index: 10;
-}
-
-.play-audio-button:hover {
-    background-color: #2980b9;
-    transform: translateY(-50%) scale(1.05);
 }
 
 .flashcard-body {
@@ -393,7 +403,7 @@
     }
 
     .flashcard-header {
-        padding: 25px 15px 15px;
+        padding: 15px;
     }
 
     .flashcard-body {

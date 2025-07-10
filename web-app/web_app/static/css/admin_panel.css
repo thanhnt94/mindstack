@@ -11,7 +11,9 @@
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     width: 100%;
-    max-width: 1200px; /* Giới hạn chiều rộng để bảng không quá rộng */
+    /* BẮT ĐẦU SỬA LỖI: Tăng max-width để bảng rộng hơn trên desktop */
+    max-width: 1200px; 
+    /* KẾT THÚC SỬA LỖI */
     margin-top: 20px;
     text-align: left; /* Căn trái nội dung trong panel */
     box-sizing: border-box;
@@ -39,7 +41,9 @@
     border-collapse: collapse; /* Gộp các đường viền bảng */
     margin-bottom: 20px;
     font-size: 0.9em;
-    min-width: 700px; /* Đảm bảo bảng không quá nhỏ trên màn hình nhỏ */
+    /* BẮT ĐẦU SỬA LỖI: Tăng min-width để bảng không bị co lại quá sớm */
+    min-width: 900px;
+    /* KẾT THÚC SỬA LỖI */
 }
 
 .data-table th, .data-table td {

@@ -1,13 +1,14 @@
 # web_app/routes/admin.py
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request
 import logging
-from ..services import user_service
+from ..services import user_service, set_service # THÊM: Import set_service
 from ..models import db, User
 from .decorators import admin_required
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 logger = logging.getLogger(__name__)
 
+# ========================== User Management ==========================
 @admin_bp.route('/users')
 @admin_required
 def manage_users():
@@ -74,3 +75,70 @@ def add_user():
         'daily_new_limit': 10, 'timezone_offset': 7
     }
     return render_template('admin/add_user.html', user_data=default_user_data, roles=['user', 'admin'])
+
+# ========================== Set Management (BẮT ĐẦU THÊM MỚI) ==========================
+@admin_bp.route('/sets')
+@admin_required
+def manage_sets():
+    """
+    Mô tả: Hiển thị trang quản lý tất cả các bộ thẻ cho quản trị viên.
+    """
+    sets = set_service.get_all_sets_with_details()
+    return render_template('admin/manage_sets.html', sets=sets)
+
+@admin_bp.route('/sets/add', methods=['GET', 'POST'])
+@admin_required
+def add_set():
+    """
+    Mô tả: Hiển thị form thêm bộ thẻ mới và xử lý việc tạo.
+    """
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        creator_id = session.get('user_id')
+        new_set, status = set_service.create_set(data, creator_id)
+        if status == "success":
+            flash(f"Bộ thẻ '{new_set.title}' đã được thêm thành công.", "success")
+            return redirect(url_for('admin.manage_sets'))
+        else:
+            flash(f"Lỗi khi thêm bộ thẻ: {status}", "error")
+            return render_template('admin/add_set.html', set_data=data)
+    
+    return render_template('admin/add_set.html', set_data={})
+
+@admin_bp.route('/sets/edit/<int:set_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_set(set_id):
+    """
+    Mô tả: Hiển thị form chỉnh sửa bộ thẻ và xử lý việc cập nhật.
+    """
+    set_to_edit = set_service.get_set_by_id(set_id)
+    if not set_to_edit:
+        flash("Không tìm thấy bộ thẻ.", "error")
+        return redirect(url_for('admin.manage_sets'))
+
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        updated_set, status = set_service.update_set(set_id, data)
+        if status == "success":
+            flash(f"Cập nhật bộ thẻ '{updated_set.title}' thành công.", "success")
+            return redirect(url_for('admin.manage_sets'))
+        else:
+            flash(f"Lỗi khi cập nhật bộ thẻ: {status}", "error")
+    
+    return render_template('admin/edit_set.html', set_data=set_to_edit)
+
+@admin_bp.route('/sets/delete/<int:set_id>', methods=['POST'])
+@admin_required
+def delete_set(set_id):
+    """
+    Mô tả: Xử lý yêu cầu xóa bộ thẻ.
+    """
+    success, status = set_service.delete_set(set_id)
+    if success:
+        flash("Bộ thẻ đã được xóa thành công.", "success")
+    else:
+        flash(f"Lỗi khi xóa bộ thẻ: {status}", "error")
+    
+    return redirect(url_for('admin.manage_sets'))
+
+# ========================== (KẾT THÚC THÊM MỚI) ==========================

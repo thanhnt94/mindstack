@@ -1,0 +1,83 @@
+/*
+ * edit_modal.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho modal sửa flashcard.
+ */
+
+.edit-modal {
+    display: none; 
+    position: fixed;
+    z-index: 1004; /* Cao hơn cả note modal và side nav */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-width: 700px; /* Rộng hơn một chút */
+    width: 90%;
+    position: relative;
+    animation-name: animatetop;
+    animation-duration: 0.4s;
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-modal-close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.edit-modal-close-btn:hover,
+.edit-modal-close-btn:focus {
+    color: black;
+}
+
+.edit-modal-body {
+    max-height: 60vh; /* Giới hạn chiều cao */
+    overflow-y: auto; /* Cho phép cuộn */
+    padding-right: 15px; /* Thêm padding để thanh cuộn không che nội dung */
+}
+
+/* Tái sử dụng .form-group từ forms.css nhưng có thể ghi đè nếu cần */
+.edit-modal .form-group textarea,
+.edit-modal .form-group input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+.edit-modal-footer {
+    display: flex;
+    justify-content: flex-end; /* Căn phải các nút */
+    align-items: center;
+    padding-top: 20px;
+    margin-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+#edit-save-status {
+    margin-right: auto; /* Đẩy status về bên trái */
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.5s;
+}

@@ -1,20 +1,30 @@
 {% extends 'base.html' %}
 {% block title %}Học Thẻ - Flashcard App{% endblock %}
 
-{# BẮT ĐẦU THÊM: Thêm lớp 'no-scroll' vào thẻ body của trang này #}
 {% block body_class %}no-scroll{% endblock %}
-{# KẾT THÚC THÊM #}
 
 {% block content %}
     <div class="main-container">
         <div class="flashcard-column">
             <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
+                {# BẮT ĐẦU SỬA LỖI: Cấu trúc lại header bằng flexbox #}
                 <div class="flashcard-header">
-                    <button id="menu-toggle-btn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
-                    <button id="open-note-btn" class="note-button" aria-label="Mở ghi chú"><i class="fas fa-pencil-alt"></i></button>
-                    <p class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
-                    <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh"><i class="fas fa-volume-up"></i></button>
+                    <div class="header-left">
+                        <button id="menu-toggle-btn" class="menu-toggle-btn header-icon-btn" aria-label="Mở menu"><i class="fas fa-bars"></i></button>
+                        <button id="open-note-btn" class="note-button header-icon-btn" aria-label="Mở ghi chú"><i class="fas fa-pencil-alt"></i></button>
+                    </div>
+                    <div class="header-center">
+                        <p class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
+                    </div>
+                    <div class="header-right">
+                        {% if can_edit %}
+                        <button id="open-edit-btn" class="edit-button header-icon-btn" aria-label="Sửa thẻ"><i class="fas fa-pen-to-square"></i></button>
+                        {% endif %}
+                        <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh"><i class="fas fa-volume-up"></i></button>
+                    </div>
                 </div>
+                {# KẾT THÚC SỬA LỖI #}
+
                 <div class="flashcard-body">
                     <div class="scrollable-card-content">
                         <div class="card-text">
@@ -26,7 +36,11 @@
                 {% if image_to_show %}
                     <div id="image-popup" class="image-popup-container">
                         <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
-                        <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image">
+                        {% if image_to_show.startswith('http://') or image_to_show.startswith('https://') %}
+                            <img src="{{ image_to_show }}" alt="Hình ảnh thẻ" class="popup-image">
+                        {% else %}
+                            <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image">
+                        {% endif %}
                     </div>
                 {% endif %}
                 <div class="flashcard-footer">
@@ -56,6 +70,7 @@
         </div>
     </div>
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
+    {# BẮT ĐẦU SỬA LỖI: Cung cấp nội dung đầy đủ cho side-nav #}
     <nav id="side-nav" class="side-nav">
         <div class="side-nav-header">
             <div class="user-profile">
@@ -99,7 +114,9 @@
             </div>
         </div>
     </nav>
+    {# KẾT THÚC SỬA LỖI #}
 
+    {# BẮT ĐẦU SỬA LỖI: Cung cấp nội dung đầy đủ cho note-modal #}
     <div id="note-modal" class="note-modal">
         <div class="note-modal-content">
             <span id="note-modal-close-btn" class="note-modal-close-btn">&times;</span>
@@ -112,6 +129,44 @@
             </div>
         </div>
     </div>
+    {# KẾT THÚC SỬA LỖI #}
+
+    <div id="edit-modal" class="edit-modal">
+        <div class="edit-modal-content">
+            <span id="edit-modal-close-btn" class="edit-modal-close-btn">&times;</span>
+            <h2>Sửa Flashcard</h2>
+            <div class="edit-modal-body">
+                <div class="form-group">
+                    <label for="edit-front">Mặt trước:</label>
+                    <textarea id="edit-front" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-back">Mặt sau:</label>
+                    <textarea id="edit-back" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-front-audio">Nội dung Audio mặt trước:</label>
+                    <textarea id="edit-front-audio" rows="2" placeholder="Ví dụ: en:Hello"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-back-audio">Nội dung Audio mặt sau:</label>
+                    <textarea id="edit-back-audio" rows="2" placeholder="Ví dụ: vi:Xin chào"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-front-img">URL ảnh mặt trước:</label>
+                    <input type="text" id="edit-front-img" placeholder="Để trống nếu không có">
+                </div>
+                <div class="form-group">
+                    <label for="edit-back-img">URL ảnh mặt sau:</label>
+                    <input type="text" id="edit-back-img" placeholder="Để trống nếu không có">
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <span id="edit-save-status"></span>
+                <button id="save-edit-btn" class="button primary">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
 
     <audio id="cardAudioPlayer" hidden></audio>
     <div id="jsData"
@@ -120,7 +175,8 @@
          data-user-audio-settings='{{ user_audio_settings_json_string | safe }}'
          data-is-front="{{ 'true' if is_front else 'false' }}"
          data-has-back-audio-content="{{ 'true' if has_back_audio_content else 'false' }}"
-         data-audio-url="{{ audio_url or '' }}">
+         data-audio-url="{{ audio_url or '' }}"
+         data-can-edit="{{ 'true' if can_edit else 'false' }}">
     </div>
 {% endblock %}
 {% block scripts_extra %}
@@ -129,4 +185,5 @@
     <script src="{{ url_for('static', filename='js/image_popup_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/mobile_menu_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/note_handler.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/edit_handler.js') }}"></script>
 {% endblock %}

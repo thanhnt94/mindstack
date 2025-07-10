@@ -4,24 +4,14 @@
  */
 
 /* --- Nút bấm để mở modal ghi chú --- */
-.note-button {
-    position: absolute;
-    top: 50%;
-    left: 70px; /* Đặt cạnh nút menu */
-    transform: translateY(-50%);
-    background-color: transparent;
-    color: #888;
-    border: none;
-    font-size: 1.5em;
-    cursor: pointer;
-    z-index: 10;
-    padding: 5px;
-    transition: color 0.2s;
+/* * Nút này giờ đây được định kiểu bởi class .header-icon-btn trong flashcard_specific.css
+ * và được sắp xếp bởi layout flexbox của .flashcard-header.
+ * Chúng ta chỉ giữ lại quy tắc hover để có màu khác biệt.
+*/
+.note-button:hover {
+    color: #3498db; /* Giữ lại màu hover đặc trưng */
 }
 
-.note-button:hover {
-    color: #3498db; /* Đổi màu khi hover */
-}
 
 /* --- Modal Ghi chú (dựa trên modal.css nhưng có tùy chỉnh) --- */
 .note-modal {
@@ -34,7 +24,6 @@
     height: 100%;
     overflow: auto;
     background-color: rgba(0,0,0,0.6);
-    /* Dòng 'display: flex;' đã được xóa. JavaScript sẽ xử lý việc hiển thị. */
     align-items: center;
     justify-content: center;
 }
