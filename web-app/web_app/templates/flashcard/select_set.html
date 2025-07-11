@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}Chọn Bộ Thẻ - Flashcard App{% endblock %}
+
+{% block body_class %}body-centered-content hide-nav-footer-on-mobile{% endblock %}
+
 {% block content %}
     <div class="container">
         <h1>Chào mừng, {{ user.username or user.telegram_id }}!</h1>

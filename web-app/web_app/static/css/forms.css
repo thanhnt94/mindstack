@@ -22,11 +22,12 @@
 .form-group input[type="password"],
 .form-group input[type="number"],
 .form-group select {
-    width: calc(100% - 20px); /* Điều chỉnh cho padding */
+    width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 1em;
+    box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
 }
 
 .form-group input[type="text"]:focus,
@@ -50,14 +51,4 @@
     margin-top: 5px;
     color: #888;
     font-size: 0.85em;
-}
-
-/* Điều chỉnh responsive cho form */
-@media (max-width: 768px) {
-    .form-group input[type="text"],
-    .form-group input[type="password"],
-    .form-group input[type="number"],
-    .form-group select {
-        width: calc(100% - 20px);
-    }
 }

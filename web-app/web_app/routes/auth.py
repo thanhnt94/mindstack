@@ -26,8 +26,17 @@ def login():
             session['user_role'] = user.user_role
             flash(f"Chào mừng, {user.username or user.telegram_id}! Bạn đã đăng nhập thành công.", "success")
             logger.info(f"Người dùng {user.username or user.telegram_id} (ID: {user.user_id}) đã đăng nhập thành công.")
-            # Chuyển hướng đến trang chính của flashcard
-            return redirect(url_for('flashcard.index'))
+            
+            # --- BẮT ĐẦU THAY ĐỔI: Logic chuyển hướng thông minh ---
+            # Nếu người dùng có bộ thẻ đang học, chuyển thẳng đến trang học
+            if user.current_set_id:
+                logger.info(f"Người dùng có bộ thẻ hiện tại (ID: {user.current_set_id}). Chuyển hướng đến trang học.")
+                return redirect(url_for('flashcard.learn_set', set_id=user.current_set_id))
+            else:
+                # Nếu không, chuyển đến trang chọn bộ thẻ
+                logger.info("Người dùng không có bộ thẻ hiện tại. Chuyển hướng đến trang chọn bộ thẻ.")
+                return redirect(url_for('flashcard.index'))
+            # --- KẾT THÚC THAY ĐỔI ---
         else:
             flash("Tên đăng nhập hoặc mật khẩu không đúng.", "error")
             logger.warning(f"Đăng nhập thất bại cho username '{username}'.")

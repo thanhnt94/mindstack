@@ -1,117 +1,165 @@
 /*
  * navbar.css
- * Mô tả: Chứa các kiểu CSS dành riêng cho thanh điều hướng (navbar) của ứng dụng.
- * Bao gồm kiểu dáng cho navbar chính, thương hiệu ứng dụng, thông tin người dùng,
- * và các nút đăng nhập/đăng xuất trong navbar.
+ * Mô tả: CSS được viết lại hoàn toàn cho thanh điều hướng mới.
  */
 
-/* Kiểu cho Navbar */
-.navbar {
-    width: 100%;
-    background-color: #2c3e50; /* Nền tối cho navbar */
-    color: white;
-    padding: 15px 30px; /* Thêm padding ngang để tạo khoảng trống bên trong */
-    display: flex;
-    justify-content: space-between; /* Giữ space-between để đẩy các phần tử ra hai phía */
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed; /* Giữ cố định ở trên cùng */
+/* Container chính của Navbar */
+.main-navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e7e9ed;
+    padding: 0 2rem;
+    position: fixed;
     top: 0;
     left: 0;
-    z-index: 1000; /* Đảm bảo nó nằm trên các nội dung khác */
-    box-sizing: border-box; /* Quan trọng: Đảm bảo padding không làm tăng width */
-}
-
-.navbar-brand {
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #f4f7f6;
-    letter-spacing: 1px;
-    /* Không cần padding riêng ở đây nếu đã có padding chung cho .navbar */
-}
-
-.navbar-user-info {
+    width: 100%;
+    z-index: 1000;
+    height: 64px; /* Chiều cao cố định */
     display: flex;
     align-items: center;
-    gap: 15px;
+    box-sizing: border-box;
 }
 
-.navbar-user-info span {
-    font-size: 1em;
-    color: #ecf0f1;
-    white-space: nowrap; /* Ngăn văn bản xuống dòng */
-    overflow: hidden; /* Ẩn phần văn bản bị tràn */
-    text-overflow: ellipsis; /* Hiển thị dấu ba chấm nếu văn bản quá dài */
-    max-width: 180px; /* Tăng giới hạn chiều rộng tối đa cho tên người dùng */
+.navbar-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.navbar-user-info .logout-button,
-.navbar-user-info .login-button {
-    background-color: #e74c3c; /* Màu đỏ cho nút đăng xuất */
-    color: white;
-    padding: 8px 15px;
-    border-radius: 5px;
+/* Logo/Brand */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a202c;
     text-decoration: none;
-    font-weight: bold;
-    font-size: 0.9em; 
-    line-height: 1; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    min-width: 90px; /* Tăng chiều rộng tối thiểu của nút */
-    height: 34px; 
-    box-sizing: border-box; 
-    transition: background-color 0.3s ease;
-    box-shadow: none; 
 }
 
-.navbar-user-info .login-button {
-    background-color: #3498db; /* Màu xanh dương cho nút đăng nhập */
+.navbar-brand .fas {
+    color: #4299e1;
 }
 
-.navbar-user-info .logout-button:hover {
-    background-color: #c0392b;
+/* Các liên kết điều hướng */
+.navbar-nav {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 1rem;
 }
 
-.navbar-user-info .login-button:hover {
-    background-color: #2980b9;
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #4a5568;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
-/* Điều chỉnh responsive cho navbar */
+.nav-link:hover {
+    background-color: #f7fafc;
+    color: #2d3748;
+}
+
+.nav-link.active {
+    background-color: #ebf8ff;
+    color: #3182ce;
+    font-weight: 600;
+}
+
+/* Menu người dùng */
+.navbar-user-menu {
+    position: relative;
+}
+
+.user-menu-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.user-menu-trigger:hover {
+    background-color: #f7fafc;
+}
+
+.user-menu-trigger .username {
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.user-menu-trigger .fa-chevron-down {
+    font-size: 0.75rem;
+    color: #a0aec0;
+    transition: transform 0.2s;
+}
+
+/* Dropdown Menu */
+.user-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid #e7e9ed;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    width: 200px;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.user-dropdown-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #4a5568;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+    background-color: #f7fafc;
+}
+
+.dropdown-item .fas {
+    width: 16px;
+    text-align: center;
+    color: #a0aec0;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #e7e9ed;
+    margin: 0.5rem 0;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .navbar {
-        padding: 1px 8px; /* Padding nhỏ hơn cho mobile */
-        height: 30px; /* Chiều cao nhỏ hơn cho mobile */
-        flex-direction: row;
-        flex-wrap: nowrap;
-        justify-content: space-between;
-        align-items: center;
+    .navbar-nav {
+        display: none; /* Ẩn các link điều hướng chính trên mobile */
     }
-
-    .navbar-brand {
-        margin-bottom: 0;
-        font-size: 1em; /* Font size nhỏ hơn cho mobile */
-        flex-shrink: 0;
-        padding-right: 10px;
-    }
-
-    .navbar-user-info {
-        flex-grow: 1;
-        justify-content: flex-end;
-        gap: 8px;
-        min-width: 0;
-    }
-
-    .navbar-user-info span {
-        font-size: 0.8em; /* Font size nhỏ hơn cho mobile */
-    }
-
-    .navbar-user-info .logout-button,
-    .navbar-user-info .login-button {
-        padding: 1px 6px; /* Padding nhỏ hơn cho mobile */
-        font-size: 0.65em; /* Font size nhỏ hơn cho mobile */
-        min-width: 40px; /* Chiều rộng tối thiểu nhỏ hơn cho mobile */
-        height: 20px; /* Chiều cao nhỏ hơn cho mobile */
-        flex-shrink: 0;
+    .main-navbar {
+        padding: 0 1rem;
     }
 }

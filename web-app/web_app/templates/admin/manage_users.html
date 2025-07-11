@@ -2,13 +2,17 @@
 {% block title %}Quản lý thành viên - Flashcard Admin{% endblock %}
 {% block content %}
     <div class="container">
-        <h1><i class="fas fa-users-cog"></i> Quản lý thành viên</h1>
+        {# --- BẮT ĐẦU SỬA: Chuyển h1 vào trong admin-panel và cấu trúc lại header --- #}
         <div class="admin-panel">
-            <div class="button-group" style="margin-bottom: 20px; justify-content: flex-start;">
-                <a href="{{ url_for('flashcard.index') }}" class="button secondary"><i class="fas fa-home"></i> Về trang chủ</a>
-                <a href="{{ url_for('admin.manage_sets') }}" class="button secondary"><i class="fas fa-layer-group"></i> Quản lý Bộ thẻ</a>
-                <a href="{{ url_for('admin.add_user') }}" class="button primary"><i class="fas fa-user-plus"></i> Thêm thành viên mới</a>
+            <div class="admin-panel-header">
+                <h1><i class="fas fa-users-cog"></i> Quản lý thành viên</h1>
+                <div class="admin-actions">
+                    <a href="{{ url_for('admin.manage_sets') }}" class="button secondary"><i class="fas fa-layer-group"></i> Quản lý Bộ thẻ</a>
+                    <a href="{{ url_for('admin.add_user') }}" class="button primary"><i class="fas fa-user-plus"></i> Thêm thành viên mới</a>
+                </div>
             </div>
+            {# --- KẾT THÚC SỬA --- #}
+
             {% if users %}
                 <div class="table-responsive">
                     <table class="data-table">

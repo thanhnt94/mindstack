@@ -12,34 +12,43 @@
  */
 
 html, body {
-    /* Đảm bảo html và body chiếm toàn bộ chiều cao và chiều rộng của viewport */
     height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
-    /* Dòng 'overflow: hidden;' đã được xóa khỏi đây để cho phép cuộn mặc định */
 }
 
 body {
-    font-family: 'Inter', sans-serif; /* Sử dụng font Inter cho toàn bộ văn bản */
-    background-color: #f4f7f6; /* Màu nền nhẹ nhàng cho body */
-    color: #333; /* Màu chữ mặc định tối */
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    /* --- BẮT ĐẦU SỬA: Xóa các quy tắc cũ khỏi body --- */
+    /* Các quy tắc display:flex, padding-top đã được chuyển đi hoặc không cần nữa */
+    /* --- KẾT THÚC SỬA --- */
+}
 
-    /* Sử dụng flexbox để dễ dàng quản lý layout */
+/* --- BẮT ĐẦU THÊM MỚI: Định kiểu cho page-wrapper --- */
+.page-wrapper {
+    padding-top: 64px; /* Chiều cao của navbar */
+    width: 100%;
+    box-sizing: border-box;
+    /* Thêm các thuộc tính flex để giữ layout cũ */
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* 'justify-content' đã được xóa để nội dung dài có thể cuộn */
 }
+/* --- KẾT THÚC THÊM MỚI --- */
 
-/* --- BẮT ĐẦU THÊM: Lớp CSS mới để vô hiệu hóa cuộn --- */
 /* Lớp này sẽ chỉ được áp dụng cho trang học thẻ */
 body.no-scroll {
     overflow: hidden;
-    justify-content: center; /* Căn giữa lại nội dung khi không cuộn */
 }
-/* --- KẾT THÚC THÊM --- */
 
+/* Khi ở trang học thẻ (không có navbar), page-wrapper không cần padding-top */
+body.no-scroll .page-wrapper {
+    padding-top: 0;
+    height: 100%; /* Đảm bảo nó chiếm toàn bộ chiều cao */
+}
 
 /* Áp dụng box-sizing cho tất cả các phần tử để tính toán kích thước dễ dàng hơn */
 * {

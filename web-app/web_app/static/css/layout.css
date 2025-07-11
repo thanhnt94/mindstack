@@ -15,6 +15,24 @@
     margin-top: 80px;
 }
 
+/* --- BẮT ĐẦU THÊM MỚI: Lớp để căn giữa nội dung --- */
+/*
+ * Lớp này được sử dụng trên thẻ <body> để căn giữa nội dung chính (ví dụ: form đăng nhập)
+ * theo cả chiều dọc và chiều ngang, đặc biệt hữu ích trên mobile.
+ */
+.body-centered-content {
+    display: flex;
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center;    /* Căn giữa theo chiều dọc */
+    height: 100%;           /* Đảm bảo body chiếm toàn bộ chiều cao viewport */
+}
+
+/* Khi nội dung được căn giữa, không cần margin-top cho .main-container nữa */
+.body-centered-content .main-container {
+    margin-top: 0;
+}
+/* --- KẾT THÚC THÊM MỚI --- */
+
 .flashcard-column {
     width: 100%;
     display: flex;

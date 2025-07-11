@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}Học Thẻ - Flashcard App{% endblock %}
 
-{% block body_class %}no-scroll{% endblock %}
+{# --- BẮT ĐẦU THAY ĐỔI: Ẩn navbar trên trang này --- #}
+{% block navbar %}{% endblock %}
+{# --- KẾT THÚC THAY ĐỔI --- #}
+
+{% block body_class %}no-scroll hide-nav-footer-on-mobile{% endblock %}
 
 {% block content %}
     <div class="main-container">
         <div class="flashcard-column">
             <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
-                {# BẮT ĐẦU SỬA LỖI: Cấu trúc lại header bằng flexbox #}
                 <div class="flashcard-header">
                     <div class="header-left">
                         <button id="menu-toggle-btn" class="menu-toggle-btn header-icon-btn" aria-label="Mở menu"><i class="fas fa-bars"></i></button>
@@ -23,7 +26,6 @@
                         <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh"><i class="fas fa-volume-up"></i></button>
                     </div>
                 </div>
-                {# KẾT THÚC SỬA LỖI #}
 
                 <div class="flashcard-body">
                     <div class="scrollable-card-content">
@@ -70,7 +72,6 @@
         </div>
     </div>
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
-    {# BẮT ĐẦU SỬA LỖI: Cung cấp nội dung đầy đủ cho side-nav #}
     <nav id="side-nav" class="side-nav">
         <div class="side-nav-header">
             <div class="user-profile">
@@ -114,9 +115,7 @@
             </div>
         </div>
     </nav>
-    {# KẾT THÚC SỬA LỖI #}
 
-    {# BẮT ĐẦU SỬA LỖI: Cung cấp nội dung đầy đủ cho note-modal #}
     <div id="note-modal" class="note-modal">
         <div class="note-modal-content">
             <span id="note-modal-close-btn" class="note-modal-close-btn">&times;</span>
@@ -129,7 +128,6 @@
             </div>
         </div>
     </div>
-    {# KẾT THÚC SỬA LỖI #}
 
     <div id="edit-modal" class="edit-modal">
         <div class="edit-modal-content">

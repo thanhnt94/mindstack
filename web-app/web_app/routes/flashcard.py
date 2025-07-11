@@ -45,6 +45,28 @@ def index():
 
     return render_template('flashcard/select_set.html', user=user, sets_data=sets_data)
 
+# --- BẮT ĐẦU THÊM MỚI: Route điều hướng thông minh ---
+@flashcard_bp.route('/go-to-learn')
+@login_required
+def go_to_learn_page():
+    """
+    Mô tả: Một route điều hướng thông minh.
+    Chuyển người dùng đến trang học của bộ thẻ hiện tại nếu có,
+    nếu không thì chuyển đến trang chọn bộ thẻ.
+    """
+    user_id = session.get('user_id')
+    user = User.query.get(user_id)
+    
+    if user and user.current_set_id:
+        # Nếu có bộ thẻ đang học, đi thẳng vào học
+        logger.info(f"User {user_id} is going to current set {user.current_set_id}")
+        return redirect(url_for('flashcard.learn_set', set_id=user.current_set_id))
+    else:
+        # Nếu không, về trang chọn bộ thẻ
+        logger.info(f"User {user_id} has no current set, going to index.")
+        return redirect(url_for('flashcard.index'))
+# --- KẾT THÚC THÊM MỚI ---
+
 @flashcard_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -86,9 +108,7 @@ def learn_set(set_id):
     context_stats = stats_service.get_user_stats_for_context(user_id, set_id)
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
     
-    # BẮT ĐẦU THÊM MỚI: Kiểm tra quyền sửa thẻ
     can_edit = _check_edit_permission(user, flashcard_obj)
-    # KẾT THÚC THÊM MỚI
 
     return render_template(
         'flashcard/learn_card.html', user=user, flashcard=flashcard_obj, progress=progress_obj,
@@ -97,7 +117,7 @@ def learn_set(set_id):
         user_audio_settings_json_string=json.dumps(user_audio_settings),
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
         audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
-        can_edit=can_edit # Truyền biến can_edit vào template
+        can_edit=can_edit
     )
 
 @flashcard_bp.route('/flip/<int:progress_id>')
@@ -115,9 +135,7 @@ def flip_card(progress_id):
     context_stats = stats_service.get_user_stats_for_context(user.user_id, flashcard_obj.set_id)
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
 
-    # BẮT ĐẦU THÊM MỚI: Kiểm tra quyền sửa thẻ
     can_edit = _check_edit_permission(user, flashcard_obj)
-    # KẾT THÚC THÊM MỚI
 
     return render_template(
         'flashcard/learn_card.html', user=user, flashcard=flashcard_obj, progress=progress,
@@ -126,14 +144,12 @@ def flip_card(progress_id):
         user_audio_settings_json_string=json.dumps(user_audio_settings),
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
         audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
-        can_edit=can_edit # Truyền biến can_edit vào template
+        can_edit=can_edit
     )
 
-# Các route còn lại không thay đổi
 @flashcard_bp.route('/rate/<int:progress_id>/<string:response_str>')
 @login_required
 def rate_card(progress_id, response_str):
-    # ... (giữ nguyên)
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     progress = UserFlashcardProgress.query.get(progress_id)

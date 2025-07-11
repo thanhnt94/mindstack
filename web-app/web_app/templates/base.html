@@ -10,21 +10,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {% block head_extra %}{% endblock %}
 </head>
-<!-- BẮT ĐẦU SỬA: Thêm block 'body_class' để các template con có thể thêm class -->
 <body class="{% block body_class %}{% endblock %}">
-<!-- KẾT THÚC SỬA -->
-    {# Navbar sẽ được include từ file riêng #}
-    {% include 'includes/navbar.html' %}
+    
+    {% block navbar %}
+        {# Navbar sẽ được include từ file riêng #}
+        {% include 'includes/navbar.html' %}
+    {% endblock %}
 
-    {# Flash messages sẽ được include từ file riêng #}
-    {% include 'includes/flashes.html' %}
+    {# --- BẮT ĐẦU THAY ĐỔI: Thêm page-wrapper --- #}
+    <div class="page-wrapper">
+        {# Flash messages sẽ được include từ file riêng #}
+        {% include 'includes/flashes.html' %}
 
-    {# Nội dung chính của trang sẽ nằm trong block này #}
-    {% block content %}{% endblock %}
+        {# Nội dung chính của trang sẽ nằm trong block này #}
+        {% block content %}{% endblock %}
 
-    {# Footer sẽ được include từ file riêng #}
-    {% include 'includes/footer.html' %}
+        {# Footer sẽ được include từ file riêng #}
+        {% include 'includes/footer.html' %}
+    </div>
+    {# --- KẾT THÚC THAY ĐỔI --- #}
 
+    <script src="{{ url_for('static', filename='js/navbar_handler.js') }}"></script>
     {% block scripts_extra %}{% endblock %}
 </body>
 </html>
