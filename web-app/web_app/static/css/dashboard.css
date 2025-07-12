@@ -1,7 +1,6 @@
 /*
  * dashboard.css
  * Mô tả: Chứa các kiểu CSS dành riêng cho trang thống kê (dashboard).
- * Thiết kế theo phương pháp Mobile-First.
  */
 
 .dashboard-container {
@@ -44,7 +43,7 @@
 /* Lưới cho các thẻ thống kê */
 .stat-cards-grid {
     display: grid;
-    grid-template-columns: 1fr; /* 1 cột trên mobile */
+    grid-template-columns: 1fr;
     gap: 15px;
 }
 
@@ -88,38 +87,65 @@
     color: #7f8c8d;
 }
 
-/* --- BẮT ĐẦU SỬA: Kiểu cho các checkbox điều khiển --- */
-.chart-controls {
+/* Lịch Nhiệt Hoạt Động */
+.heatmap-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 12px);
+    grid-auto-rows: 12px;
+    gap: 3px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+.heatmap-day {
+    width: 12px;
+    height: 12px;
+    background-color: #ebedf0;
+    border-radius: 2px;
+    transition: background-color 0.3s;
+}
+.heatmap-day[data-level="1"] { background-color: #c6e48b; }
+.heatmap-day[data-level="2"] { background-color: #7bc96f; }
+.heatmap-day[data-level="3"] { background-color: #239a3b; }
+.heatmap-day[data-level="4"] { background-color: #196127; }
+.heatmap-legend {
     display: flex;
-    flex-wrap: nowrap; /* Ngăn không cho xuống dòng */
-    justify-content: center; /* Đảm bảo căn giữa */
-    gap: 6px; /* Giảm khoảng cách giữa các mục */
-    margin-bottom: 15px; /* Giảm khoảng cách với biểu đồ */
-    overflow-x: auto; 
-    padding-bottom: 5px; 
+    justify-content: flex-end;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8em;
+    color: #586069;
+}
+.legend-color-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
 }
 
+/* Kiểu cho các checkbox điều khiển */
+.chart-controls {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-content: center;
+    gap: 10px 25px;
+    margin-bottom: 20px;
+}
 .chart-toggle {
     display: flex;
     align-items: center;
     cursor: pointer;
     font-size: 0.9em;
-    white-space: nowrap; /* Ngăn chữ bị xuống dòng */
+    white-space: nowrap; 
 }
-
 .chart-toggle-checkbox {
     margin-right: 8px;
     cursor: pointer;
 }
-
 .toggle-label {
     font-weight: 500;
     color: #4a5568;
     position: relative;
-    padding-left: 18px; /* Giảm padding để gần chấm màu hơn */
+    padding-left: 18px; 
 }
-
-/* Chấm màu phía trước label */
 .toggle-label::before {
     content: '';
     position: absolute;
@@ -130,41 +156,28 @@
     height: 12px;
     border-radius: 50%;
 }
-
-/* Định nghĩa màu sắc tương ứng */
-.toggle-label.color-reviews::before {
-    background-color: rgba(52, 152, 219, 1); /* Màu xanh dương */
-}
-
-.toggle-label.color-reviewed-cards::before {
-    background-color: rgba(155, 89, 182, 1); /* Màu tím */
-}
-
-.toggle-label.color-new-cards::before {
-    background-color: rgba(46, 204, 113, 1); /* Màu xanh lá */
-}
-/* --- KẾT THÚC SỬA --- */
-
+.toggle-label.color-reviews::before { background-color: rgba(52, 152, 219, 1); }
+.toggle-label.color-reviewed-cards::before { background-color: rgba(155, 89, 182, 1); }
+.toggle-label.color-new-cards::before { background-color: rgba(46, 204, 113, 1); }
+.toggle-label.color-score::before { background-color: rgba(241, 196, 15, 1); }
 
 /* Container cho biểu đồ */
 .chart-container {
     position: relative;
     width: 100%;
-    height: 250px; /* Chiều cao cố định cho mobile */
+    height: 250px; 
 }
 
 /* Dropdown chọn bộ thẻ */
 .set-selector-container {
     margin-bottom: 20px;
 }
-
 .set-selector-container label {
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
     color: #555;
 }
-
 .form-control {
     width: 100%;
     padding: 10px;
@@ -174,47 +187,99 @@
     background-color: #fff;
 }
 
-/* Container cho chi tiết bộ thẻ */
+/* --- BẮT ĐẦU SỬA: CSS cho phần chi tiết bộ thẻ --- */
 .set-details-container {
     margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
 }
-
 .pie-chart-container {
-    max-width: 250px;
-    margin: 0 auto 20px auto;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 180px;
+    margin: 0 auto;
 }
-
 .set-details-text {
-    text-align: center;
-    font-size: 1.1em;
-    color: #333;
+    width: 100%;
 }
+.set-details-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+.main-progress-bar-container {
+    width: 100%;
+}
+.main-progress-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #4a5568;
+    margin-bottom: 8px;
+}
+.main-progress-bar {
+    height: 12px;
+    background-color: #e9ecef;
+    border-radius: 6px;
+    width: 100%;
+}
+.main-progress-fill {
+    height: 100%;
+    background-color: #3498db;
+    border-radius: 6px;
+    transition: width 0.5s ease;
+}
+.key-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+.key-stat-card {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    color: #fff;
+}
+.key-stat-card.due { background-color: #e74c3c; }
+.key-stat-card.mastered { background-color: #2ecc71; }
+.key-stat-card.lapsed { background-color: #f39c12; }
+.key-stat-value {
+    display: block;
+    font-size: 1.8em;
+    font-weight: 700;
+}
+.key-stat-label {
+    display: block;
+    font-size: 0.85em;
+    opacity: 0.9;
+}
+/* --- KẾT THÚC SỬA --- */
 
-/* Responsive cho màn hình lớn hơn */
+/* Responsive */
 @media (min-width: 576px) {
     .stat-cards-grid {
-        grid-template-columns: repeat(3, 1fr); /* 3 cột trên màn hình lớn hơn */
+        grid-template-columns: repeat(3, 1fr); 
     }
 }
-
 @media (min-width: 768px) {
     .dashboard-container {
         padding: 20px;
     }
     .chart-container {
-        height: 300px; /* Biểu đồ cao hơn trên desktop */
+        height: 300px; 
     }
     .set-details-container {
-        display: flex !important; /* Luôn hiển thị flex trên desktop */
-        align-items: center;
-        gap: 20px;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 30px;
     }
     .pie-chart-container {
-        flex: 1;
-        margin-bottom: 0;
+        flex-basis: 180px;
     }
     .set-details-text {
-        flex: 1;
-        text-align: left;
+        flex-grow: 1;
     }
 }

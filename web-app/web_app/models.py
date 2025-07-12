@@ -38,6 +38,7 @@ class User(db.Model):
     created_sets = db.relationship('VocabularySet', backref='creator', lazy=True, foreign_keys='VocabularySet.creator_user_id')
     progresses = db.relationship('UserFlashcardProgress', backref='user', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('FlashcardNote', backref='user', lazy=True, cascade="all, delete-orphan")
+    score_logs = db.relationship('ScoreLog', backref='user', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User {self.username or self.telegram_id}>"
@@ -73,10 +74,8 @@ class Flashcard(db.Model):
     back_img = db.Column(db.String)
     notification_text = db.Column(db.String)
 
-    # BẮT ĐẦU SỬA LỖI: Thêm cascade để xóa các bản ghi liên quan khi flashcard bị xóa
     progresses = db.relationship('UserFlashcardProgress', backref='flashcard', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('FlashcardNote', backref='flashcard', lazy=True, cascade="all, delete-orphan")
-    # KẾT THÚC SỬA LỖI
 
     def __repr__(self):
         return f"<Flashcard {self.flashcard_id} - {self.front[:20]}>"
@@ -112,3 +111,15 @@ class FlashcardNote(db.Model):
 
     def __repr__(self):
         return f"<Note ID:{self.note_id} Card:{self.flashcard_id} User:{self.user_id}>"
+
+# ========================== ScoreLog ==========================
+class ScoreLog(db.Model):
+    __tablename__ = 'ScoreLogs'
+    log_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='CASCADE'), nullable=False)
+    score_change = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.String) # Ví dụ: 'review', 'new_card'
+
+    def __repr__(self):
+        return f"<ScoreLog User:{self.user_id} Change:{self.score_change}>"

@@ -37,11 +37,27 @@
         </div>
     </div>
 
+    {# --- BẮT ĐẦU THÊM MỚI: Lịch Nhiệt Hoạt Động --- #}
+    <div class="stats-section">
+        <h2 class="section-title">Lịch sử hoạt động</h2>
+        <div id="heatmap-container" class="heatmap-container">
+            <!-- Heatmap sẽ được vẽ ở đây bởi JavaScript -->
+        </div>
+        <div class="heatmap-legend">
+            <span>Ít</span>
+            <div class="legend-color-box" style="background-color: #c6e48b;"></div>
+            <div class="legend-color-box" style="background-color: #7bc96f;"></div>
+            <div class="legend-color-box" style="background-color: #239a3b;"></div>
+            <div class="legend-color-box" style="background-color: #196127;"></div>
+            <span>Nhiều</span>
+        </div>
+    </div>
+    {# --- KẾT THÚC THÊM MỚI --- #}
+
     <!-- Phần Biểu đồ hoạt động -->
     <div class="stats-section">
         <h2 class="section-title">Hoạt động 30 ngày qua</h2>
         
-        {# --- BẮT ĐẦU SỬA: Thêm các lớp CSS màu sắc --- #}
         <div class="chart-controls">
             <label class="chart-toggle">
                 <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="0" checked>
@@ -55,8 +71,11 @@
                 <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="2" checked>
                 <span class="toggle-label color-new-cards">Thẻ học mới</span>
             </label>
+            <label class="chart-toggle">
+                <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="3" checked>
+                <span class="toggle-label color-score">Điểm đạt được</span>
+            </label>
         </div>
-        {# --- KẾT THÚC SỬA --- #}
 
         <div class="chart-container">
             <canvas id="activityChart"></canvas>

@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
-from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress
+from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress, ScoreLog
 from ..config import DEFAULT_TIMEZONE_OFFSET, LEARNING_MODE_DISPLAY_NAMES
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,8 @@ class StatsService:
             'learned_distinct_overall': 0,
             'learned_sets_count': 0,
             'activity_chart_data': {},
-            'sets_stats': {}
+            'sets_stats': {},
+            'heatmap_data': {}
         }
 
         all_user_progress = UserFlashcardProgress.query.filter_by(user_id=user_id)
@@ -83,24 +84,30 @@ class StatsService:
         tz_offset = user.timezone_offset or DEFAULT_TIMEZONE_OFFSET
         tz = timezone(timedelta(hours=tz_offset))
         today = datetime.now(tz).date()
-        thirty_days_ago_ts = int((datetime.now(tz) - timedelta(days=30)).timestamp())
-
-        # --- BẮT ĐẦU SỬA: Truy vấn thêm dữ liệu cho biểu đồ ---
         
-        # 1. Lấy dữ liệu thô: các lượt ôn tập trong 30 ngày qua
-        reviews_last_30_days = db.session.query(UserFlashcardProgress.last_reviewed, UserFlashcardProgress.flashcard_id)\
-            .filter(UserFlashcardProgress.user_id == user_id, UserFlashcardProgress.last_reviewed >= thirty_days_ago_ts)\
+        one_year_ago_date = today - timedelta(days=365)
+        one_year_ago_ts = int(datetime.combine(one_year_ago_date, datetime.min.time(), tzinfo=tz).timestamp())
+        
+        reviews_last_year = db.session.query(UserFlashcardProgress.last_reviewed, UserFlashcardProgress.flashcard_id)\
+            .filter(UserFlashcardProgress.user_id == user_id, UserFlashcardProgress.last_reviewed >= one_year_ago_ts)\
             .all()
         
-        # Xử lý dữ liệu thô
+        heatmap_activity = defaultdict(int)
+        for review_ts, _ in reviews_last_year:
+            review_date_str = datetime.fromtimestamp(review_ts, tz).strftime('%Y-%m-%d')
+            heatmap_activity[review_date_str] += 1
+        stats['heatmap_data'] = dict(heatmap_activity)
+
+        thirty_days_ago_ts = int((datetime.now(tz) - timedelta(days=30)).timestamp())
+        
         review_actions_by_day = defaultdict(int)
         reviewed_cards_by_day = defaultdict(set)
-        for review_ts, card_id in reviews_last_30_days:
-            review_date_str = datetime.fromtimestamp(review_ts, tz).strftime('%d/%m')
-            review_actions_by_day[review_date_str] += 1
-            reviewed_cards_by_day[review_date_str].add(card_id)
+        for review_ts, card_id in reviews_last_year:
+            if review_ts >= thirty_days_ago_ts:
+                review_date_str = datetime.fromtimestamp(review_ts, tz).strftime('%d/%m')
+                review_actions_by_day[review_date_str] += 1
+                reviewed_cards_by_day[review_date_str].add(card_id)
 
-        # 2. Số thẻ học mới
         new_cards_last_30_days = db.session.query(UserFlashcardProgress.learned_date)\
             .filter(UserFlashcardProgress.user_id == user_id, UserFlashcardProgress.learned_date >= thirty_days_ago_ts)\
             .all()
@@ -109,45 +116,63 @@ class StatsService:
             learned_date = datetime.fromtimestamp(new_card.learned_date, tz).strftime('%d/%m')
             new_card_activity_by_day[learned_date] += 1
         
-        # Tạo nhãn và dữ liệu cho biểu đồ
+        score_logs_last_30_days = db.session.query(ScoreLog.timestamp, ScoreLog.score_change)\
+            .filter(ScoreLog.user_id == user_id, ScoreLog.timestamp >= thirty_days_ago_ts)\
+            .all()
+        score_gained_by_day = defaultdict(int)
+        for log in score_logs_last_30_days:
+            log_date = datetime.fromtimestamp(log.timestamp, tz).strftime('%d/%m')
+            score_gained_by_day[log_date] += log.score_change
+
         chart_labels = [(today - timedelta(days=i)).strftime('%d/%m') for i in range(29, -1, -1)]
         review_actions_data = [review_actions_by_day.get(label, 0) for label in chart_labels]
         distinct_cards_data = [len(reviewed_cards_by_day.get(label, set())) for label in chart_labels]
         new_cards_chart_data = [new_card_activity_by_day.get(label, 0) for label in chart_labels]
+        score_chart_data = [score_gained_by_day.get(label, 0) for label in chart_labels]
 
         stats['activity_chart_data'] = {
             'labels': chart_labels,
             'datasets': [
                 {'label': 'Số lần ôn tập', 'data': review_actions_data},
                 {'label': 'Số thẻ ôn tập', 'data': distinct_cards_data},
-                {'label': 'Số thẻ học mới', 'data': new_cards_chart_data}
+                {'label': 'Số thẻ học mới', 'data': new_cards_chart_data},
+                {'label': 'Điểm đạt được', 'data': score_chart_data}
             ]
         }
-        # --- KẾT THÚC SỬA ---
 
         learned_sets = VocabularySet.query.join(Flashcard).join(UserFlashcardProgress)\
             .filter(UserFlashcardProgress.user_id == user_id).distinct().all()
         
         stats['learned_sets_count'] = len(learned_sets)
 
+        # --- BẮT ĐẦU SỬA: Thêm logic lấy chi tiết cho từng bộ ---
+        current_ts = self._get_current_unix_timestamp(tz_offset)
         for s in learned_sets:
             set_id = s.set_id
             total_cards = Flashcard.query.filter_by(set_id=set_id).count()
+            
             progress_in_set = UserFlashcardProgress.query.join(Flashcard)\
                 .filter(Flashcard.set_id == set_id, UserFlashcardProgress.user_id == user_id)
+            
             learned_cards = progress_in_set.count()
             mastered_cards = progress_in_set.filter(UserFlashcardProgress.correct_streak > 5).count()
+            due_cards = progress_in_set.filter(UserFlashcardProgress.due_time <= current_ts).count()
+            lapsed_cards = progress_in_set.filter(UserFlashcardProgress.lapse_count > 0).count()
             learning_cards = learned_cards - mastered_cards
-            not_started_cards = total_cards - learned_cards
+
             stats['sets_stats'][set_id] = {
                 'title': s.title,
                 'total_cards': total_cards,
                 'learned_cards': learned_cards,
+                'due_cards': due_cards,
+                'mastered_cards': mastered_cards,
+                'lapsed_cards': lapsed_cards,
                 'pie_chart_data': {
-                    'labels': ['Đã thuộc', 'Đang học', 'Chưa học'],
-                    'data': [mastered_cards, learning_cards, not_started_cards]
+                    'labels': ['Nhớ sâu', 'Đang học', 'Chưa học'],
+                    'data': [mastered_cards, learning_cards, total_cards - learned_cards]
                 }
             }
+        # --- KẾT THÚC SỬA ---
         
         logger.info(f"{log_prefix} Tổng hợp dữ liệu thành công.")
         return stats
