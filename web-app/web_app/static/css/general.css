@@ -3,14 +3,6 @@
  * Mô tả: Chứa các kiểu CSS chung nhất cho toàn bộ ứng dụng Flashcard Web App.
  */
 
-/* ========================== THAY ĐỔI CHO GIAO DIỆN MỚI ========================== */
-/*
- * Các thay đổi này nhằm mục đích:
- * 1. Thiết lập font chữ 'Inter' hiện đại, dễ đọc.
- * 2. Đặt màu nền nhẹ nhàng, dễ chịu cho mắt.
- * 3. Cấu hình body để hỗ trợ layout toàn màn hình trên mobile.
- */
-
 html, body {
     height: 100%;
     width: 100%;
@@ -22,32 +14,32 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #f4f7f6;
     color: #333;
-    /* --- BẮT ĐẦU SỬA: Xóa các quy tắc cũ khỏi body --- */
-    /* Các quy tắc display:flex, padding-top đã được chuyển đi hoặc không cần nữa */
-    /* --- KẾT THÚC SỬA --- */
+    display: flex; /* Sử dụng flexbox cho layout chính */
+    flex-direction: column; /* Xếp chồng navbar và page-wrapper */
 }
 
-/* --- BẮT ĐẦU THÊM MỚI: Định kiểu cho page-wrapper --- */
+/* Lớp wrapper chính bao quanh nội dung trang */
 .page-wrapper {
     padding-top: 64px; /* Chiều cao của navbar */
     width: 100%;
     box-sizing: border-box;
-    /* Thêm các thuộc tính flex để giữ layout cũ */
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* Bỏ align-items: center để nội dung có thể trải rộng */
+    flex-grow: 1; /* Cho phép wrapper chiếm hết không gian còn lại */
 }
-/* --- KẾT THÚC THÊM MỚI --- */
 
 /* Lớp này sẽ chỉ được áp dụng cho trang học thẻ */
 body.no-scroll {
     overflow: hidden;
 }
 
-/* Khi ở trang học thẻ (không có navbar), page-wrapper không cần padding-top */
-body.no-scroll .page-wrapper {
-    padding-top: 0;
-    height: 100%; /* Đảm bảo nó chiếm toàn bộ chiều cao */
+/* Khi ở trang học thẻ (không có navbar trên mobile), page-wrapper không cần padding-top */
+@media (max-width: 1024px) {
+    body.learn-page .page-wrapper {
+        padding-top: 0;
+        height: 100%;
+    }
 }
 
 /* Áp dụng box-sizing cho tất cả các phần tử để tính toán kích thước dễ dàng hơn */

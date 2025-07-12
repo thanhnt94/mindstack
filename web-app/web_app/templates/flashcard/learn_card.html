@@ -1,12 +1,28 @@
 {% extends 'base.html' %}
 {% block title %}Học Thẻ - Flashcard App{% endblock %}
 
-{% block navbar %}{% endblock %}
-
-{% block body_class %}no-scroll hide-nav-footer-on-mobile{% endblock %}
+{# Thêm class để xử lý trên mobile và desktop #}
+{% block body_class %}no-scroll learn-page{% endblock %}
 
 {% block content %}
-    <div class="main-container">
+    {# Container chính cho trang học, sẽ chứa các cột #}
+    <div class="main-container learn-page-container">
+
+        {# CỘT TRÁI (Desktop): Hiển thị hình ảnh hoặc một placeholder #}
+        <div class="left-column-container">
+            {% set image_to_show = flashcard.front_img if is_front else flashcard.back_img %}
+            {% if image_to_show %}
+                <div class="flashcard-image-panel">
+                    {% if image_to_show.startswith('http://') or image_to_show.startswith('https://') %}
+                        <img src="{{ image_to_show }}" alt="Hình ảnh thẻ">
+                    {% else %}
+                        <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ">
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        {# CỘT GIỮA (Desktop) / Cột chính (Mobile): Flashcard #}
         <div class="flashcard-column">
             <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
                 <div class="flashcard-header">
@@ -19,7 +35,7 @@
                     </div>
                     <div class="header-right">
                         {% if can_edit %}
-                        <button id="open-edit-btn" class="edit-button header-icon-btn" aria-label="Sửa thẻ"><i class="fas fa-pen-to-square"></i></button>
+                            <button id="open-edit-btn" class="edit-button header-icon-btn" aria-label="Sửa thẻ"><i class="fas fa-pen-to-square"></i></button>
                         {% endif %}
                         <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh"><i class="fas fa-volume-up"></i></button>
                     </div>
@@ -32,7 +48,8 @@
                         </div>
                     </div>
                 </div>
-                {% set image_to_show = flashcard.front_img if is_front else flashcard.back_img %}
+
+                {# Popup ảnh cho giao diện mobile, sẽ được ẩn trên desktop #}
                 {% if image_to_show %}
                     <div id="image-popup" class="image-popup-container">
                         <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
@@ -43,6 +60,7 @@
                         {% endif %}
                     </div>
                 {% endif %}
+
                 <div class="flashcard-footer">
                     {% if is_autoplay_mode %}
                         {% if is_front %}
@@ -68,11 +86,50 @@
                 </div>
             </div>
         </div>
+
+        {# CỘT PHẢI (Desktop): Panel thống kê và điều khiển #}
+        <div class="right-column-container">
+            <div class="context-panel">
+                <a href="{% if user.user_role == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('flashcard.dashboard') }}{% endif %}" class="user-profile-link">
+                    <div class="user-profile">
+                        <div class="user-avatar"><i class="fas fa-user"></i></div>
+                        <div class="user-info">
+                            <span class="username">{{ user.username or 'User' }}</span>
+                            <span class="score">Điểm: {{ context_stats.total_score or 0 }}</span>
+                        </div>
+                    </div>
+                </a>
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Bộ thẻ hiện tại</h3>
+                    <p>{{ context_stats.set_title }}</p>
+                    <p>Tiến độ: {{ context_stats.set_learned_cards }} / {{ context_stats.set_total_cards }} thẻ</p>
+                    <p>Cần ôn: {{ context_stats.set_due_cards }} thẻ</p>
+                    <div class="nav-section-actions">
+                        <a href="{{ url_for('flashcard.select_set_page') }}" class="nav-action-button"><i class="fas fa-layer-group"></i> Chọn Bộ Khác</a>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Chế độ học</h3>
+                    <p>{{ context_stats.current_mode_display }}</p>
+                    <div class="nav-section-actions">
+                        <a href="{{ url_for('flashcard.select_mode') }}" class="nav-action-button"><i class="fas fa-bolt"></i> Đổi Chế Độ</a>
+                    </div>
+                </div>
+                <hr class="nav-separator">
+                <ul class="side-nav-links">
+                    <li><a href="{{ url_for('flashcard.dashboard') }}"><i class="fas fa-chart-bar"></i> Thống kê</a></li>
+                    <li><a href="#"><i class="fas fa-trophy"></i> Bảng xếp hạng</a></li>
+                    <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
+
+    {# Lớp phủ và Menu trượt cho Mobile #}
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
     <nav id="side-nav" class="side-nav">
         <div class="side-nav-header">
-            {# --- BẮT ĐẦU SỬA: Cập nhật link cho admin --- #}
             <a href="{% if user.user_role == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('flashcard.dashboard') }}{% endif %}" class="user-profile-link">
                 <div class="user-profile">
                     <div class="user-avatar"><i class="fas fa-user"></i></div>
@@ -82,7 +139,6 @@
                     </div>
                 </div>
             </a>
-            {# --- KẾT THÚC SỬA --- #}
             <button id="side-nav-close-btn" class="side-nav-close-btn">&times;</button>
         </div>
         <div class="side-nav-content">
@@ -118,6 +174,7 @@
         </div>
     </nav>
 
+    {# Modals cho Mobile (Nội dung đầy đủ) #}
     <div id="note-modal" class="note-modal">
         <div class="note-modal-content">
             <span id="note-modal-close-btn" class="note-modal-close-btn">&times;</span>
@@ -130,41 +187,19 @@
             </div>
         </div>
     </div>
-
     <div id="edit-modal" class="edit-modal">
         <div class="edit-modal-content">
             <span id="edit-modal-close-btn" class="edit-modal-close-btn">&times;</span>
             <h2>Sửa Flashcard</h2>
             <div class="edit-modal-body">
-                <div class="form-group">
-                    <label for="edit-front">Mặt trước:</label>
-                    <textarea id="edit-front" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="edit-back">Mặt sau:</label>
-                    <textarea id="edit-back" rows="4"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="edit-front-audio">Nội dung Audio mặt trước:</label>
-                    <textarea id="edit-front-audio" rows="2" placeholder="Ví dụ: en:Hello"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="edit-back-audio">Nội dung Audio mặt sau:</label>
-                    <textarea id="edit-back-audio" rows="2" placeholder="Ví dụ: vi:Xin chào"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="edit-front-img">URL ảnh mặt trước:</label>
-                    <input type="text" id="edit-front-img" placeholder="Để trống nếu không có">
-                </div>
-                <div class="form-group">
-                    <label for="edit-back-img">URL ảnh mặt sau:</label>
-                    <input type="text" id="edit-back-img" placeholder="Để trống nếu không có">
-                </div>
+                <div class="form-group"><label for="edit-front">Mặt trước:</label><textarea id="edit-front" rows="3"></textarea></div>
+                <div class="form-group"><label for="edit-back">Mặt sau:</label><textarea id="edit-back" rows="4"></textarea></div>
+                <div class="form-group"><label for="edit-front-audio">Nội dung Audio mặt trước:</label><textarea id="edit-front-audio" rows="2" placeholder="Ví dụ: en:Hello"></textarea></div>
+                <div class="form-group"><label for="edit-back-audio">Nội dung Audio mặt sau:</label><textarea id="edit-back-audio" rows="2" placeholder="Ví dụ: vi:Xin chào"></textarea></div>
+                <div class="form-group"><label for="edit-front-img">URL ảnh mặt trước:</label><input type="text" id="edit-front-img" placeholder="Để trống nếu không có"></div>
+                <div class="form-group"><label for="edit-back-img">URL ảnh mặt sau:</label><input type="text" id="edit-back-img" placeholder="Để trống nếu không có"></div>
             </div>
-            <div class="edit-modal-footer">
-                <span id="edit-save-status"></span>
-                <button id="save-edit-btn" class="button primary">Lưu thay đổi</button>
-            </div>
+            <div class="edit-modal-footer"><span id="edit-save-status"></span><button id="save-edit-btn" class="button primary">Lưu thay đổi</button></div>
         </div>
     </div>
 
@@ -179,6 +214,7 @@
          data-can-edit="{{ 'true' if can_edit else 'false' }}">
     </div>
 {% endblock %}
+
 {% block scripts_extra %}
     <script src="{{ url_for('static', filename='js/learn_card_audio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/card_content_adjuster.js') }}"></script>

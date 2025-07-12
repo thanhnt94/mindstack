@@ -4,7 +4,12 @@
  */
 
 .footer {
-    margin-top: 30px;
+    width: 100%; /* Đảm bảo footer chiếm toàn bộ chiều ngang */
+    margin-top: auto; /* Đẩy footer xuống cuối nếu page-wrapper là flex-column */
+    padding: 20px;
     font-size: 0.9em;
     color: #999;
+    text-align: center; /* Căn giữa nội dung bên trong */
+    background-color: #f4f7f6; /* Đồng bộ màu nền với body */
+    box-sizing: border-box;
 }

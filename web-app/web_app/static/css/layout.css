@@ -3,35 +3,23 @@
  * Mô tả: Chứa các kiểu CSS liên quan đến bố cục chính của ứng dụng.
  */
 
-/* ========================== Bố cục chính (Main Container) ========================== */
-/* Các style này chủ yếu dành cho desktop và sẽ được ghi đè trên mobile */
+/* ========================== Bố cục chung ========================== */
 .main-container {
     display: flex;
     width: 100%;
     justify-content: center;
     align-items: center;
-    padding: 0 20px;
+    padding: 20px;
     box-sizing: border-box;
-    margin-top: 80px;
 }
 
-/* --- BẮT ĐẦU THÊM MỚI: Lớp để căn giữa nội dung --- */
-/*
- * Lớp này được sử dụng trên thẻ <body> để căn giữa nội dung chính (ví dụ: form đăng nhập)
- * theo cả chiều dọc và chiều ngang, đặc biệt hữu ích trên mobile.
- */
-.body-centered-content {
-    display: flex;
-    justify-content: center; /* Căn giữa theo chiều ngang */
-    align-items: center;    /* Căn giữa theo chiều dọc */
-    height: 100%;           /* Đảm bảo body chiếm toàn bộ chiều cao viewport */
+/* Container cho trang học thẻ */
+.learn-page-container {
+    align-items: stretch;
+    flex-grow: 1;
+    padding: 0;
+    height: 100%; /* Đảm bảo nó chiếm chiều cao còn lại */
 }
-
-/* Khi nội dung được căn giữa, không cần margin-top cho .main-container nữa */
-.body-centered-content .main-container {
-    margin-top: 0;
-}
-/* --- KẾT THÚC THÊM MỚI --- */
 
 .flashcard-column {
     width: 100%;
@@ -41,46 +29,76 @@
     align-items: center;
 }
 
-/* ========================== Điều chỉnh Responsive ========================== */
+/* Ẩn các cột desktop trên mobile theo mặc định */
+.left-column-container, .right-column-container {
+    display: none;
+}
 
-/* Màn hình Desktop (>= 1025px) */
+/* ========================== Bố cục Desktop (>= 1025px) ========================== */
 @media (min-width: 1025px) {
-    /* ... các style cho desktop không thay đổi ... */
-}
-
-/* Màn hình Tablet (769px đến 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-    /* ... các style cho tablet không thay đổi ... */
-}
-
-
-/* ========================== SỬA LỖI CHO MOBILE ========================== */
-/* Màn hình Mobile (<= 768px) */
-@media (max-width: 768px) {
-    /* Ẩn tất cả các thành phần không phải là flashcard */
-    .navbar,
-    .footer,
-    .flashcard-image-column,
-    .right-column-container,
-    .flashes {
-        display: none !important; /* Dùng !important để đảm bảo ghi đè */
+    .learn-page-container {
+        display: grid; /* Chuyển sang Grid Layout */
+        /* Định nghĩa 3 cột:
+           - Cột trái và phải sẽ chiếm không gian còn lại (1fr)
+           - Cột giữa (flashcard) có chiều rộng tối đa 800px
+        */
+        grid-template-columns: 1fr minmax(auto, 800px) 1fr;
+        gap: 30px;
+        padding: 40px;
+        height: 100%;
+        box-sizing: border-box;
     }
 
-    /* Đảm bảo body, main-container và flashcard-column chiếm toàn bộ màn hình */
-    body {
-        padding: 0; /* Bỏ mọi padding trên body */
+    /* Hiển thị các cột trên desktop */
+    .left-column-container, .right-column-container {
+        display: flex;
+        flex-direction: column; /* Xếp chồng nội dung bên trong */
+        justify-content: center; /* Căn giữa theo chiều dọc */
+        height: 100%; /* Chiếm hết chiều cao của grid row */
+    }
+
+    .left-column-container {
+        align-items: flex-end; /* Căn panel ảnh về phía bên phải (sát flashcard) */
+    }
+
+    .right-column-container {
+        align-items: flex-start; /* Căn panel thống kê về phía bên trái (sát flashcard) */
+    }
+
+    /* Đặt chiều rộng tối đa cho các panel bên trong cột */
+    .flashcard-image-panel {
+        width: 100%;
+        max-width: 350px;
+    }
+    .context-panel {
+        width: 100%;
+        max-width: 350px;
+    }
+}
+
+/* ========================== Giao diện Mobile (<= 1024px) ========================== */
+@media (max-width: 1024px) {
+    body.learn-page .main-navbar,
+    body.learn-page .footer {
+        display: none !important;
+    }
+
+    body.learn-page {
+        padding: 0;
         margin: 0;
     }
 
-    .main-container {
+    .learn-page-container {
         width: 100%;
         height: 100%;
         padding: 0;
         margin: 0;
+        display: block; /* Quay về block layout mặc định */
     }
 
     .flashcard-column {
         width: 100%;
         height: 100%;
+        max-width: none;
     }
 }
