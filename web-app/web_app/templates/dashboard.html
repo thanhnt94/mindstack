@@ -9,63 +9,128 @@
 <div class="dashboard-container">
     <h1 class="dashboard-header"><i class="fas fa-chart-pie"></i> Bảng điều khiển Thống kê</h1>
 
-    <div class="stats-section">
-        <h2 class="section-title">Tổng quan</h2>
-        <div class="stat-cards-grid">
-            <div class="stat-card">
-                <div class="stat-card-icon score"><i class="fas fa-star"></i></div>
-                <div class="stat-card-info">
-                    <span class="stat-card-value">{{ dashboard_data.total_score }}</span>
-                    <span class="stat-card-label">Tổng điểm</span>
+    {# BẮT ĐẦU THÊM MỚI: Container cho 2 cột #}
+    <div class="stats-two-column-grid">
+        {# Cột Flashcard #}
+        <div class="stats-column flashcard-stats-column">
+            <div class="stats-section">
+                <h2 class="section-title">Tổng quan Flashcard</h2>
+                <div class="stat-cards-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon score"><i class="fas fa-star"></i></div>
+                        <div class="stat-card-info">
+                            <span class="stat-card-value">{{ dashboard_data.total_score }}</span>
+                            <span class="stat-card-label">Tổng điểm Flashcard</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon learned"><i class="fas fa-graduation-cap"></i></div>
+                        <div class="stat-card-info">
+                            <span class="stat-card-value">{{ dashboard_data.learned_distinct_overall }}</span>
+                            <span class="stat-card-label">Thẻ đã học</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon sets"><i class="fas fa-layer-group"></i></div>
+                        <div class="stat-card-info">
+                            <span class="stat-card-value">{{ dashboard_data.learned_sets_count }}</span>
+                            <span class="stat-card-label">Bộ đã học</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-card-icon learned"><i class="fas fa-graduation-cap"></i></div>
-                <div class="stat-card-info">
-                    <span class="stat-card-value">{{ dashboard_data.learned_distinct_overall }}</span>
-                    <span class="stat-card-label">Thẻ đã học</span>
+
+            <div class="stats-section">
+                <h2 class="section-title">Hoạt động 30 ngày Flashcard</h2>
+                <div class="chart-controls">
+                    <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-chart-type="flashcard" data-dataset-index="0" checked><span class="toggle-label color-reviews">Số lần ôn tập</span></label>
+                    <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-chart-type="flashcard" data-dataset-index="1" checked><span class="toggle-label color-reviewed-cards">Số thẻ ôn tập</span></label>
+                    <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-chart-type="flashcard" data-dataset-index="2" checked><span class="toggle-label color-new-cards">Thẻ học mới</span></label>
+                    <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-chart-type="flashcard" data-dataset-index="3" checked><span class="toggle-label color-score">Điểm đạt được (Flashcard)</span></label>
+                </div>
+                <div class="chart-container"><canvas id="flashcardActivityChart"></canvas></div>
+            </div>
+
+            <div class="stats-section">
+                <h2 class="section-title">Chi tiết theo bộ Flashcard</h2>
+                {% if dashboard_data.sets_stats %}
+                    <div class="set-selector-container" data-current-set-id="{{ current_set_id or '' }}" data-type="flashcard">
+                        <label for="flashcardSetSelector">Chọn một bộ để xem chi tiết:</label>
+                        <select id="flashcardSetSelector" class="form-control">
+                            <option value="">-- Chọn bộ thẻ --</option>
+                            {% for set_id, set_data in dashboard_data.sets_stats.items() %}
+                                <option value="{{ set_id }}">{{ set_data.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="flashcard-set-details-container" class="set-details-container" style="display: none;"></div>
+                {% else %}
+                    <p>Bạn chưa học bộ thẻ nào để xem thống kê chi tiết.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Cột Quiz #}
+        <div class="stats-column quiz-stats-column">
+            <div class="stats-section">
+                <h2 class="section-title">Tổng quan Trắc nghiệm</h2>
+                <div class="stat-cards-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon score" style="background-color: #9b59b6;"><i class="fas fa-trophy"></i></div>
+                        <div class="stat-card-info">
+                            <span class="stat-card-value">{{ dashboard_data.quiz_score }}</span>
+                            <span class="stat-card-label">Tổng điểm Trắc nghiệm</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon learned" style="background-color: #e67e22;"><i class="fas fa-question-circle"></i></div>
+                        <div class="stat-card-info">
+                            <span class="stat-card-value">{{ dashboard_data.questions_answered_count }}</span>
+                            <span class="stat-card-label">Câu đã trả lời</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon sets" style="background-color: #e74c3c;"><i class="fas fa-tasks"></i></div>
+                        <div class="stat-card-info">
+                            <span class="stat-card-value">{{ dashboard_data.quiz_sets_started_count }}</span>
+                            <span class="stat-card-label">Bộ đã làm</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-card-icon sets"><i class="fas fa-layer-group"></i></div>
-                <div class="stat-card-info">
-                    <span class="stat-card-value">{{ dashboard_data.learned_sets_count }}</span>
-                    <span class="stat-card-label">Bộ đã học</span>
+
+            <div class="stats-section">
+                <h2 class="section-title">Hoạt động 30 ngày Trắc nghiệm</h2>
+                <div class="chart-controls">
+                    <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-chart-type="quiz" data-dataset-index="0" checked><span class="toggle-label color-reviews">Số lần trả lời</span></label>
+                    <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-chart-type="quiz" data-dataset-index="1" checked><span class="toggle-label color-reviewed-cards">Số câu hỏi khác nhau</span></label>
+                    <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-chart-type="quiz" data-dataset-index="2" checked><span class="toggle-label color-score">Điểm đạt được (Quiz)</span></label>
                 </div>
+                <div class="chart-container"><canvas id="quizActivityChart"></canvas></div>
+            </div>
+
+            <div class="stats-section">
+                <h2 class="section-title">Chi tiết theo bộ Trắc nghiệm</h2>
+                {% if dashboard_data.quiz_sets_stats %}
+                    <div class="set-selector-container" data-type="quiz">
+                        <label for="quizSetSelector">Chọn một bộ để xem chi tiết:</label>
+                        <select id="quizSetSelector" class="form-control">
+                            <option value="">-- Chọn bộ câu hỏi --</option>
+                            {% for set_id, set_data in dashboard_data.quiz_sets_stats.items() %}
+                                <option value="{{ set_id }}">{{ set_data.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="quiz-set-details-container" class="set-details-container" style="display: none;"></div>
+                {% else %}
+                    <p>Bạn chưa làm bộ câu hỏi nào để xem thống kê chi tiết.</p>
+                {% endif %}
             </div>
         </div>
     </div>
+    {# KẾT THÚC THÊM MỚI #}
 
-    {# --- BẮT ĐẦU THÊM MỚI: Thống kê Trắc nghiệm --- #}
-    <div class="stats-section">
-        <h2 class="section-title">Thống kê Trắc nghiệm</h2>
-        <div class="stat-cards-grid">
-            <div class="stat-card">
-                <div class="stat-card-icon score" style="background-color: #9b59b6;"><i class="fas fa-trophy"></i></div>
-                <div class="stat-card-info">
-                    <span class="stat-card-value">{{ dashboard_data.quiz_score }}</span>
-                    <span class="stat-card-label">Điểm Trắc nghiệm</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card-icon learned" style="background-color: #e67e22;"><i class="fas fa-question-circle"></i></div>
-                <div class="stat-card-info">
-                    <span class="stat-card-value">{{ dashboard_data.questions_answered_count }}</span>
-                    <span class="stat-card-label">Câu đã trả lời</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card-icon sets" style="background-color: #e74c3c;"><i class="fas fa-tasks"></i></div>
-                <div class="stat-card-info">
-                    <span class="stat-card-value">{{ dashboard_data.quiz_sets_started_count }}</span>
-                    <span class="stat-card-label">Bộ đã làm</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    {# --- KẾT THÚC THÊM MỚI --- #}
-
-    {# --- Lịch Nhiệt Hoạt Động --- #}
+    {# Lịch Nhiệt Hoạt Động (chung cho cả 2) #}
     <div class="stats-section">
         <h2 class="section-title">Lịch sử hoạt động</h2>
         <div id="heatmap-container" class="heatmap-container"></div>
@@ -79,40 +144,13 @@
         </div>
     </div>
 
-    <div class="stats-section">
-        <h2 class="section-title">Hoạt động 30 ngày qua</h2>
-        <div class="chart-controls">
-            <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="0" checked><span class="toggle-label color-reviews">Số lần ôn tập</span></label>
-            <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="1" checked><span class="toggle-label color-reviewed-cards">Số thẻ ôn tập</span></label>
-            <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="2" checked><span class="toggle-label color-new-cards">Thẻ học mới</span></label>
-            <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="3" checked><span class="toggle-label color-score">Điểm đạt được</span></label>
-        </div>
-        <div class="chart-container"><canvas id="activityChart"></canvas></div>
-    </div>
-
-    <div class="stats-section">
-        <h2 class="section-title">Chi tiết theo bộ Flashcard</h2>
-        {% if dashboard_data.sets_stats %}
-            <div class="set-selector-container" data-current-set-id="{{ current_set_id or '' }}">
-                <label for="setSelector">Chọn một bộ để xem chi tiết:</label>
-                <select id="setSelector" class="form-control">
-                    <option value="">-- Chọn bộ thẻ --</option>
-                    {% for set_id, set_data in dashboard_data.sets_stats.items() %}
-                        <option value="{{ set_id }}">{{ set_data.title }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div id="set-details-container" style="display: none;"></div>
-        {% else %}
-            <p>Bạn chưa học bộ thẻ nào để xem thống kê chi tiết.</p>
-        {% endif %}
-    </div>
 </div>
 
+{# Modal danh sách thẻ/câu hỏi (dùng chung) #}
 <div id="card-list-modal" class="card-list-modal" style="display: none;">
     <div class="card-list-modal-content">
         <span id="card-list-modal-close-btn" class="card-list-modal-close-btn">&times;</span>
-        <h2 id="card-list-modal-title">Danh sách thẻ</h2>
+        <h2 id="card-list-modal-title">Danh sách</h2>
         <div id="card-list-container" class="card-list-container"></div>
         <div id="card-list-pagination" class="card-list-pagination"></div>
     </div>

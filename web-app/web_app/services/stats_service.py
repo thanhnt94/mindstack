@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
-from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress, ScoreLog
+from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress, ScoreLog, QuizQuestion, UserQuizProgress, QuestionSet
 from ..config import DEFAULT_TIMEZONE_OFFSET, LEARNING_MODE_DISPLAY_NAMES
 
 logger = logging.getLogger(__name__)
@@ -13,6 +13,13 @@ class StatsService:
         pass
 
     def _get_current_unix_timestamp(self, tz_offset_hours):
+        """
+        Mô tả: Lấy Unix timestamp hiện tại theo múi giờ cụ thể.
+        Args:
+            tz_offset_hours (int): Độ lệch múi giờ tính bằng giờ (ví dụ: 7 cho UTC+7).
+        Returns:
+            int: Unix timestamp hiện tại.
+        """
         try:
             tz = timedelta(hours=tz_offset_hours)
             now = datetime.now(timezone.utc).astimezone(timezone(tz))
@@ -22,6 +29,15 @@ class StatsService:
             return int(datetime.now(timezone.utc).timestamp())
 
     def _get_midnight_timestamp(self, current_timestamp, tz_offset_hours):
+        """
+        Mô tả: Tính toán Unix timestamp của nửa đêm (00:00:00) của ngày hiện tại
+               dựa trên một timestamp cho trước và độ lệch múi giờ.
+        Args:
+            current_timestamp (int): Unix timestamp hiện tại.
+            tz_offset_hours (int): Độ lệch múi giờ tính bằng giờ.
+        Returns:
+            int: Unix timestamp của nửa đêm của ngày hiện tại.
+        """
         try:
             tz = timedelta(hours=tz_offset_hours)
             dt_now = datetime.fromtimestamp(current_timestamp, timezone.utc).astimezone(timezone(tz))
@@ -33,6 +49,13 @@ class StatsService:
 
 
     def get_admin_dashboard_stats(self):
+        """
+        Mô tả: Lấy các số liệu thống kê tổng quan cho trang quản trị viên.
+        Returns:
+            dict: Một dictionary chứa các số liệu thống kê như tổng số người dùng,
+                  tổng số bộ thẻ, tổng số flashcard, tổng số lượt ôn tập,
+                  và số người dùng hoạt động hôm nay.
+        """
         log_prefix = "[ADMIN_DASHBOARD_STATS]"
         logger.info(f"{log_prefix} Bắt đầu tổng hợp dữ liệu thống kê cho admin.")
         
@@ -60,6 +83,15 @@ class StatsService:
             return None
 
     def get_dashboard_stats(self, user_id):
+        """
+        Mô tả: Lấy các số liệu thống kê chi tiết cho bảng điều khiển của người dùng.
+               Bao gồm thống kê flashcard, thống kê quiz, lịch sử hoạt động,
+               và chi tiết theo bộ thẻ.
+        Args:
+            user_id (int): ID của người dùng.
+        Returns:
+            dict: Một dictionary chứa tất cả các số liệu thống kê cần thiết cho dashboard.
+        """
         log_prefix = f"[DASHBOARD_STATS|User:{user_id}]"
         logger.info(f"{log_prefix} Bắt đầu tổng hợp dữ liệu thống kê.")
         
@@ -75,9 +107,17 @@ class StatsService:
             'learned_sets_count': 0,
             'activity_chart_data': {},
             'sets_stats': {},
-            'heatmap_data': {}
+            'heatmap_data': {},
+            'quiz_score': 0,
+            'questions_answered_count': 0,
+            'quiz_sets_started_count': 0,
+            # BẮT ĐẦU THÊM MỚI: Khởi tạo các trường cho thống kê Quiz chi tiết và biểu đồ
+            'quiz_activity_chart_data': {},
+            'quiz_sets_stats': {}
+            # KẾT THÚC THÊM MỚI
         }
 
+        # --- Thống kê Flashcard ---
         all_user_progress = UserFlashcardProgress.query.filter_by(user_id=user_id)
         stats['learned_distinct_overall'] = all_user_progress.filter(UserFlashcardProgress.learned_date.isnot(None)).count()
         
@@ -116,19 +156,26 @@ class StatsService:
             learned_date = datetime.fromtimestamp(new_card.learned_date, tz).strftime('%d/%m')
             new_card_activity_by_day[learned_date] += 1
         
-        score_logs_last_30_days = db.session.query(ScoreLog.timestamp, ScoreLog.score_change)\
+        score_logs_last_30_days = db.session.query(ScoreLog.timestamp, ScoreLog.score_change, ScoreLog.source_type)\
             .filter(ScoreLog.user_id == user_id, ScoreLog.timestamp >= thirty_days_ago_ts)\
             .all()
-        score_gained_by_day = defaultdict(int)
+        
+        flashcard_score_gained_by_day = defaultdict(int)
+        quiz_score_gained_by_day = defaultdict(int) # BẮT ĐẦU THÊM MỚI: Dành cho điểm Quiz
         for log in score_logs_last_30_days:
             log_date = datetime.fromtimestamp(log.timestamp, tz).strftime('%d/%m')
-            score_gained_by_day[log_date] += log.score_change
+            if log.source_type == 'flashcard':
+                flashcard_score_gained_by_day[log_date] += log.score_change
+            # BẮT ĐẦU THÊM MỚI: Phân loại điểm Quiz
+            elif log.source_type == 'quiz':
+                quiz_score_gained_by_day[log_date] += log.score_change
+            # KẾT THÚC THÊM MỚI
 
         chart_labels = [(today - timedelta(days=i)).strftime('%d/%m') for i in range(29, -1, -1)]
         review_actions_data = [review_actions_by_day.get(label, 0) for label in chart_labels]
         distinct_cards_data = [len(reviewed_cards_by_day.get(label, set())) for label in chart_labels]
         new_cards_chart_data = [new_card_activity_by_day.get(label, 0) for label in chart_labels]
-        score_chart_data = [score_gained_by_day.get(label, 0) for label in chart_labels]
+        flashcard_score_chart_data = [flashcard_score_gained_by_day.get(label, 0) for label in chart_labels]
 
         stats['activity_chart_data'] = {
             'labels': chart_labels,
@@ -136,7 +183,7 @@ class StatsService:
                 {'label': 'Số lần ôn tập', 'data': review_actions_data},
                 {'label': 'Số thẻ ôn tập', 'data': distinct_cards_data},
                 {'label': 'Số thẻ học mới', 'data': new_cards_chart_data},
-                {'label': 'Điểm đạt được', 'data': score_chart_data}
+                {'label': 'Điểm đạt được (Flashcard)', 'data': flashcard_score_chart_data}
             ]
         }
 
@@ -155,11 +202,11 @@ class StatsService:
             progress_in_set = UserFlashcardProgress.query.join(Flashcard)\
                 .filter(Flashcard.set_id == set_id, UserFlashcardProgress.user_id == user_id)
             
-            # --- TÍNH TOÁN CÁC CHỈ SỐ CHO LƯỚI 6 Ô ---
+            # Tính toán các chỉ số cho lưới 6 ô
             learned_cards = progress_in_set.count()
             unseen_cards = total_cards - learned_cards
             mastered_cards = progress_in_set.filter(UserFlashcardProgress.correct_streak > 5).count()
-            learning_cards = learned_cards - mastered_cards
+            learning_cards = learned_cards - mastered_cards # Thẻ đang học là tổng thẻ đã có tiến trình trừ đi thẻ đã nhớ sâu
             due_cards = progress_in_set.filter(UserFlashcardProgress.due_time <= current_ts).count()
             lapsed_cards = progress_in_set.filter(UserFlashcardProgress.lapse_count > 0).count()
             due_soon_cards = progress_in_set.filter(UserFlashcardProgress.due_time > current_ts, UserFlashcardProgress.due_time <= ts_in_24_hours).count()
@@ -178,35 +225,72 @@ class StatsService:
                     'lapsed': lapsed_cards
                 }
             }
+
+        # --- BẮT ĐẦU THÊM MỚI: Thống kê Quiz ---
+        # Tổng điểm Quiz
+        stats['quiz_score'] = db.session.query(db.func.sum(ScoreLog.score_change))\
+            .filter(ScoreLog.user_id == user_id, ScoreLog.source_type == 'quiz').scalar() or 0
+        
+        # Tổng số câu hỏi đã trả lời
+        stats['questions_answered_count'] = UserQuizProgress.query.filter_by(user_id=user_id).count()
+
+        # Số lượng bộ Quiz đã bắt đầu
+        stats['quiz_sets_started_count'] = db.session.query(QuizQuestion.set_id)\
+            .join(UserQuizProgress)\
+            .filter(UserQuizProgress.user_id == user_id)\
+            .distinct()\
+            .count()
+        
+        # Dữ liệu hoạt động Quiz 30 ngày qua
+        quiz_questions_answered_by_day = defaultdict(int)
+        quiz_distinct_questions_answered_by_day = defaultdict(set)
+        
+        quiz_progresses_last_30_days = db.session.query(UserQuizProgress.last_answered, UserQuizProgress.question_id)\
+            .filter(UserQuizProgress.user_id == user_id, UserQuizProgress.last_answered >= thirty_days_ago_ts)\
+            .all()
+
+        for answered_ts, question_id in quiz_progresses_last_30_days:
+            answered_date_str = datetime.fromtimestamp(answered_ts, tz).strftime('%d/%m')
+            quiz_questions_answered_by_day[answered_date_str] += 1
+            quiz_distinct_questions_answered_by_day[answered_date_str].add(question_id)
+
+        stats['quiz_activity_chart_data'] = {
+            'labels': chart_labels, # Sử dụng cùng nhãn ngày với flashcard
+            'datasets': [
+                {'label': 'Số lần trả lời (Quiz)', 'data': [quiz_questions_answered_by_day.get(label, 0) for label in chart_labels]},
+                {'label': 'Số câu hỏi khác nhau (Quiz)', 'data': [len(quiz_distinct_questions_answered_by_day.get(label, set())) for label in chart_labels]},
+                {'label': 'Điểm đạt được (Quiz)', 'data': [quiz_score_gained_by_day.get(label, 0) for label in chart_labels]}
+            ]
+        }
+
+        # Thống kê chi tiết theo bộ Quiz
+        started_quiz_sets = QuestionSet.query.join(QuizQuestion).join(UserQuizProgress)\
+            .filter(UserQuizProgress.user_id == user_id).distinct().all()
+
+        for q_set in started_quiz_sets:
+            set_id = q_set.set_id
+            total_questions = QuizQuestion.query.filter_by(set_id=set_id).count()
+            
+            progress_in_quiz_set = UserQuizProgress.query.join(QuizQuestion)\
+                .filter(QuizQuestion.set_id == set_id, UserQuizProgress.user_id == user_id)
+            
+            answered_questions = progress_in_quiz_set.count()
+            correct_answers = progress_in_quiz_set.filter(UserQuizProgress.times_correct > 0).count()
+            incorrect_answers = progress_in_quiz_set.filter(UserQuizProgress.times_incorrect > 0).count()
+            mastered_questions = progress_in_quiz_set.filter(UserQuizProgress.is_mastered == True).count()
+            
+            stats['quiz_sets_stats'][set_id] = {
+                'title': q_set.title,
+                'total_questions': total_questions,
+                'answered_questions': answered_questions,
+                'stat_values': {
+                    'correct': correct_answers,
+                    'incorrect': incorrect_answers,
+                    'mastered': mastered_questions,
+                    'unanswered': total_questions - answered_questions # Số câu chưa trả lời
+                }
+            }
+        # KẾT THÚC THÊM MỚI
         
         logger.info(f"{log_prefix} Tổng hợp dữ liệu thành công.")
-        return stats
-
-    def get_user_stats_for_context(self, user_id, set_id=None):
-        stats = {
-            'total_score': 0, 'learned_distinct_overall': 0, 'due_overall': 0,
-            'learned_sets_count': 0, 'set_title': 'N/A', 'set_total_cards': 0,
-            'set_learned_cards': 0, 'set_due_cards': 0, 'current_mode_display': 'N/A'
-        }
-        user = User.query.get(user_id)
-        if not user:
-            logger.warning(f"[GET_CONTEXT_STATS] User {user_id} not found.")
-            return stats
-        
-        stats['total_score'] = user.score
-        stats['current_mode_display'] = LEARNING_MODE_DISPLAY_NAMES.get(user.current_mode, user.current_mode)
-        current_ts = self._get_current_unix_timestamp(user.timezone_offset)
-        overall_progress = UserFlashcardProgress.query.filter_by(user_id=user_id)
-        stats['learned_distinct_overall'] = overall_progress.filter(UserFlashcardProgress.learned_date.isnot(None)).distinct(UserFlashcardProgress.flashcard_id).count()
-        stats['due_overall'] = overall_progress.filter(UserFlashcardProgress.due_time.isnot(None), UserFlashcardProgress.due_time <= current_ts).count()
-        stats['learned_sets_count'] = db.session.query(Flashcard.set_id).join(UserFlashcardProgress).filter(UserFlashcardProgress.user_id == user_id).distinct().count()
-
-        if set_id:
-            current_set = VocabularySet.query.get(set_id)
-            if current_set:
-                stats['set_title'] = current_set.title
-                stats['set_total_cards'] = db.session.query(Flashcard).filter(Flashcard.set_id == set_id).count()
-                stats['set_learned_cards'] = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id, UserFlashcardProgress.learned_date.isnot(None)).count()
-                stats['set_due_cards'] = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id, UserFlashcardProgress.due_time.isnot(None), UserFlashcardProgress.due_time <= current_ts).count()
-        
         return stats
