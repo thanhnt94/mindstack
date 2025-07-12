@@ -38,10 +38,9 @@
                     </div>
                 </div>
 
-                {# Dynamic Island là con trực tiếp của .flashcard, ngay sau flashcard-header #}
+                {# --- BẮT ĐẦU SỬA: Thay đổi cấu trúc HTML của dynamic island --- #}
                 <div id="dynamic-card-details" class="dynamic-card-details">
                     <div class="dynamic-card-details-summary">
-                        {# Đã loại bỏ prefix "Thông tin thẻ: " theo yêu cầu #}
                         <span class="summary-value correct-streak">{{ progress.correct_streak }}</span>
                         <span class="summary-separator">/</span>
                         <span class="summary-value correct-count">{{ progress.correct_count }}</span>
@@ -89,6 +88,8 @@
                         </div>
                     </div>
                 </div>
+                {# --- KẾT THÚC SỬA --- #}
+
 
                 <div class="flashcard-body">
                     <div class="scrollable-card-content">

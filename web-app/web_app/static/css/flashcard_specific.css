@@ -170,49 +170,45 @@
 
 /* ========================== DYNAMIC CARD DETAILS (MOBILE ONLY - TRIGGER BUTTON & EXPANDED CONTENT) ========================== */
 .dynamic-card-details {
-    display: none; /* Mặc định ẩn trên Desktop */
-    position: absolute; /* Định vị tuyệt đối trong .flashcard */
+    display: none; 
+    position: absolute; 
     
-    /* Kiểu dáng thu gọn ban đầu */
-    background: rgba(255, 255, 255, 1); /* Nền trắng đục, KHÔNG BLUR */
-    backdrop-filter: none; /* KHÔNG BLUR */
-    border: 1px solid rgba(200, 200, 200, 0.5); /* Viền nhạt */
-    color: #333; /* Màu chữ tối */
-    border-radius: 20px; /* Bo tròn vừa phải */
-    padding: 8px 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Bóng nhẹ */
+    background: rgba(255, 255, 255, 1);
+    backdrop-filter: none;
+    border: 1px solid rgba(200, 200, 200, 0.5);
+    color: #333;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     overflow: hidden;
-    transition: all 0.3s ease-out, width 0.4s ease-out, height 0.4s ease-out, top 0.4s ease-out, transform 0.4s ease-out, border-radius 0.3s ease-out; /* Thêm border-radius transition */
+    transition: all 0.3s ease-out;
     cursor: pointer;
-    white-space: nowrap; /* Đảm bảo không xuống dòng khi thu gọn */
-    z-index: 101; /* Đảm bảo nó nằm trên header khi thu gọn */
+    white-space: nowrap;
+    z-index: 101;
 
-    width: auto; /* Fit với text khi thu gọn */
-    max-width: calc(100% - 60px); /* Giới hạn chiều rộng để có khoảng cách 30px mỗi bên */
-    height: 40px; /* Chiều cao cố định khi thu gọn */
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: auto;
+    height: 40px;
+    padding: 0 15px; 
 }
 
 /* Màu sắc cho các giá trị trong tóm tắt */
-.dynamic-card-details-summary .summary-value.correct-streak { color: #28a745; /* Xanh lá */ font-weight: bold; }
-.dynamic-card-details-summary .summary-value.correct-count { color: #007bff; /* Xanh dương */ font-weight: bold; }
-.dynamic-card-details-summary .summary-value.review-count { color: #ffc107; /* Vàng */ font-weight: bold; }
+.dynamic-card-details-summary .summary-value.correct-streak { color: #28a745; font-weight: bold; }
+.dynamic-card-details-summary .summary-value.correct-count { color: #007bff; font-weight: bold; }
+.dynamic-card-details-summary .summary-value.review-count { color: #ffc107; font-weight: bold; }
 .dynamic-card-details-summary .summary-separator { color: #888; margin: 0 5px; }
 
-/* --- BẮT ĐẦU SỬA: Áp dụng lại flexbox để căn chỉnh nội dung bên trong --- */
 .dynamic-card-details-summary {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
     font-size: 0.9em;
     font-weight: 500;
-    opacity: 1;
-    transition: opacity 0.3s ease-out;
 }
-/* --- KẾT THÚC SỬA --- */
 
 .dynamic-card-details.expanded .dynamic-card-details-summary {
     display: none;
@@ -228,50 +224,33 @@
 }
 
 .dynamic-card-details-full {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease-out, visibility 0s 0.3s;
-    white-space: normal;
-    overflow-y: auto;
-    box-sizing: border-box;
-}
-
-.dynamic-card-details.expanded .dynamic-card-details-full {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 0.3s ease-out 0.1s, visibility 0s;
+    display: none; 
 }
 
 .dynamic-card-details.expanded {
-    position: absolute;
     top: 65px; 
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 60px);
-    height: auto;
+    height: auto; 
     
-    background: rgba(255, 255, 255, 1);
-    backdrop-filter: none;
     border-radius: 20px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.2);
     
-    display: block; 
     padding: 15px;
-
     z-index: 105;
 }
 
+.dynamic-card-details.expanded .dynamic-card-details-full {
+    display: block; 
+}
 
-/* Style cho bố cục 2 cột và các item chi tiết */
+/* --- BẮT ĐẦU SỬA: Chuyển sang Flexbox để đảm bảo layout 2 cột --- */
 .details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* 2 cột, tự động điều chỉnh */
-    gap: 10px; /* Khoảng cách giữa các item */
+    display: flex;
+    flex-wrap: wrap; /* Cho phép các item xuống dòng */
+    justify-content: space-between; /* Tạo khoảng trống đều giữa các item */
+    gap: 10px;
     width: 100%;
 }
 
@@ -280,30 +259,33 @@
     align-items: center;
     gap: 8px;
     padding: 8px 10px;
-    background-color: rgba(255, 255, 255, 0.3); /* Nền item trong suốt */
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
     border-radius: 8px;
     font-size: 0.9em;
     color: #444;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Bóng nhẹ cho từng item */
+    flex-grow: 1; /* Cho phép item co giãn */
+    flex-basis: 45%; /* Chiều rộng cơ bản, để 2 item nằm vừa trên một hàng */
 }
+/* --- KẾT THÚC SỬA --- */
 
 .detail-item.full-width {
-    grid-column: 1 / -1; /* Chiếm toàn bộ chiều rộng nếu có class full-width */
+    flex-basis: 100%;
 }
 
 .detail-icon {
     font-size: 1.1em;
-    color: #007bff; /* Màu icon mặc định */
+    color: #007bff;
 }
 
 /* Màu sắc cụ thể cho từng icon */
-.detail-icon.correct-streak-icon { color: #28a745; } /* Xanh lá */
-.detail-icon.correct-count-icon { color: #007bff; } /* Xanh dương */
-.detail-icon.review-count-icon { color: #ffc107; } /* Vàng */
-.detail-icon.incorrect-count-icon { color: #dc3545; } /* Đỏ */
-.detail-icon.lapse-count-icon { color: #fd7e14; } /* Cam */
-.detail-icon.last-reviewed-icon { color: #6c757d; } /* Xám */
-.detail-icon.due-time-icon { color: #6f42c1; } /* Tím */
+.detail-icon.correct-streak-icon { color: #28a745; }
+.detail-icon.correct-count-icon { color: #007bff; }
+.detail-icon.review-count-icon { color: #ffc107; }
+.detail-icon.incorrect-count-icon { color: #dc3545; }
+.detail-icon.lapse-count-icon { color: #fd7e14; }
+.detail-icon.last-reviewed-icon { color: #6c757d; }
+.detail-icon.due-time-icon { color: #6f42c1; }
 
 
 .detail-label {
@@ -312,57 +294,46 @@
 
 .detail-value {
     font-weight: bold;
-    color: #2c3e50; /* Màu đậm hơn cho giá trị */
-    margin-left: auto; /* Đẩy giá trị sang phải */
+    color: #2c3e50; 
+    margin-left: auto;
 }
 
 
 /* ========================== RESPONSIVE & ẨN/HIỆN ========================== */
 
-/* Giao diện Desktop (>= 1025px) */
 @media (min-width: 1025px) {
-    /* Ẩn các thành phần chỉ dành cho mobile */
     #menu-toggle-btn,
     .side-nav,
     .side-nav-overlay,
     .image-popup-container,
-    .dynamic-card-details, /* Ẩn dynamic-card-details trên desktop */
-    .card-details-modal { /* Ẩn modal trên desktop */
+    .dynamic-card-details,
+    .card-details-modal {
         display: none !important;
     }
 
-    /* Hiển thị lại desktop-card-details trên desktop */
     .desktop-card-details {
         display: block !important;
     }
 }
 
-/* Giao diện Mobile (<= 1024px) */
 @media (max-width: 1024px) {
-    /* Ẩn panel ảnh của desktop */
     .flashcard-image-panel {
         display: none;
     }
 
-    /* Điều khiển hiển thị card-side và dynamic-card-details trên mobile */
     .card-side {
-        display: none; /* Ẩn chữ "Mặt trước/Mặt sau" trên mobile */
+        display: none; 
     }
 
     .dynamic-card-details {
-        display: flex; /* Hiển thị dynamic island trên mobile */
-        top: 15px; /* Điều chỉnh top để ngang hàng với các nút header */
-        left: 50%; /* Căn giữa theo chiều ngang của flashcard */
-        transform: translateX(-50%); /* Dịch chuyển để căn giữa chính xác */
+        display: flex; 
     }
 
-    /* Ẩn desktop-card-details trên mobile */
     .desktop-card-details {
         display: none !important;
     }
 }
 
-/* Giao diện Mobile (<= 768px) */
 @media (max-width: 768px) {
     .flashcard {
         height: 100%;
