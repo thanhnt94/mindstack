@@ -11,14 +11,14 @@
     align-items: center;
     padding: 20px;
     box-sizing: border-box;
+    flex-grow: 1;
 }
 
-/* Container cho trang học thẻ */
 .learn-page-container {
     align-items: stretch;
-    flex-grow: 1;
     padding: 0;
-    height: 100%; /* Đảm bảo nó chiếm chiều cao còn lại */
+    height: 100%;
+    width: 100%;
 }
 
 .flashcard-column {
@@ -29,7 +29,6 @@
     align-items: center;
 }
 
-/* Ẩn các cột desktop trên mobile theo mặc định */
 .left-column-container, .right-column-container {
     display: none;
 }
@@ -37,49 +36,53 @@
 /* ========================== Bố cục Desktop (>= 1025px) ========================== */
 @media (min-width: 1025px) {
     .learn-page-container {
-        display: grid; /* Chuyển sang Grid Layout */
-        /* Định nghĩa 3 cột:
-           - Cột trái và phải sẽ chiếm không gian còn lại (1fr)
-           - Cột giữa (flashcard) có chiều rộng tối đa 800px
-        */
+        display: grid;
         grid-template-columns: 1fr minmax(auto, 800px) 1fr;
+        grid-template-rows: 1fr;
         gap: 30px;
-        padding: 40px;
-        height: 100%;
+        padding:  80px 10px 10px 10px;
+        height: 100%; /* Chiếm hết chiều cao của page-wrapper */
         box-sizing: border-box;
     }
 
-    /* Hiển thị các cột trên desktop */
-    .left-column-container, .right-column-container {
+    .left-column-container, .right-column-container, .flashcard-column {
         display: flex;
-        flex-direction: column; /* Xếp chồng nội dung bên trong */
-        justify-content: center; /* Căn giữa theo chiều dọc */
-        height: 100%; /* Chiếm hết chiều cao của grid row */
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        overflow: hidden; /* Ngăn container cha bị cuộn */
     }
 
     .left-column-container {
-        align-items: flex-end; /* Căn panel ảnh về phía bên phải (sát flashcard) */
+        align-items: center; /* Căn giữa panel ảnh trong cột của nó */
     }
 
     .right-column-container {
-        align-items: flex-start; /* Căn panel thống kê về phía bên trái (sát flashcard) */
+        align-items: center; /* Căn giữa panel stats trong cột của nó */
     }
 
-    /* Đặt chiều rộng tối đa cho các panel bên trong cột */
-    .flashcard-image-panel {
+    .flashcard-image-panel, .context-panel {
         width: 100%;
-        max-width: 350px;
+        height: 100%; /* Cho phép panel chiếm hết chiều cao cột */
+        overflow-y: auto; /* Cho phép panel tự cuộn */
     }
-    .context-panel {
-        width: 100%;
-        max-width: 350px;
+
+    /* THÊM MỚI: Giới hạn kích thước cho cột phải */
+    .right-column-container .context-panel {
+        min-width: 320px;
+        max-width: 400px;
+    }
+    
+    .flashcard-column {
+        min-width: 0;
     }
 }
 
 /* ========================== Giao diện Mobile (<= 1024px) ========================== */
 @media (max-width: 1024px) {
+    /* SỬA LỖI: Khôi phục lại quy tắc ẩn navbar và footer trên trang học của mobile */
     body.learn-page .main-navbar,
-    body.learn-page .footer {
+    body.learn-page .main-footer {
         display: none !important;
     }
 
@@ -93,7 +96,7 @@
         height: 100%;
         padding: 0;
         margin: 0;
-        display: block; /* Quay về block layout mặc định */
+        display: block;
     }
 
     .flashcard-column {

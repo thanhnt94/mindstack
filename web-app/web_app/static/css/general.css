@@ -14,35 +14,33 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #f4f7f6;
     color: #333;
-    display: flex; /* Sử dụng flexbox cho layout chính */
-    flex-direction: column; /* Xếp chồng navbar và page-wrapper */
-}
-
-/* Lớp wrapper chính bao quanh nội dung trang */
-.page-wrapper {
-    padding-top: 64px; /* Chiều cao của navbar */
-    width: 100%;
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    /* Bỏ align-items: center để nội dung có thể trải rộng */
-    flex-grow: 1; /* Cho phép wrapper chiếm hết không gian còn lại */
+    min-height: 100vh;
 }
 
-/* Lớp này sẽ chỉ được áp dụng cho trang học thẻ */
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Quan trọng: Cho phép wrapper chiếm hết không gian dọc còn lại */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* SỬA: Chỉ áp dụng padding-top cho các trang không phải trang học */
+body:not(.learn-page) .page-wrapper {
+    padding-top: 64px;
+}
+
 body.no-scroll {
     overflow: hidden;
 }
 
-/* Khi ở trang học thẻ (không có navbar trên mobile), page-wrapper không cần padding-top */
-@media (max-width: 1024px) {
-    body.learn-page .page-wrapper {
-        padding-top: 0;
-        height: 100%;
-    }
+/* SỬA: Đảm bảo page-wrapper trên trang học chiếm toàn bộ chiều cao viewport */
+body.learn-page .page-wrapper {
+    height: 100vh;
 }
 
-/* Áp dụng box-sizing cho tất cả các phần tử để tính toán kích thước dễ dàng hơn */
 * {
     box-sizing: border-box;
 }

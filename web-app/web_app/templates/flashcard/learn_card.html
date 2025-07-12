@@ -1,14 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Học Thẻ - Flashcard App{% endblock %}
 
-{# Thêm class để xử lý trên mobile và desktop #}
 {% block body_class %}no-scroll learn-page{% endblock %}
 
 {% block content %}
-    {# Container chính cho trang học, sẽ chứa các cột #}
     <div class="main-container learn-page-container">
 
-        {# CỘT TRÁI (Desktop): Hiển thị hình ảnh hoặc một placeholder #}
         <div class="left-column-container">
             {% set image_to_show = flashcard.front_img if is_front else flashcard.back_img %}
             {% if image_to_show %}
@@ -22,7 +19,6 @@
             {% endif %}
         </div>
 
-        {# CỘT GIỮA (Desktop) / Cột chính (Mobile): Flashcard #}
         <div class="flashcard-column">
             <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
                 <div class="flashcard-header">
@@ -49,7 +45,6 @@
                     </div>
                 </div>
 
-                {# Popup ảnh cho giao diện mobile, sẽ được ẩn trên desktop #}
                 {% if image_to_show %}
                     <div id="image-popup" class="image-popup-container">
                         <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
@@ -87,7 +82,6 @@
             </div>
         </div>
 
-        {# CỘT PHẢI (Desktop): Panel thống kê và điều khiển #}
         <div class="right-column-container">
             <div class="context-panel">
                 <a href="{% if user.user_role == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('flashcard.dashboard') }}{% endif %}" class="user-profile-link">
@@ -126,7 +120,6 @@
         </div>
     </div>
 
-    {# Lớp phủ và Menu trượt cho Mobile #}
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
     <nav id="side-nav" class="side-nav">
         <div class="side-nav-header">
@@ -173,8 +166,7 @@
             </div>
         </div>
     </nav>
-
-    {# Modals cho Mobile (Nội dung đầy đủ) #}
+    
     <div id="note-modal" class="note-modal">
         <div class="note-modal-content">
             <span id="note-modal-close-btn" class="note-modal-close-btn">&times;</span>
