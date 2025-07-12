@@ -27,7 +27,30 @@
                         <button id="open-note-btn" class="note-button header-icon-btn" aria-label="Mở ghi chú"><i class="fas fa-pencil-alt"></i></button>
                     </div>
                     <div class="header-center">
-                        <p class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
+                        {# BẮT ĐẦU SỬA: Thêm class cho card-side để điều khiển hiển thị #}
+                        <p id="card-side-text" class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
+                        {# KẾT THÚC SỬA #}
+
+                        {# BẮT ĐẦU SỬA: Dynamic Island cho chi tiết thẻ trên Mobile #}
+                        {# Di chuyển vào trong header-center để nằm cùng hàng với card-side #}
+                        <div id="dynamic-card-details" class="dynamic-card-details">
+                            <div class="dynamic-card-details-summary">
+                                <span class="summary-text">
+                                    Đúng: {{ progress.correct_count }} • Ôn tập: {{ progress.review_count }}
+                                </span>
+                                <i class="fas fa-chevron-down summary-icon"></i>
+                            </div>
+                            <div class="dynamic-card-details-full">
+                                <p>Lần đáp đúng liên tiếp: <span class="detail-value">{{ progress.correct_streak }}</span></p>
+                                <p>Tổng lần đáp đúng: <span class="detail-value">{{ progress.correct_count }}</span></p>
+                                <p>Tổng lần ôn tập: <span class="detail-value">{{ progress.review_count }}</span></p>
+                                <p>Tổng lần đáp sai: <span class="detail-value">{{ progress.incorrect_count }}</span></p>
+                                <p>Số lần lỡ hẹn: <span class="detail-value">{{ progress.lapse_count }}</span></p>
+                                <p>Lần cuối ôn: <span class="detail-value">{% if progress.last_reviewed %}{{ progress.last_reviewed | format_unix_timestamp }}{% else %}Chưa ôn{% endif %}</span></p>
+                                <p>Đến hạn tiếp theo: <span class="detail-value">{% if progress.due_time %}{{ progress.due_time | format_unix_timestamp }}{% else %}N/A{% endif %}</span></p>
+                            </div>
+                        </div>
+                        {# KẾT THÚC SỬA #}
                     </div>
                     <div class="header-right">
                         {% if can_edit %}
@@ -110,8 +133,8 @@
                     </div>
                 </div>
                 
-                {# BẮT ĐẦU THÊM MỚI: Thông tin chi tiết của thẻ #}
-                <div class="nav-section">
+                {# Thông tin chi tiết của thẻ (chỉ hiển thị trên Desktop) #}
+                <div class="nav-section desktop-card-details">
                     <h3 class="nav-section-title">Chi tiết thẻ</h3>
                     <p>Lần đáp đúng liên tiếp: <span style="font-weight: bold;">{{ progress.correct_streak }}</span></p>
                     <p>Tổng lần đáp đúng: <span style="font-weight: bold;">{{ progress.correct_count }}</span></p>
@@ -121,14 +144,9 @@
                     <p>Lần cuối ôn: {% if progress.last_reviewed %}{{ progress.last_reviewed | format_unix_timestamp }}{% else %}Chưa ôn{% endif %}</p>
                     <p>Đến hạn tiếp theo: {% if progress.due_time %}{{ progress.due_time | format_unix_timestamp }}{% else %}N/A{% endif %}</p>
                 </div>
-                {# KẾT THÚC THÊM MỚI #}
 
                 <hr class="nav-separator">
                 <ul class="side-nav-links">
-                    {# BẮT ĐẦU SỬA: Xóa nút Thống kê và Bảng xếp hạng #}
-                    {# <li><a href="{{ url_for('flashcard.dashboard') }}"><i class="fas fa-chart-bar"></i> Thống kê</a></li> #}
-                    {# <li><a href="#"><i class="fas fa-trophy"></i> Bảng xếp hạng</a></li> #}
-                    {# KẾT THÚC SỬA #}
                     <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
                     <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
                 </ul>
@@ -170,10 +188,6 @@
                 </div>
                 <hr class="nav-separator">
                 <ul class="side-nav-links">
-                    {# BẮT ĐẦU SỬA: Xóa nút Thống kê và Bảng xếp hạng trong side-nav #}
-                    {# <li><a href="{{ url_for('flashcard.dashboard') }}"><i class="fas fa-chart-bar"></i> Thống kê</a></li> #}
-                    {# <li><a href="#"><i class="fas fa-trophy"></i> Bảng xếp hạng</a></li> #}
-                    {# KẾT THÚC SỬA #}
                 </ul>
             </div>
             <div class="side-nav-footer">
@@ -232,4 +246,6 @@
     <script src="{{ url_for('static', filename='js/mobile_menu_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/note_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edit_handler.js') }}"></script>
+    {# Script cho Dynamic Card Details #}
+    <script src="{{ url_for('static', filename='js/card_details_handler.js') }}"></script>
 {% endblock %}

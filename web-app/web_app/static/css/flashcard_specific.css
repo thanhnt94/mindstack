@@ -85,11 +85,25 @@
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
+    position: relative; /* Quan trọng cho việc định vị dynamic-card-details */
 }
 .header-left, .header-right { display: flex; align-items: center; gap: 10px; flex: 1; }
 .header-right { justify-content: flex-end; }
-.header-center { flex: 2; text-align: center; }
-.card-side { font-size: 0.85em; color: #888; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+.header-center { flex: 2; text-align: center; position: relative; } /* Thêm position: relative */
+.card-side {
+    font-size: 0.85em;
+    color: #888;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    transition: opacity 0.3s ease-out; /* Hiệu ứng mờ dần */
+}
+.card-side.hidden {
+    opacity: 0;
+    pointer-events: none; /* Ngăn chặn tương tác khi ẩn */
+}
+
 .header-icon-btn { background: transparent; border: none; color: #888; font-size: 1.5em; cursor: pointer; padding: 8px; line-height: 1; transition: color 0.2s; }
 .header-icon-btn:hover { color: #3498db; }
 .edit-button:hover { color: #f39c12; }
@@ -133,6 +147,106 @@
 .flashcard:not(.is-back-side) .card-text { font-size: 2.5em; }
 .flashcard-footer { width: 100%; padding: 20px 30px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
 
+/* ========================== DYNAMIC CARD DETAILS (MOBILE ONLY) ========================== */
+.dynamic-card-details {
+    display: none; /* Mặc định ẩn trên Desktop */
+    position: absolute; /* Định vị tuyệt đối trong header-center */
+    top: 50%; /* Căn giữa theo chiều dọc */
+    left: 50%; /* Căn giữa theo chiều ngang */
+    transform: translate(-50%, -50%); /* Dịch chuyển để căn giữa chính xác */
+    
+    background: linear-gradient(135deg, #6a82fb, #fc5c7d); /* Màu sắc đẹp hơn */
+    color: white;
+    border-radius: 25px; /* Bo tròn hơn */
+    padding: 8px 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    overflow: hidden; /* Đảm bảo nội dung không tràn ra ngoài khi thu gọn */
+    transition: all 0.3s ease-out, width 0.4s ease-out, height 0.4s ease-out; /* Thêm transition cho width/height */
+    cursor: pointer;
+    white-space: nowrap; /* Ngăn không cho text xuống dòng */
+    z-index: 10; /* Đảm bảo nằm trên card-side text */
+
+    /* Kích thước ban đầu (thu gọn) */
+    width: auto;
+    max-width: 90%; /* Giới hạn chiều rộng để không tràn ra ngoài */
+    height: 40px; /* Chiều cao cố định khi thu gọn */
+
+    display: flex; /* Sử dụng flexbox cho nội dung bên trong */
+    align-items: center;
+    justify-content: center;
+}
+
+.dynamic-card-details-summary {
+    display: flex;
+    justify-content: center; /* Căn giữa nội dung tóm tắt */
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    font-size: 0.9em;
+    font-weight: 500;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+.dynamic-card-details.expanded .dynamic-card-details-summary {
+    opacity: 0;
+    pointer-events: none; /* Ngăn chặn tương tác khi ẩn */
+}
+
+.dynamic-card-details-summary .summary-icon {
+    margin-left: 8px; /* Khoảng cách với text */
+    transition: transform 0.3s ease-out;
+}
+
+.dynamic-card-details.expanded .dynamic-card-details-summary .summary-icon {
+    transform: rotate(180deg);
+}
+
+.dynamic-card-details-full {
+    position: absolute; /* Để nằm chồng lên summary khi mở rộng */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; /* Căn trái nội dung chi tiết */
+    padding: 10px 15px; /* Padding cho nội dung chi tiết */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-out, visibility 0s 0.3s;
+    white-space: normal; /* Cho phép text xuống dòng khi mở rộng */
+}
+
+.dynamic-card-details.expanded .dynamic-card-details-full {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease-out 0.1s, visibility 0s; /* Hiển thị sau một chút */
+}
+
+.dynamic-card-details.expanded {
+    /* Kích thước khi mở rộng */
+    width: 90%; /* Chiếm phần lớn chiều rộng */
+    height: auto; /* Chiều cao tự động theo nội dung */
+    min-height: 150px; /* Đảm bảo có đủ không gian */
+    padding: 15px; /* Tăng padding khi mở rộng */
+    align-items: flex-start; /* Căn nội dung chi tiết lên trên */
+    justify-content: flex-start;
+}
+
+.dynamic-card-details-full p {
+    margin: 3px 0;
+    font-size: 0.85em;
+    color: #fff;
+}
+
+.dynamic-card-details-full .detail-value {
+    font-weight: bold;
+    color: #ffe0b2; /* Màu sáng hơn cho giá trị */
+}
+
+
 /* ========================== RESPONSIVE & ẨN/HIỆN ========================== */
 
 /* Giao diện Desktop (>= 1025px) */
@@ -141,8 +255,14 @@
     #menu-toggle-btn,
     .side-nav,
     .side-nav-overlay,
-    .image-popup-container {
+    .image-popup-container,
+    .dynamic-card-details {
         display: none !important;
+    }
+
+    /* Hiển thị lại desktop-card-details trên desktop */
+    .desktop-card-details {
+        display: block !important;
     }
 }
 
@@ -151,6 +271,16 @@
     /* Ẩn panel ảnh của desktop */
     .flashcard-image-panel {
         display: none;
+    }
+
+    /* Hiển thị dynamic-card-details trên mobile */
+    .dynamic-card-details {
+        display: flex; /* Đảm bảo hiển thị và dùng flexbox */
+    }
+
+    /* Ẩn desktop-card-details trên mobile */
+    .desktop-card-details {
+        display: none !important;
     }
 }
 
