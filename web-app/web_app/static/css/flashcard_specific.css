@@ -12,10 +12,11 @@
     text-align: center;
     display: flex;
     flex-direction: column;
-    position: relative;
+    position: relative; /* Quan trọng: Để dynamic-card-details có thể định vị tuyệt đối bên trong */
     box-sizing: border-box;
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    overflow: visible; /* Rất quan trọng để dynamic island có thể mở rộng ra ngoài mà không bị cắt */
 }
 
 /* ========================== CỘT TRÁI - PANEL HÌNH ẢNH (DESKTOP) ========================== */
@@ -85,11 +86,23 @@
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
-    position: relative; /* Quan trọng cho việc định vị dynamic-card-details */
+    position: relative; /* Giữ lại để các nút header có thể định vị tương đối */
+    z-index: 100; /* Đảm bảo header luôn nằm trên các phần tử khác trong flashcard */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 .header-left, .header-right { display: flex; align-items: center; gap: 10px; flex: 1; }
 .header-right { justify-content: flex-end; }
-.header-center { flex: 2; text-align: center; position: relative; } /* Thêm position: relative */
+.header-center {
+    flex: 2;
+    text-align: center;
+    position: relative; /* position relative cho header-center */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px; /* Chiều cao cố định cho dynamic island khi thu gọn */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
 .card-side {
     font-size: 0.85em;
     color: #888;
@@ -97,11 +110,8 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: bold;
-    transition: opacity 0.3s ease-out; /* Hiệu ứng mờ dần */
-}
-.card-side.hidden {
-    opacity: 0;
-    pointer-events: none; /* Ngăn chặn tương tác khi ẩn */
+    display: block; /* Mặc định hiển thị trên desktop */
+    transition: opacity 0.3s ease-out;
 }
 
 .header-icon-btn { background: transparent; border: none; color: #888; font-size: 1.5em; cursor: pointer; padding: 8px; line-height: 1; transition: color 0.2s; }
@@ -139,46 +149,62 @@
     justify-content: center;
     align-items: center;
     min-height: 0;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 .scrollable-card-content { width: 100%; max-height: 100%; overflow-y: auto; }
 .card-text { font-size: 2em; font-weight: bold; word-wrap: break-word; white-space: pre-wrap; color: #2c3e50; margin: 0; width: 100%; text-align: center; }
 .flashcard.is-back-side.is-multi-line .card-text,
 .flashcard.is-back-side.is-overflow .card-text { text-align: left; }
 .flashcard:not(.is-back-side) .card-text { font-size: 2.5em; }
-.flashcard-footer { width: 100%; padding: 20px 30px; box-sizing: border-box; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+.flashcard-footer {
+    width: 100%;
+    padding: 20px 30px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
 
-/* ========================== DYNAMIC CARD DETAILS (MOBILE ONLY) ========================== */
+
+/* ========================== DYNAMIC CARD DETAILS (MOBILE ONLY - TRIGGER BUTTON & EXPANDED CONTENT) ========================== */
 .dynamic-card-details {
     display: none; /* Mặc định ẩn trên Desktop */
-    position: absolute; /* Định vị tuyệt đối trong header-center */
-    top: 50%; /* Căn giữa theo chiều dọc */
-    left: 50%; /* Căn giữa theo chiều ngang */
-    transform: translate(-50%, -50%); /* Dịch chuyển để căn giữa chính xác */
+    position: absolute; /* Định vị tuyệt đối trong .flashcard */
     
-    background: linear-gradient(135deg, #6a82fb, #fc5c7d); /* Màu sắc đẹp hơn */
-    color: white;
-    border-radius: 25px; /* Bo tròn hơn */
+    /* Kiểu dáng thu gọn ban đầu */
+    background: rgba(255, 255, 255, 1); /* Nền trắng đục, KHÔNG BLUR */
+    backdrop-filter: none; /* KHÔNG BLUR */
+    border: 1px solid rgba(200, 200, 200, 0.5); /* Viền nhạt */
+    color: #333; /* Màu chữ tối */
+    border-radius: 20px; /* Bo tròn vừa phải */
     padding: 8px 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    overflow: hidden; /* Đảm bảo nội dung không tràn ra ngoài khi thu gọn */
-    transition: all 0.3s ease-out, width 0.4s ease-out, height 0.4s ease-out; /* Thêm transition cho width/height */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Bóng nhẹ */
+    overflow: hidden;
+    transition: all 0.3s ease-out, width 0.4s ease-out, height 0.4s ease-out, top 0.4s ease-out, transform 0.4s ease-out, border-radius 0.3s ease-out; /* Thêm border-radius transition */
     cursor: pointer;
-    white-space: nowrap; /* Ngăn không cho text xuống dòng */
-    z-index: 10; /* Đảm bảo nằm trên card-side text */
+    white-space: nowrap; /* Đảm bảo không xuống dòng khi thu gọn */
+    z-index: 101; /* Đảm bảo nó nằm trên header khi thu gọn */
 
-    /* Kích thước ban đầu (thu gọn) */
-    width: auto;
-    max-width: 90%; /* Giới hạn chiều rộng để không tràn ra ngoài */
+    width: auto; /* Fit với text khi thu gọn */
+    max-width: calc(100% - 60px); /* Giới hạn chiều rộng để có khoảng cách 30px mỗi bên */
     height: 40px; /* Chiều cao cố định khi thu gọn */
 
-    display: flex; /* Sử dụng flexbox cho nội dung bên trong */
+    display: flex;
     align-items: center;
     justify-content: center;
 }
 
+/* Màu sắc cho các giá trị trong tóm tắt */
+.dynamic-card-details-summary .summary-value.correct-streak { color: #28a745; /* Xanh lá */ font-weight: bold; }
+.dynamic-card-details-summary .summary-value.correct-count { color: #007bff; /* Xanh dương */ font-weight: bold; }
+.dynamic-card-details-summary .summary-value.review-count { color: #ffc107; /* Vàng */ font-weight: bold; }
+.dynamic-card-details-summary .summary-separator { color: #888; margin: 0 5px; }
+
 .dynamic-card-details-summary {
     display: flex;
-    justify-content: center; /* Căn giữa nội dung tóm tắt */
+    justify-content: center;
     align-items: center;
     width: 100%;
     height: 100%;
@@ -190,11 +216,11 @@
 
 .dynamic-card-details.expanded .dynamic-card-details-summary {
     opacity: 0;
-    pointer-events: none; /* Ngăn chặn tương tác khi ẩn */
+    pointer-events: none;
 }
 
 .dynamic-card-details-summary .summary-icon {
-    margin-left: 8px; /* Khoảng cách với text */
+    margin-left: 8px;
     transition: transform 0.3s ease-out;
 }
 
@@ -203,47 +229,99 @@
 }
 
 .dynamic-card-details-full {
-    position: absolute; /* Để nằm chồng lên summary khi mở rộng */
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: flex-start; /* Căn trái nội dung chi tiết */
-    padding: 10px 15px; /* Padding cho nội dung chi tiết */
+    justify-content: flex-start; /* Căn trên */
+    align-items: flex-start; /* Căn trái */
+    padding: 15px; /* Padding cho nội dung bên trong */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease-out, visibility 0s 0.3s;
-    white-space: normal; /* Cho phép text xuống dòng khi mở rộng */
+    white-space: normal;
+    overflow-y: auto; /* Cho phép cuộn nếu nội dung quá dài */
+    box-sizing: border-box; /* Đảm bảo padding không làm tràn */
 }
 
 .dynamic-card-details.expanded .dynamic-card-details-full {
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.3s ease-out 0.1s, visibility 0s; /* Hiển thị sau một chút */
+    transition: opacity 0.3s ease-out 0.1s, visibility 0s;
 }
 
 .dynamic-card-details.expanded {
-    /* Kích thước khi mở rộng */
-    width: 90%; /* Chiếm phần lớn chiều rộng */
-    height: auto; /* Chiều cao tự động theo nội dung */
-    min-height: 150px; /* Đảm bảo có đủ không gian */
-    padding: 15px; /* Tăng padding khi mở rộng */
-    align-items: flex-start; /* Căn nội dung chi tiết lên trên */
-    justify-content: flex-start;
+    /* Kiểu dáng mở rộng - bao phủ toàn bộ flashcard, không che nút header */
+    position: absolute; /* Vẫn là absolute so với .flashcard */
+    top: 0; /* Bắt đầu từ đỉnh của .flashcard */
+    left: 0; /* Bắt đầu từ lề trái của .flashcard */
+    width: 100%; /* Chiếm toàn bộ chiều rộng của .flashcard */
+    height: 100%; /* Chiếm toàn bộ chiều cao của .flashcard */
+    transform: none; /* Loại bỏ mọi dịch chuyển */
+    
+    background: rgba(255, 255, 255, 1); /* Nền trắng đục, KHÔNG BLUR */
+    backdrop-filter: none; /* KHÔNG BLUR */
+    border-radius: 12px; /* Giữ bo tròn của .flashcard */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2); /* Bóng đậm */
+    
+    display: flex; /* Dùng flexbox để căn giữa nội dung */
+    justify-content: center; /* Căn giữa theo chiều dọc */
+    align-items: center; /* Căn giữa theo chiều ngang */
+    padding: 0; /* Padding sẽ được áp dụng cho dynamic-card-details-full */
+
+    z-index: 105; /* Đảm bảo nó nằm trên tất cả khi mở rộng */
 }
 
-.dynamic-card-details-full p {
-    margin: 3px 0;
-    font-size: 0.85em;
-    color: #fff;
+/* Style cho bố cục 2 cột và các item chi tiết */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* 2 cột, tự động điều chỉnh */
+    gap: 10px; /* Khoảng cách giữa các item */
+    width: 100%;
 }
 
-.dynamic-card-details-full .detail-value {
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background-color: rgba(255, 255, 255, 0.3); /* Nền item trong suốt */
+    border-radius: 8px;
+    font-size: 0.9em;
+    color: #444;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Bóng nhẹ cho từng item */
+}
+
+.detail-item.full-width {
+    grid-column: 1 / -1; /* Chiếm toàn bộ chiều rộng nếu có class full-width */
+}
+
+.detail-icon {
+    font-size: 1.1em;
+    color: #007bff; /* Màu icon mặc định */
+}
+
+/* Màu sắc cụ thể cho từng icon */
+.detail-icon.correct-streak-icon { color: #28a745; } /* Xanh lá */
+.detail-icon.correct-count-icon { color: #007bff; } /* Xanh dương */
+.detail-icon.review-count-icon { color: #ffc107; } /* Vàng */
+.detail-icon.incorrect-count-icon { color: #dc3545; } /* Đỏ */
+.detail-icon.lapse-count-icon { color: #fd7e14; } /* Cam */
+.detail-icon.last-reviewed-icon { color: #6c757d; } /* Xám */
+.detail-icon.due-time-icon { color: #6f42c1; } /* Tím */
+
+
+.detail-label {
+    font-weight: 500;
+}
+
+.detail-value {
     font-weight: bold;
-    color: #ffe0b2; /* Màu sáng hơn cho giá trị */
+    color: #2c3e50; /* Màu đậm hơn cho giá trị */
+    margin-left: auto; /* Đẩy giá trị sang phải */
 }
 
 
@@ -256,7 +334,8 @@
     .side-nav,
     .side-nav-overlay,
     .image-popup-container,
-    .dynamic-card-details {
+    .dynamic-card-details, /* Ẩn dynamic-card-details trên desktop */
+    .card-details-modal { /* Ẩn modal trên desktop */
         display: none !important;
     }
 
@@ -273,9 +352,16 @@
         display: none;
     }
 
-    /* Hiển thị dynamic-card-details trên mobile */
+    /* Điều khiển hiển thị card-side và dynamic-card-details trên mobile */
+    .card-side {
+        display: none; /* Ẩn chữ "Mặt trước/Mặt sau" trên mobile */
+    }
+
     .dynamic-card-details {
-        display: flex; /* Đảm bảo hiển thị và dùng flexbox */
+        display: flex; /* Hiển thị dynamic island trên mobile */
+        top: 15px; /* Điều chỉnh top để ngang hàng với các nút header */
+        left: 50%; /* Căn giữa theo chiều ngang của flashcard */
+        transform: translateX(-50%); /* Dịch chuyển để căn giữa chính xác */
     }
 
     /* Ẩn desktop-card-details trên mobile */

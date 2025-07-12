@@ -20,43 +20,73 @@
         </div>
 
         <div class="flashcard-column">
-            <div class="flashcard {% if not is_front %}is-back-side{% endif %}">
+            {# Thêm ID cho flashcard #}
+            <div id="main-flashcard" class="flashcard {% if not is_front %}is-back-side{% endif %}">
                 <div class="flashcard-header">
                     <div class="header-left">
                         <button id="menu-toggle-btn" class="menu-toggle-btn header-icon-btn" aria-label="Mở menu"><i class="fas fa-bars"></i></button>
                         <button id="open-note-btn" class="note-button header-icon-btn" aria-label="Mở ghi chú"><i class="fas fa-pencil-alt"></i></button>
                     </div>
                     <div class="header-center">
-                        {# BẮT ĐẦU SỬA: Thêm class cho card-side để điều khiển hiển thị #}
                         <p id="card-side-text" class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
-                        {# KẾT THÚC SỬA #}
-
-                        {# BẮT ĐẦU SỬA: Dynamic Island cho chi tiết thẻ trên Mobile #}
-                        {# Di chuyển vào trong header-center để nằm cùng hàng với card-side #}
-                        <div id="dynamic-card-details" class="dynamic-card-details">
-                            <div class="dynamic-card-details-summary">
-                                <span class="summary-text">
-                                    Đúng: {{ progress.correct_count }} • Ôn tập: {{ progress.review_count }}
-                                </span>
-                                <i class="fas fa-chevron-down summary-icon"></i>
-                            </div>
-                            <div class="dynamic-card-details-full">
-                                <p>Lần đáp đúng liên tiếp: <span class="detail-value">{{ progress.correct_streak }}</span></p>
-                                <p>Tổng lần đáp đúng: <span class="detail-value">{{ progress.correct_count }}</span></p>
-                                <p>Tổng lần ôn tập: <span class="detail-value">{{ progress.review_count }}</span></p>
-                                <p>Tổng lần đáp sai: <span class="detail-value">{{ progress.incorrect_count }}</span></p>
-                                <p>Số lần lỡ hẹn: <span class="detail-value">{{ progress.lapse_count }}</span></p>
-                                <p>Lần cuối ôn: <span class="detail-value">{% if progress.last_reviewed %}{{ progress.last_reviewed | format_unix_timestamp }}{% else %}Chưa ôn{% endif %}</span></p>
-                                <p>Đến hạn tiếp theo: <span class="detail-value">{% if progress.due_time %}{{ progress.due_time | format_unix_timestamp }}{% else %}N/A{% endif %}</span></p>
-                            </div>
-                        </div>
-                        {# KẾT THÚC SỬA #}
                     </div>
                     <div class="header-right">
                         {% if can_edit %}
                             <button id="open-edit-btn" class="edit-button header-icon-btn" aria-label="Sửa thẻ"><i class="fas fa-pen-to-square"></i></button>
                         {% endif %}
                         <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh"><i class="fas fa-volume-up"></i></button>
+                    </div>
+                </div>
+
+                {# Dynamic Island là con trực tiếp của .flashcard, ngay sau flashcard-header #}
+                <div id="dynamic-card-details" class="dynamic-card-details">
+                    <div class="dynamic-card-details-summary">
+                        {# Đã loại bỏ prefix "Thông tin thẻ: " theo yêu cầu #}
+                        <span class="summary-value correct-streak">{{ progress.correct_streak }}</span>
+                        <span class="summary-separator">/</span>
+                        <span class="summary-value correct-count">{{ progress.correct_count }}</span>
+                        <span class="summary-separator">/</span>
+                        <span class="summary-value review-count">{{ progress.review_count }}</span>
+                        <i class="fas fa-chevron-down summary-icon"></i>
+                    </div>
+                    <div class="dynamic-card-details-full">
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <i class="fas fa-check-circle detail-icon correct-streak-icon"></i>
+                                <span class="detail-label">Đúng liên tiếp:</span>
+                                <span class="detail-value">{{ progress.correct_streak }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-chart-line detail-icon correct-count-icon"></i>
+                                <span class="detail-label">Tổng đúng:</span>
+                                <span class="detail-value">{{ progress.correct_count }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-history detail-icon review-count-icon"></i>
+                                <span class="detail-label">Tổng ôn tập:</span>
+                                <span class="detail-value">{{ progress.review_count }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-times-circle detail-icon incorrect-count-icon"></i>
+                                <span class="detail-label">Tổng sai:</span>
+                                <span class="detail-value">{{ progress.incorrect_count }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-exclamation-triangle detail-icon lapse-count-icon"></i>
+                                <span class="detail-label">Lỡ hẹn:</span>
+                                <span class="detail-value">{{ progress.lapse_count }}</span>
+                            </div>
+                            <div class="detail-item full-width">
+                                <i class="fas fa-calendar-alt detail-icon last-reviewed-icon"></i>
+                                <span class="detail-label">Lần cuối ôn:</span>
+                                <span class="detail-value">{% if progress.last_reviewed %}{{ progress.last_reviewed | format_unix_timestamp }}{% else %}Chưa ôn{% endif %}</span>
+                            </div>
+                            <div class="detail-item full-width">
+                                <i class="fas fa-clock detail-icon due-time-icon"></i>
+                                <span class="detail-label">Đến hạn tiếp:</span>
+                                <span class="detail-value">{% if progress.due_time %}{{ progress.due_time | format_unix_timestamp }}{% else %}N/A{% endif %}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -72,9 +102,9 @@
                     <div id="image-popup" class="image-popup-container">
                         <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
                         {% if image_to_show.startswith('http://') or image_to_show.startswith('https://') %}
-                            <img src="{{ image_to_show }}" alt="Hình ảnh thẻ" class="popup-image">
+                            <img src="{{ image_to_show }}" alt="Hình ảnh thẻ">
                         {% else %}
-                            <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image">
+                            <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ">
                         {% endif %}
                     </div>
                 {% endif %}
