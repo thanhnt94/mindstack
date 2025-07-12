@@ -88,6 +88,64 @@
     color: #7f8c8d;
 }
 
+/* --- BẮT ĐẦU SỬA: Kiểu cho các checkbox điều khiển --- */
+.chart-controls {
+    display: flex;
+    flex-wrap: nowrap; /* Ngăn không cho xuống dòng */
+    justify-content: center; /* Đảm bảo căn giữa */
+    gap: 6px; /* Giảm khoảng cách giữa các mục */
+    margin-bottom: 15px; /* Giảm khoảng cách với biểu đồ */
+    overflow-x: auto; 
+    padding-bottom: 5px; 
+}
+
+.chart-toggle {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9em;
+    white-space: nowrap; /* Ngăn chữ bị xuống dòng */
+}
+
+.chart-toggle-checkbox {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.toggle-label {
+    font-weight: 500;
+    color: #4a5568;
+    position: relative;
+    padding-left: 18px; /* Giảm padding để gần chấm màu hơn */
+}
+
+/* Chấm màu phía trước label */
+.toggle-label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+/* Định nghĩa màu sắc tương ứng */
+.toggle-label.color-reviews::before {
+    background-color: rgba(52, 152, 219, 1); /* Màu xanh dương */
+}
+
+.toggle-label.color-reviewed-cards::before {
+    background-color: rgba(155, 89, 182, 1); /* Màu tím */
+}
+
+.toggle-label.color-new-cards::before {
+    background-color: rgba(46, 204, 113, 1); /* Màu xanh lá */
+}
+/* --- KẾT THÚC SỬA --- */
+
+
 /* Container cho biểu đồ */
 .chart-container {
     position: relative;

@@ -41,19 +41,15 @@
     <div class="stats-section">
         <h2 class="section-title">Hoạt động 30 ngày qua</h2>
         
-        {# --- BẮT ĐẦU SỬA: Thêm các lớp CSS màu sắc --- #}
+        {# --- BẮT ĐẦU SỬA: Bỏ checkbox "Điểm đạt được" --- #}
         <div class="chart-controls">
             <label class="chart-toggle">
                 <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="0" checked>
-                <span class="toggle-label color-reviews">Số lần ôn tập</span>
+                <span class="toggle-label">Số lần ôn tập</span>
             </label>
             <label class="chart-toggle">
                 <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="1" checked>
-                <span class="toggle-label color-reviewed-cards">Số thẻ ôn tập</span>
-            </label>
-            <label class="chart-toggle">
-                <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="2" checked>
-                <span class="toggle-label color-new-cards">Thẻ học mới</span>
+                <span class="toggle-label">Thẻ học mới</span>
             </label>
         </div>
         {# --- KẾT THÚC SỬA --- #}
@@ -67,7 +63,7 @@
     <div class="stats-section">
         <h2 class="section-title">Chi tiết theo bộ</h2>
         {% if dashboard_data.sets_stats %}
-            <div class="set-selector-container" data-current-set-id="{{ current_set_id or '' }}">
+            <div class="set-selector-container">
                 <label for="setSelector">Chọn một bộ để xem chi tiết:</label>
                 <select id="setSelector" class="form-control">
                     <option value="">-- Chọn bộ thẻ --</option>

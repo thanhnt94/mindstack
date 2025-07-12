@@ -21,19 +21,22 @@
 .form-group input[type="text"],
 .form-group input[type="password"],
 .form-group input[type="number"],
-.form-group select {
+.form-group select,
+.form-group textarea { /* Thêm textarea vào đây */
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 1em;
-    box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
+    box-sizing: border-box; 
+    font-family: 'Inter', sans-serif; /* Đảm bảo font nhất quán */
 }
 
 .form-group input[type="text"]:focus,
 .form-group input[type="password"]:focus,
 .form-group input[type="number"]:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus { /* Thêm textarea vào đây */
     border-color: #007bff;
     outline: none;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
@@ -52,3 +55,31 @@
     color: #888;
     font-size: 0.85em;
 }
+
+/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho input file --- */
+.form-group input[type="file"] {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    font-size: 0.9em;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-group input[type="file"]::file-selector-button {
+    margin-right: 15px;
+    border: none;
+    background: #6c757d; /* Màu secondary */
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color .2s ease-in-out;
+}
+
+.form-group input[type="file"]::file-selector-button:hover {
+    background: #5a6268;
+}
+/* --- KẾT THÚC THÊM MỚI --- */

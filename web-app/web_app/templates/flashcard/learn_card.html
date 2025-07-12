@@ -1,9 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Học Thẻ - Flashcard App{% endblock %}
 
-{# --- BẮT ĐẦU THAY ĐỔI: Ẩn navbar trên trang này --- #}
 {% block navbar %}{% endblock %}
-{# --- KẾT THÚC THAY ĐỔI --- #}
 
 {% block body_class %}no-scroll hide-nav-footer-on-mobile{% endblock %}
 
@@ -74,13 +72,17 @@
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
     <nav id="side-nav" class="side-nav">
         <div class="side-nav-header">
-            <div class="user-profile">
-                <div class="user-avatar"><i class="fas fa-user"></i></div>
-                <div class="user-info">
-                    <span class="username">{{ user.username or 'User' }}</span>
-                    <span class="score">Điểm: {{ context_stats.total_score or 0 }}</span>
+            {# --- BẮT ĐẦU SỬA: Cập nhật link cho admin --- #}
+            <a href="{% if user.user_role == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('flashcard.dashboard') }}{% endif %}" class="user-profile-link">
+                <div class="user-profile">
+                    <div class="user-avatar"><i class="fas fa-user"></i></div>
+                    <div class="user-info">
+                        <span class="username">{{ user.username or 'User' }}</span>
+                        <span class="score">Điểm: {{ context_stats.total_score or 0 }}</span>
+                    </div>
                 </div>
-            </div>
+            </a>
+            {# --- KẾT THÚC SỬA --- #}
             <button id="side-nav-close-btn" class="side-nav-close-btn">&times;</button>
         </div>
         <div class="side-nav-content">

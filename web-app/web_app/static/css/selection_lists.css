@@ -1,142 +1,206 @@
 /*
  * selection_lists.css
  * Mô tả: Chứa các kiểu CSS dành cho danh sách chọn bộ thẻ và danh sách chọn chế độ học.
- * PHIÊN BẢN SỬA LỖI DỨT ĐIỂM THEO HƯỚNG ĐỘC LẬP HÓA.
  */
 
-/* Container chung */
-.container {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+/* Container chính cho trang chọn bộ */
+.select-set-container {
     width: 100%;
-    max-width: 600px;
-    text-align: center;
-    margin: 50px auto;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 15px;
+    box-sizing: border-box;
 }
 
-.container h1 {
-    color: #333;
+/* Kiểu cho từng khu vực (Bộ của bạn, Khám phá) */
+.set-category {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e7e9ed;
+}
+
+.set-category-header {
+    font-size: 1.5em;
+    color: #2c3e50;
+    margin-top: 0;
     margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ecf0f1;
 }
 
-.container p {
-    color: #666;
-    line-height: 1.6;
-}
-
-/* Danh sách chung */
-.set-list, .mode-list {
+/* Danh sách bộ thẻ */
+.set-list {
     list-style: none;
     padding: 0;
-    margin-top: 20px;
+    margin: 0;
 }
 
-.set-list li, .mode-list li {
-    margin-bottom: 10px;
+.set-list li {
+    margin-bottom: 12px;
 }
 
-/* Style chung cho các mục trong danh sách */
-.set-list li a, .mode-list li a {
-    text-decoration: none;
-    font-weight: bold;
-    display: block;
-    width: 100%;
-    padding: 15px 20px;
-    border-radius: 8px;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+/* --- CSS cho nút bấm dạng progress bar --- */
+.set-item-progress-link {
     position: relative;
-    cursor: pointer;
-}
-
-.set-list li a:hover, .mode-list li a:hover {
+    display: block;
+    border-radius: 8px;
     background-color: #e9ecef;
-    border-color: #ced4da;
+    overflow: hidden;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid #dee2e6;
 }
-
-/* 1. Trang Chọn Bộ Thẻ: Dùng Flexbox, căn đều 2 bên (hoạt động tốt) */
-.set-list li a {
+.set-item-progress-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+    border-color: #4299e1;
+}
+.progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #d1e7dd;
+    border-radius: 8px;
+    transition: width 0.5s ease-in-out, background-color 0.3s;
+    z-index: 1;
+    width: var(--progress-width, 0%);
+}
+.progress-fill.current {
+    background-color: #ffe0b2;
+}
+.set-content-overlay {
+    position: relative;
+    z-index: 2;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #007bff;
+    padding: 15px 20px;
+    color: #2d3748;
 }
-
-/* 2. Trang Chọn Chế Độ: Độc lập hoàn toàn, không dùng flex */
-.mode-list li a.mode-button {
-    text-align: center; /* Phương pháp căn giữa đơn giản và hiệu quả nhất */
-    font-size: 1.1em;
-    color: #333;
-}
-
-
-/* Style cho nhãn "(Hiện tại)" - Định vị tuyệt đối so với thẻ <a> cha */
-.current-mode-indicator {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-weight: normal;
-    color: #28a745;
-    font-size: 0.85em;
-    background-color: #d4edda;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-/* Các style cho trạng thái bộ thẻ (không đổi) */
-.set-list li.set-item-current a {
-    background-color: #fff3cd;
-    border-color: #ffeeba;
-    color: #856404;
-}
-
-.set-status-indicator {
-    font-weight: bold;
+.progress-text-overlay {
     font-size: 0.9em;
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin-left: 8px;
+    font-weight: 600;
+    color: #4a5568;
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 3px 8px;
+    border-radius: 10px;
+}
+
+/* --- BẮT ĐẦU SỬA: Hợp nhất và dọn dẹp CSS --- */
+
+/* Kiểu chung cho các mục trong danh sách (Khám phá & Chọn chế độ) */
+.set-list li.set-item-not_started a,
+.set-list li.set-item-mode a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid #e7e9ed;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.set-list li.set-item-not_started a:hover,
+.set-list li.set-item-mode a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+    border-color: #4299e1;
+}
+
+/* Highlight chế độ đang được chọn */
+.set-list li.set-item-mode.active-mode a {
+    border-color: #dd6b20;
+    background-color: #fffaf0;
+}
+
+/* Thông tin chung (tên, người tạo) */
+.set-info {
+    display: flex;
+    flex-direction: column;
+}
+.set-title {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 1.1em;
+}
+.set-creator {
+    font-size: 0.85em;
+    color: #718096;
+}
+
+/* Chỉ báo trạng thái (cho cả bộ thẻ và chế độ) */
+.set-status-indicator {
+    font-weight: 600;
+    font-size: 0.8em;
+    padding: 5px 10px;
+    border-radius: 20px;
     white-space: nowrap;
 }
-
-.set-status-indicator.current-set-indicator {
-    color: #856404;
-    background-color: #ffeeba;
-}
-
-.set-list li.set-item-in_progress a {
-    background-color: #e0f7fa;
-    border-color: #b2ebf2;
-    color: #00838f;
-}
-
-.set-status-indicator.in-progress-set-indicator {
-    color: #00838f;
-    background-color: #b2ebf2;
-}
-
-.set-list li.set-item-not_started a {
-    background-color: #f0f4c3;
-    border-color: #dce775;
-    color: #558b2f;
-}
-
 .set-status-indicator.not-started-set-indicator {
-    color: #558b2f;
-    background-color: #dce775;
+    background-color: #f0fff4;
+    color: #38a169;
+}
+.set-status-indicator.current-mode-indicator {
+    background-color: #fffaf0;
+    color: #dd6b20;
 }
 
-/* Responsive (không đổi) */
-@media (max-width: 768px) {
-    .container {
-        padding: 20px;
-        margin-top: 20px;
-        background-color: transparent;
-        box-shadow: none;
-    }
+/* --- KẾT THÚC SỬA --- */
+
+.empty-message {
+    color: #718096;
+    text-align: center;
+    padding: 20px;
+    background-color: #f7fafc;
+    border-radius: 8px;
+}
+
+/* CSS cho Phân trang */
+.pagination-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+}
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.page-item a, .page-item span {
+    color: #4a5568;
+    padding: 10px 15px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid #e2e8f0;
+    background-color: #fff;
+    display: block;
+    margin-left: -1px;
+}
+.page-item:first-child a {
+    margin-left: 0;
+}
+.page-item a:hover {
+    background-color: #f7fafc;
+    color: #2d3748;
+}
+.page-item.active a {
+    background-color: #4299e1;
+    border-color: #4299e1;
+    color: white;
+    cursor: default;
+}
+.page-item.disabled a, .page-item.disabled span {
+    color: #a0aec0;
+    pointer-events: none;
+    cursor: default;
+    background-color: #f7fafc;
 }

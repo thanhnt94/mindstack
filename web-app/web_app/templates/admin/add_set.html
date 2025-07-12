@@ -4,7 +4,9 @@
     <div class="container">
         <h1><i class="fas fa-plus-circle"></i> Thêm Bộ thẻ mới</h1>
         <div class="admin-panel">
-            <form method="POST" action="{{ url_for('admin.add_set') }}">
+            {# --- BẮT ĐẦU SỬA: Thêm enctype để hỗ trợ upload file --- #}
+            <form method="POST" action="{{ url_for('admin.add_set') }}" enctype="multipart/form-data">
+            {# --- KẾT THÚC SỬA --- #}
                 <div class="form-group">
                     <label for="title">Tên bộ thẻ (Title): <span class="required-field">*</span></label>
                     <input type="text" id="title" name="title" value="{{ set_data.title or '' }}" required>
@@ -24,6 +26,16 @@
                         <option value="0" {% if set_data.is_public == 0 %}selected{% endif %}>Riêng tư (Private)</option>
                     </select>
                 </div>
+                
+                {# --- BẮT ĐẦU THÊM MỚI: Ô upload file --- #}
+                <hr style="margin: 20px 0; border: 1px solid #eee;">
+                <div class="form-group">
+                    <label for="excel_file">Hoặc tạo từ file Excel (.xlsx):</label>
+                    <input type="file" id="excel_file" name="excel_file" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    <small>Tạo flashcard hàng loạt. File phải có cột A là 'Mặt trước' và cột B là 'Mặt sau'. Dòng đầu tiên sẽ được bỏ qua (coi như tiêu đề).</small>
+                </div>
+                {# --- KẾT THÚC THÊM MỚI --- #}
+
                 <div class="button-group">
                     <button type="submit" class="button primary"><i class="fas fa-save"></i> Lưu Bộ thẻ</button>
                     <a href="{{ url_for('admin.manage_sets') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>

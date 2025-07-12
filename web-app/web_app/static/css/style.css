@@ -32,5 +32,7 @@
 @import url("modal.css");
 /* Nhập các kiểu dành riêng cho trang quản trị viên */
 @import url("admin_panel.css");
+/* THÊM MỚI: Nhập kiểu cho Admin Dashboard */
+@import url("admin_dashboard.css");
 /* Nhập các kiểu cho footer */
 @import url("footer.css");

@@ -2,9 +2,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request
 import logging
 import json
+from sqlalchemy import func
 from ..services import learning_logic_service, stats_service, note_service
 from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress
-from ..config import LEARNING_MODE_DISPLAY_NAMES, MODE_AUTOPLAY_REVIEW
+from ..config import LEARNING_MODE_DISPLAY_NAMES, MODE_AUTOPLAY_REVIEW, SETS_PER_PAGE
 from .decorators import login_required
 
 flashcard_bp = Blueprint('flashcard', __name__)
@@ -25,63 +26,73 @@ def _serialize_flashcard(flashcard_obj):
 def index():
     user_id = session.get('user_id')
     user = User.query.get(user_id)
-    all_sets = VocabularySet.query.order_by(VocabularySet.title).all()
     
-    progressed_set_ids = {p.flashcard.set_id for p in UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).distinct(Flashcard.set_id)}
+    page_started = request.args.get('page_started', 1, type=int)
+    page_new = request.args.get('page_new', 1, type=int)
 
-    sets_data, current_set_data, in_progress_data, not_started_data = [], None, [], []
-    for s in all_sets:
-        status = 'not_started'
-        if s.set_id == user.current_set_id: status = 'current'
-        elif s.set_id in progressed_set_ids: status = 'in_progress'
-        set_info = {'set': s, 'status': status}
-        if status == 'current': current_set_data = set_info
-        elif status == 'in_progress': in_progress_data.append(set_info)
-        else: not_started_data.append(set_info)
+    progressed_set_ids_query = db.session.query(Flashcard.set_id)\
+        .join(UserFlashcardProgress)\
+        .filter(UserFlashcardProgress.user_id == user_id)\
+        .distinct()
+    progressed_set_ids = {row[0] for row in progressed_set_ids_query.all()}
 
-    if current_set_data: sets_data.append(current_set_data)
-    sets_data.extend(sorted(in_progress_data, key=lambda x: x['set'].title))
-    sets_data.extend(sorted(not_started_data, key=lambda x: x['set'].title))
+    started_sets_query = VocabularySet.query.filter(VocabularySet.set_id.in_(progressed_set_ids))\
+        .order_by(VocabularySet.title)
+    started_sets_pagination = started_sets_query.paginate(page=page_started, per_page=SETS_PER_PAGE, error_out=False)
 
-    return render_template('flashcard/select_set.html', user=user, sets_data=sets_data)
+    if started_sets_pagination.items:
+        set_ids = [s.set_id for s in started_sets_pagination.items]
+        
+        total_cards_map = dict(db.session.query(Flashcard.set_id, func.count(Flashcard.flashcard_id))\
+            .filter(Flashcard.set_id.in_(set_ids)).group_by(Flashcard.set_id).all())
+            
+        learned_cards_map = dict(db.session.query(Flashcard.set_id, func.count(UserFlashcardProgress.progress_id))\
+            .join(Flashcard).filter(UserFlashcardProgress.user_id == user_id, Flashcard.set_id.in_(set_ids))\
+            .group_by(Flashcard.set_id).all())
 
-# --- BẮT ĐẦU THÊM MỚI: Route điều hướng thông minh ---
+        for set_item in started_sets_pagination.items:
+            set_item.total_cards = total_cards_map.get(set_item.set_id, 0)
+            set_item.learned_cards = learned_cards_map.get(set_item.set_id, 0)
+
+    new_sets_query = VocabularySet.query.filter(VocabularySet.is_public == 1, VocabularySet.set_id.notin_(progressed_set_ids))\
+        .order_by(VocabularySet.title)
+    new_sets_pagination = new_sets_query.paginate(page=page_new, per_page=SETS_PER_PAGE, error_out=False)
+    
+    return render_template('flashcard/select_set.html', 
+                           user=user, 
+                           started_sets_pagination=started_sets_pagination,
+                           new_sets_pagination=new_sets_pagination)
+
 @flashcard_bp.route('/go-to-learn')
 @login_required
 def go_to_learn_page():
-    """
-    Mô tả: Một route điều hướng thông minh.
-    Chuyển người dùng đến trang học của bộ thẻ hiện tại nếu có,
-    nếu không thì chuyển đến trang chọn bộ thẻ.
-    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     
     if user and user.current_set_id:
-        # Nếu có bộ thẻ đang học, đi thẳng vào học
         logger.info(f"User {user_id} is going to current set {user.current_set_id}")
         return redirect(url_for('flashcard.learn_set', set_id=user.current_set_id))
     else:
-        # Nếu không, về trang chọn bộ thẻ
         logger.info(f"User {user_id} has no current set, going to index.")
         return redirect(url_for('flashcard.index'))
-# --- KẾT THÚC THÊM MỚI ---
 
 @flashcard_bp.route('/dashboard')
 @login_required
 def dashboard():
     user_id = session.get('user_id')
+    user = User.query.get(user_id)
     dashboard_data = stats_service.get_dashboard_stats(user_id)
     if not dashboard_data:
         flash("Không thể tải dữ liệu thống kê.", "error")
         return redirect(url_for('flashcard.index'))
     dashboard_data_json = json.dumps(dashboard_data)
+    
     return render_template('dashboard.html', 
                            dashboard_data=dashboard_data,
-                           dashboard_data_json=dashboard_data_json)
+                           dashboard_data_json=dashboard_data_json,
+                           current_set_id=user.current_set_id)
 
 def _check_edit_permission(user, flashcard_obj):
-    """Helper function to check if a user can edit a flashcard."""
     if not user or not flashcard_obj:
         return False
     set_creator_id = flashcard_obj.vocabulary_set.creator_user_id

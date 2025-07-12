@@ -95,10 +95,27 @@
     flex-shrink: 0;
 }
 
+/* --- BẮT ĐẦU THÊM MỚI: Định dạng cho liên kết hồ sơ --- */
+.user-profile-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+    flex-grow: 1; /* Cho phép nó chiếm không gian */
+    margin-right: 10px; /* Khoảng cách với nút đóng */
+}
+
+.user-profile-link:hover {
+    background-color: #e9ecef;
+}
+/* --- KẾT THÚC THÊM MỚI --- */
+
 .user-profile {
     display: flex;
     align-items: center;
     gap: 12px;
+    padding: 5px; /* Thêm padding bên trong để hover đẹp hơn */
 }
 
 .user-avatar {
@@ -131,6 +148,7 @@
     font-size: 28px;
     color: #aaa;
     cursor: pointer;
+    flex-shrink: 0; /* Ngăn nút bị co lại */
 }
 
 .side-nav-content {

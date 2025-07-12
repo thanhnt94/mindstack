@@ -15,6 +15,12 @@ def create_app():
     # Khởi tạo DB
     db.init_app(app)
 
+    # --- BẮT ĐẦU SỬA: Bật extension 'do' cho Jinja2 ---
+    # Extension này cho phép sử dụng tag {% do ... %} trong template,
+    # cần thiết cho macro phân trang hoạt động chính xác.
+    app.jinja_env.add_extension('jinja2.ext.do')
+    # --- KẾT THÚC SỬA ---
+
     # Đăng ký Jinja2 filter
     @app.template_filter('format_unix_timestamp')
     def format_unix_timestamp_filter(timestamp):
