@@ -214,10 +214,11 @@
     transition: opacity 0.3s ease-out;
 }
 
+/* --- BẮT ĐẦU SỬA: Ẩn phần tóm tắt khi mở rộng --- */
 .dynamic-card-details.expanded .dynamic-card-details-summary {
-    opacity: 0;
-    pointer-events: none;
+    display: none;
 }
+/* --- KẾT THÚC SỬA --- */
 
 .dynamic-card-details-summary .summary-icon {
     margin-left: 8px;
@@ -228,24 +229,21 @@
     transform: rotate(180deg);
 }
 
+/* --- BẮT ĐẦU SỬA: Bỏ position absolute và các thuộc tính liên quan --- */
 .dynamic-card-details-full {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Căn trên */
-    align-items: flex-start; /* Căn trái */
-    padding: 15px; /* Padding cho nội dung bên trong */
+    justify-content: flex-start;
+    align-items: flex-start;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease-out, visibility 0s 0.3s;
     white-space: normal;
-    overflow-y: auto; /* Cho phép cuộn nếu nội dung quá dài */
-    box-sizing: border-box; /* Đảm bảo padding không làm tràn */
+    overflow-y: auto;
+    box-sizing: border-box;
 }
+/* --- KẾT THÚC SỬA --- */
 
 .dynamic-card-details.expanded .dynamic-card-details-full {
     opacity: 1;
@@ -254,26 +252,24 @@
 }
 
 .dynamic-card-details.expanded {
-    /* Kiểu dáng mở rộng - bao phủ toàn bộ flashcard, không che nút header */
-    position: absolute; /* Vẫn là absolute so với .flashcard */
-    top: 0; /* Bắt đầu từ đỉnh của .flashcard */
-    left: 0; /* Bắt đầu từ lề trái của .flashcard */
-    width: 100%; /* Chiếm toàn bộ chiều rộng của .flashcard */
-    height: 100%; /* Chiếm toàn bộ chiều cao của .flashcard */
-    transform: none; /* Loại bỏ mọi dịch chuyển */
+    position: absolute;
+    top: 65px; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 60px);
+    height: auto;
     
-    background: rgba(255, 255, 255, 1); /* Nền trắng đục, KHÔNG BLUR */
-    backdrop-filter: none; /* KHÔNG BLUR */
-    border-radius: 12px; /* Giữ bo tròn của .flashcard */
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2); /* Bóng đậm */
+    background: rgba(255, 255, 255, 1);
+    backdrop-filter: none;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
     
-    display: flex; /* Dùng flexbox để căn giữa nội dung */
-    justify-content: center; /* Căn giữa theo chiều dọc */
-    align-items: center; /* Căn giữa theo chiều ngang */
-    padding: 0; /* Padding sẽ được áp dụng cho dynamic-card-details-full */
+    display: block; 
+    padding: 15px;
 
-    z-index: 105; /* Đảm bảo nó nằm trên tất cả khi mở rộng */
+    z-index: 105;
 }
+
 
 /* Style cho bố cục 2 cột và các item chi tiết */
 .details-grid {
