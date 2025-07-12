@@ -202,23 +202,21 @@
 .dynamic-card-details-summary .summary-value.review-count { color: #ffc107; /* Vàng */ font-weight: bold; }
 .dynamic-card-details-summary .summary-separator { color: #888; margin: 0 5px; }
 
+/* --- BẮT ĐẦU SỬA: Áp dụng lại flexbox để căn chỉnh nội dung bên trong --- */
 .dynamic-card-details-summary {
     display: flex;
-    justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100%;
+    justify-content: center;
     font-size: 0.9em;
     font-weight: 500;
     opacity: 1;
     transition: opacity 0.3s ease-out;
 }
+/* --- KẾT THÚC SỬA --- */
 
-/* --- BẮT ĐẦU SỬA: Ẩn phần tóm tắt khi mở rộng --- */
 .dynamic-card-details.expanded .dynamic-card-details-summary {
     display: none;
 }
-/* --- KẾT THÚC SỬA --- */
 
 .dynamic-card-details-summary .summary-icon {
     margin-left: 8px;
@@ -229,7 +227,6 @@
     transform: rotate(180deg);
 }
 
-/* --- BẮT ĐẦU SỬA: Bỏ position absolute và các thuộc tính liên quan --- */
 .dynamic-card-details-full {
     width: 100%;
     display: flex;
@@ -243,7 +240,6 @@
     overflow-y: auto;
     box-sizing: border-box;
 }
-/* --- KẾT THÚC SỬA --- */
 
 .dynamic-card-details.expanded .dynamic-card-details-full {
     opacity: 1;
