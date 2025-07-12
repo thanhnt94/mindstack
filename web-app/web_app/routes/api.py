@@ -3,7 +3,9 @@ from flask import Blueprint, send_file, session, jsonify, request
 import logging
 import os
 import asyncio
-from ..services import audio_service, note_service, flashcard_service
+# --- BẮT ĐẦU SỬA ĐỔI: Import các service mới ---
+from ..services import audio_service, note_service, flashcard_service, quiz_service, quiz_note_service
+# --- KẾT THÚC SỬA ĐỔI ---
 from ..models import Flashcard
 from ..config import IMAGES_DIR
 from .decorators import login_required
@@ -11,7 +13,7 @@ from .decorators import login_required
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
 
-# --- Các API cũ không thay đổi ---
+# ... (API cho Flashcard giữ nguyên) ...
 @api_bp.route('/card_audio/<int:flashcard_id>/<string:side>')
 @login_required
 def get_card_audio(flashcard_id, side):
@@ -79,15 +81,12 @@ def edit_flashcard(flashcard_id):
     card_data = {'front': updated_card.front, 'back': updated_card.back, 'front_img': updated_card.front_img, 'back_img': updated_card.back_img}
     return jsonify({'status': 'success', 'message': 'Cập nhật thành công!', 'data': card_data})
 
-
-# --- CẬP NHẬT API Lấy danh sách thẻ theo danh mục ---
 @api_bp.route('/cards_by_category/<int:set_id>/<string:category>')
 @login_required
 def get_cards_by_category(set_id, category):
     user_id = session.get('user_id')
     page = request.args.get('page', 1, type=int)
     
-    # Danh sách các danh mục hợp lệ mới
     valid_categories = ['due', 'mastered', 'lapsed', 'due_soon', 'learning', 'unseen']
     if category not in valid_categories:
         return jsonify({'status': 'error', 'message': 'Danh mục không hợp lệ.'}), 400
@@ -101,3 +100,56 @@ def get_cards_by_category(set_id, category):
     except Exception as e:
         logger.error(f"Lỗi khi lấy thẻ theo danh mục '{category}' cho bộ {set_id}: {e}", exc_info=True)
         return jsonify({'status': 'error', 'message': 'Lỗi server nội bộ.'}), 500
+
+# --- BẮT ĐẦU THÊM MỚI: API cho Quiz ---
+@api_bp.route('/quiz_note/<int:question_id>', methods=['GET', 'POST'])
+@login_required
+def handle_quiz_note(question_id):
+    user_id = session.get('user_id')
+    if request.method == 'GET':
+        note = quiz_note_service.get_note_by_question_id(user_id, question_id)
+        return jsonify({'note': note.note if note else ""})
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data or 'note' not in data:
+            return jsonify({'status': 'error', 'message': 'Dữ liệu không hợp lệ.'}), 400
+        note_obj, status, message = quiz_note_service.create_or_update_note(user_id, question_id, data['note'])
+        if status == "error":
+            return jsonify({'status': 'error', 'message': message}), 500
+        return jsonify({'status': status, 'message': message, 'note': note_obj.note})
+
+@api_bp.route('/quiz_question/details/<int:question_id>')
+@login_required
+def get_quiz_question_details(question_id):
+    question = quiz_service.get_question_by_id(question_id)
+    if not question:
+        return jsonify({'status': 'error', 'message': 'Không tìm thấy câu hỏi.'}), 404
+    
+    question_data = {
+        'pre_question_text': question.pre_question_text,
+        'question': question.question,
+        'option_a': question.option_a,
+        'option_b': question.option_b,
+        'option_c': question.option_c,
+        'option_d': question.option_d,
+        'correct_answer': question.correct_answer,
+        'guidance': question.guidance
+    }
+    return jsonify({'status': 'success', 'data': question_data})
+
+@api_bp.route('/quiz_question/edit/<int:question_id>', methods=['POST'])
+@login_required
+def edit_quiz_question(question_id):
+    user_id = session.get('user_id')
+    data = request.get_json()
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Dữ liệu không hợp lệ.'}), 400
+    
+    updated_question, status = quiz_service.update_question(question_id, data, user_id)
+    
+    if status != "success":
+        message_map = {"permission_denied": "Bạn không có quyền sửa câu hỏi này.", "question_not_found": "Không tìm thấy câu hỏi."}
+        return jsonify({'status': 'error', 'message': message_map.get(status, "Lỗi server.")}), 403 if status == "permission_denied" else 404 if status == "question_not_found" else 500
+    
+    return jsonify({'status': 'success', 'message': 'Cập nhật thành công!'})
+# --- KẾT THÚC THÊM MỚI ---

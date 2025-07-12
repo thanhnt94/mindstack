@@ -1,6 +1,6 @@
 /*
  * navbar.css
- * Mô tả: CSS được viết lại hoàn toàn cho thanh điều hướng mới.
+ * Mô tả: CSS được viết lại để hỗ trợ dropdown chính trên mobile.
  */
 
 /* Container chính của Navbar */
@@ -13,7 +13,7 @@
     left: 0;
     width: 100%;
     z-index: 1000;
-    height: 64px; /* Chiều cao cố định */
+    height: 64px;
     display: flex;
     align-items: center;
     box-sizing: border-box;
@@ -24,11 +24,15 @@
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
-    justify-content: space-between;
     align-items: center;
 }
 
-/* Logo/Brand */
+/* Container cho logo/brand để định vị dropdown */
+.navbar-brand-container {
+    position: relative;
+    flex-shrink: 0;
+}
+
 .navbar-brand {
     display: flex;
     align-items: center;
@@ -37,13 +41,29 @@
     font-weight: 600;
     color: #1a202c;
     text-decoration: none;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s;
 }
 
-.navbar-brand .fas {
+.navbar-brand .fa-brain {
     color: #4299e1;
 }
 
-/* Các liên kết điều hướng */
+/* --- BẮT ĐẦU SỬA LỖI: Tăng độ ưu tiên cho selector --- */
+/* Mặc định ẩn mũi tên đi bằng một selector cụ thể hơn */
+.navbar-brand .nav-chevron-main {
+    display: none;
+}
+
+/* Wrapper cho các link điều hướng */
+.main-nav-wrapper {
+    flex-grow: 1; 
+    display: flex;
+    justify-content: center; 
+}
+/* --- KẾT THÚC SỬA LỖI --- */
+
 .navbar-nav {
     display: flex;
     list-style: none;
@@ -75,9 +95,10 @@
     font-weight: 600;
 }
 
-/* Menu người dùng */
+/* Menu người dùng (bên phải) */
 .navbar-user-menu {
     position: relative;
+    margin-left: auto; 
 }
 
 .user-menu-trigger {
@@ -105,7 +126,7 @@
     transition: transform 0.2s;
 }
 
-/* Dropdown Menu */
+/* Dropdown Menu của người dùng */
 .user-dropdown-menu {
     position: absolute;
     top: calc(100% + 10px);
@@ -154,12 +175,57 @@
     margin: 0.5rem 0;
 }
 
-/* Responsive */
+/* --- CSS cho giao diện Mobile (<= 768px) --- */
 @media (max-width: 768px) {
-    .navbar-nav {
-        display: none; /* Ẩn các link điều hướng chính trên mobile */
-    }
     .main-navbar {
         padding: 0 1rem;
+    }
+    .navbar-container {
+        justify-content: space-between; 
+    }
+    
+    /* Biến wrapper thành dropdown */
+    .main-nav-wrapper {
+        position: absolute;
+        top: calc(100% + 5px); 
+        left: 1rem;
+        background-color: #ffffff;
+        border: 1px solid #e7e9ed;
+        border-radius: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        width: 220px;
+        z-index: 1001;
+        display: none; 
+    }
+
+    .main-nav-wrapper.open {
+        display: block; 
+    }
+
+    /* Các link trong navbar sẽ xếp dọc */
+    .navbar-nav {
+        flex-direction: column;
+        gap: 0;
+        padding: 0.5rem;
+    }
+
+    .nav-link {
+        justify-content: flex-start; 
+    }
+
+    /* Hiện icon mũi tên và làm cho brand có thể bấm */
+    .navbar-brand {
+        cursor: pointer;
+    }
+    .navbar-brand .nav-chevron-main {
+        display: inline-block;
+        font-size: 0.8rem;
+        margin-left: 5px;
+        color: #a0aec0;
+        transition: transform 0.2s;
+    }
+    .main-nav-wrapper.open + .navbar-brand-container .nav-chevron-main,
+    .navbar-brand-container .navbar-brand.open .nav-chevron-main {
+        transform: rotate(180deg);
     }
 }

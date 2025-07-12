@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Chào mừng đến với MindStack{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container home-container">
+    <div class="home-header">
+        <h1>Chào mừng đến với MindStack</h1>
+        <p>Nền tảng học tập của bạn. Hãy chọn một hoạt động để bắt đầu.</p>
+    </div>
+
+    <div class="activity-selector">
+        <a href="{{ url_for('flashcard.index') }}" class="activity-card flashcard-card">
+            <div class="activity-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <h2>Học Flashcard</h2>
+            <p>Ôn tập và ghi nhớ kiến thức với thẻ ghi nhớ thông minh.</p>
+        </a>
+
+        <a href="{{ url_for('quiz.index') }}" class="activity-card quiz-card">
+            <div class="activity-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h2>Làm Trắc nghiệm</h2>
+            <p>Kiểm tra và củng cố hiểu biết của bạn qua các bài tập trắc nghiệm.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

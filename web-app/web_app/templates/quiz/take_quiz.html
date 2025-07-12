@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Làm trắc nghiệm - {{ question.question_set.title }}{% endblock %}
+
+{% block content %}
+{# --- BẮT ĐẦU SỬA: Sử dụng đúng class container chính --- #}
+<div class="main-container" style="max-width: 800px;">
+{# --- KẾT THÚC SỬA --- #}
+    <div class="quiz-take-panel">
+        
+        <!-- Thanh tiến trình và Chế độ -->
+        <div class="quiz-header-bar">
+            <div class="quiz-progress-bar">
+                {% set percentage = ((progress.current-1) / progress.total) * 100 if progress.total > 0 else 0 %}
+                <div class="progress-bar-fill" style="width: {{ percentage }}%;"></div>
+                <span class="progress-bar-text">Câu {{ progress.current }} / {{ progress.total }}</span>
+            </div>
+            <a href="{{ url_for('quiz.select_mode') }}" class="button secondary small-button change-mode-button">
+                <i class="fas fa-random"></i>
+                <span>{{ current_mode_display }}</span>
+            </a>
+        </div>
+
+        <!-- Form chính -->
+        <form id="quiz-form" data-question-id="{{ question.question_id }}" data-check-url="{{ url_for('quiz.check_answer', question_id=question.question_id) }}">
+            
+            <div class="question-section">
+                {% if question.pre_question_text %}
+                    <p class="pre-question-text">{{ question.pre_question_text }}</p>
+                {% endif %}
+                <h2 class="question-text">{{ question.question }}</h2>
+            </div>
+
+            <div class="options-grid" id="options-grid">
+                <label class="option-card" data-option="A">
+                    <input type="radio" name="option" value="A" required>
+                    <div class="option-content">
+                        <span class="option-letter">A</span>
+                        <p>{{ question.option_a }}</p>
+                    </div>
+                </label>
+                <label class="option-card" data-option="B">
+                    <input type="radio" name="option" value="B" required>
+                    <div class="option-content">
+                        <span class="option-letter">B</span>
+                        <p>{{ question.option_b }}</p>
+                    </div>
+                </label>
+                <label class="option-card" data-option="C">
+                    <input type="radio" name="option" value="C" required>
+                    <div class="option-content">
+                        <span class="option-letter">C</span>
+                        <p>{{ question.option_c }}</p>
+                    </div>
+                </label>
+                <label class="option-card" data-option="D">
+                    <input type="radio" name="option" value="D" required>
+                    <div class="option-content">
+                        <span class="option-letter">D</span>
+                        <p>{{ question.option_d }}</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Khu vực kết quả và hành động (ẩn ban đầu) -->
+            <div id="result-section" class="result-section" style="display: none;">
+                <div id="guidance-panel" class="guidance-panel" style="display: none;">
+                    <h4><i class="fas fa-lightbulb"></i> Giải thích</h4>
+                    <p id="guidance-text"></p>
+                </div>
+                <div class="result-actions">
+                    <button type="button" id="open-quiz-note-btn" class="button secondary small-button {% if has_note %}has-note{% endif %}">
+                        <i class="fas fa-pencil-alt"></i> Ghi chú
+                    </button>
+                    {% if can_edit %}
+                    <button type="button" id="open-quiz-edit-btn" class="button warning small-button">
+                        <i class="fas fa-edit"></i> Sửa
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Nút điều khiển -->
+            <div class="quiz-controls">
+                <button type="submit" id="check-answer-btn" class="button primary">
+                    <i class="fas fa-check"></i> Kiểm tra
+                </button>
+                {# --- BẮT ĐẦU SỬA: Sửa lại nút Tiếp theo --- #}
+                <a href="{{ url_for('quiz.take_set', set_id=question.set_id) }}" id="next-question-btn" class="button success" style="display: none;">
+                    Tiếp theo <i class="fas fa-arrow-right"></i>
+                </a>
+                {# --- KẾT THÚC SỬA --- #}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ghi chú -->
+<div id="quiz-note-modal" class="note-modal" style="display: none;">
+    <div class="note-modal-content">
+        <span id="quiz-note-modal-close-btn" class="note-modal-close-btn">&times;</span>
+        <h2>Ghi chú cá nhân</h2>
+        <p>Ghi chú của bạn cho câu hỏi này.</p>
+        <textarea id="quiz-note-textarea" placeholder="Viết ghi chú của bạn vào đây..."></textarea>
+        <div class="note-modal-footer">
+            <span id="quiz-note-save-status"></span>
+            <button id="save-quiz-note-btn" class="button primary">Lưu Ghi chú</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa câu hỏi -->
+{% if can_edit %}
+<div id="quiz-edit-modal" class="edit-modal" style="display: none;">
+    <div class="edit-modal-content">
+        <span id="quiz-edit-modal-close-btn" class="edit-modal-close-btn">&times;</span>
+        <h2>Sửa Câu hỏi</h2>
+        <div class="edit-modal-body">
+            <div class="form-group"><label for="edit-pre-question-text">Văn bản trước câu hỏi:</label><textarea id="edit-pre-question-text" rows="2"></textarea></div>
+            <div class="form-group"><label for="edit-question">Nội dung câu hỏi:</label><textarea id="edit-question" rows="3" required></textarea></div>
+            <div class="form-group"><label for="edit-option-a">Lựa chọn A:</label><input type="text" id="edit-option-a" required></div>
+            <div class="form-group"><label for="edit-option-b">Lựa chọn B:</label><input type="text" id="edit-option-b" required></div>
+            <div class="form-group"><label for="edit-option-c">Lựa chọn C:</label><input type="text" id="edit-option-c" required></div>
+            <div class="form-group"><label for="edit-option-d">Lựa chọn D:</label><input type="text" id="edit-option-d" required></div>
+            <div class="form-group"><label for="edit-correct-answer">Đáp án đúng:</label>
+                <select id="edit-correct-answer" required>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select>
+            </div>
+            <div class="form-group"><label for="edit-guidance">Giải thích:</label><textarea id="edit-guidance" rows="3"></textarea></div>
+        </div>
+        <div class="edit-modal-footer">
+            <span id="quiz-edit-save-status"></span>
+            <button id="save-quiz-edit-btn" class="button primary">Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts_extra %}
+    <script src="{{ url_for('static', filename='js/quiz_handler.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/quiz_note_handler.js') }}"></script>
+    {% if can_edit %}
+    <script src="{{ url_for('static', filename='js/quiz_edit_handler.js') }}"></script>
+    {% endif %}
+{% endblock %}

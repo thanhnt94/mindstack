@@ -1,26 +1,40 @@
 <nav class="main-navbar">
     <div class="navbar-container">
-        <!-- Phần bên trái: Logo/Brand -->
-        <a href="{{ url_for('flashcard.go_to_learn_page') }}" class="navbar-brand">
-            <i class="fas fa-layer-group"></i>
-            Flashcard App
-        </a>
+        <!-- BẮT ĐẦU SỬA ĐỔI: Bọc logo/brand vào một container để định vị dropdown -->
+        <div class="navbar-brand-container">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand" id="brand-menu-trigger">
+                <i class="fas fa-brain"></i>
+                <span>MindStack</span>
+                <!-- Icon mũi tên này sẽ chỉ hiển thị trên mobile -->
+                <i class="fas fa-chevron-down nav-chevron-main"></i>
+            </a>
+        </div>
+        <!-- KẾT THÚC SỬA ĐỔI -->
 
-        <!-- Phần ở giữa: Các liên kết chính -->
-        <ul class="navbar-nav">
-            <li>
-                <a href="{{ url_for('flashcard.go_to_learn_page') }}" class="nav-link {% if request.endpoint in ['flashcard.index', 'flashcard.learn_set', 'flashcard.flip_card', 'flashcard.select_mode'] %}active{% endif %}">
-                    <i class="fas fa-home"></i> Học
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('flashcard.dashboard') }}" class="nav-link {% if request.endpoint == 'flashcard.dashboard' %}active{% endif %}">
-                    <i class="fas fa-chart-line"></i> Thống kê
-                </a>
-            </li>
-        </ul>
+        <!-- BẮT ĐẦU SỬA ĐỔI: Bọc các link điều hướng vào một wrapper -->
+        <!-- Wrapper này sẽ là menu dropdown trên mobile và là thanh nav ngang trên desktop -->
+        <div class="main-nav-wrapper" id="main-nav-wrapper">
+            <ul class="navbar-nav">
+                <li>
+                    <a href="{{ url_for('flashcard.index') }}" class="nav-link {% if request.endpoint.startswith('flashcard.') %}active{% endif %}">
+                        <i class="fas fa-layer-group"></i> Flashcard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('quiz.index') }}" class="nav-link {% if request.endpoint.startswith('quiz.') %}active{% endif %}">
+                        <i class="fas fa-question-circle"></i> Trắc nghiệm
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('flashcard.dashboard') }}" class="nav-link {% if request.endpoint == 'flashcard.dashboard' %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i> Thống kê
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- KẾT THÚC SỬA ĐỔI -->
 
-        <!-- Phần bên phải: Menu người dùng -->
+        <!-- Phần bên phải: Menu người dùng (giữ nguyên) -->
         <div class="navbar-user-menu">
             {% if session.get('username') %}
                 <div class="user-menu-trigger" id="user-menu-trigger">
@@ -29,11 +43,9 @@
                 </div>
                 <div class="user-dropdown-menu" id="user-dropdown-menu">
                     {% if session.get('user_role') == 'admin' %}
-                        {# --- BẮT ĐẦU SỬA: Cập nhật link Admin Panel --- #}
                         <a href="{{ url_for('admin.dashboard') }}" class="dropdown-item">
                             <i class="fas fa-user-shield"></i> Admin Panel
                         </a>
-                        {# --- KẾT THÚC SỬA --- #}
                     {% endif %}
                     <a href="#" class="dropdown-item">
                         <i class="fas fa-cog"></i> Cài đặt

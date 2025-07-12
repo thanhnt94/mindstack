@@ -12,6 +12,15 @@
     color: #3498db; /* Giữ lại màu hover đặc trưng */
 }
 
+/* --- THÊM MỚI: Kiểu cho nút khi có ghi chú --- */
+.note-button.has-note {
+    color: #3498db; /* Màu xanh dương để báo hiệu có ghi chú */
+}
+
+.note-button.has-note:hover {
+    color: #2980b9; /* Màu xanh đậm hơn khi hover */
+}
+
 
 /* --- Modal Ghi chú (dựa trên modal.css nhưng có tùy chỉnh) --- */
 .note-modal {

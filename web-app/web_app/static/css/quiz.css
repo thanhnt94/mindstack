@@ -1,0 +1,211 @@
+/*
+ * quiz.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho tính năng trắc nghiệm.
+ */
+
+/* --- Panel chính --- */
+.quiz-take-panel {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+/* --- Header Bar (Thanh tiến trình & Nút đổi chế độ) --- */
+.quiz-header-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.quiz-progress-bar {
+    flex-grow: 1;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    border-radius: 10px;
+    transition: width 0.4s ease-out;
+    min-width: 1%; /* Đảm bảo thanh luôn có độ rộng tối thiểu */
+}
+
+.progress-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.8em;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.change-mode-button {
+    flex-shrink: 0;
+    padding: 6px 12px !important;
+    font-size: 0.85em !important;
+}
+.change-mode-button .fas {
+    margin-right: 8px;
+}
+
+/* --- Phần câu hỏi --- */
+.question-section {
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.pre-question-text {
+    background-color: #f8f9fa;
+    border-left: 4px solid #3498db;
+    padding: 15px;
+    margin-bottom: 15px;
+    font-style: italic;
+    color: #555;
+    line-height: 1.6;
+}
+
+.question-text {
+    font-size: 1.5em;
+    color: #2c3e50;
+    line-height: 1.4;
+}
+
+/* --- Phần lựa chọn đáp án --- */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.option-card {
+    display: block;
+    position: relative;
+    background-color: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.option-card:hover {
+    border-color: #3498db;
+    transform: translateY(-2px);
+}
+
+.option-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+/* --- SỬA LẠI HIỆU ỨNG CHỌN --- */
+.option-card.selected {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px #3498db;
+}
+
+.option-card.correct {
+    border-color: #28a745;
+    background-color: #e9f7ef;
+    box-shadow: none; /* Bỏ shadow khi đã có kết quả */
+}
+.option-card.correct .option-letter {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: #fff;
+}
+
+.option-card.incorrect {
+    border-color: #dc3545;
+    background-color: #fbe9e7;
+    box-shadow: none; /* Bỏ shadow khi đã có kết quả */
+}
+.option-card.incorrect .option-letter {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+}
+
+.option-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-align: left;
+}
+
+.option-letter {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border: 2px solid #ced4da;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #495057;
+    transition: all 0.2s;
+}
+
+.option-content p {
+    margin: 0;
+    color: #343a40;
+    line-height: 1.5;
+}
+
+/* --- Khu vực kết quả và hành động --- */
+.result-section {
+    margin-top: 25px;
+}
+
+.guidance-panel {
+    padding: 20px;
+    background-color: #fffaf0;
+    border: 1px solid #ffe5b3;
+    border-left: 5px solid #ffc107;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.guidance-panel h4 {
+    margin-top: 0;
+    color: #d69e2e;
+}
+
+.guidance-panel p {
+    margin-bottom: 0;
+    line-height: 1.6;
+    color: #5c4a1e;
+}
+
+.result-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.result-actions .button.has-note {
+    background-color: #cce5ff;
+    color: #004085;
+    border-color: #b8daff;
+}
+
+/* --- Nút điều khiển --- */
+.quiz-controls {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* --- SỬA LẠI NÚT TIẾP THEO --- */
+.quiz-controls .button {
+    min-width: 120px; /* Đảm bảo nút có chiều rộng tối thiểu */
+}

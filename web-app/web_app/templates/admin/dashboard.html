@@ -70,15 +70,21 @@
             </a>
             <a href="{{ url_for('admin.manage_sets') }}" class="action-button">
                 <i class="fas fa-book"></i>
-                <span>Quản lý Bộ thẻ</span>
+                <span>Quản lý Bộ Flashcard</span>
             </a>
+            {# --- BẮT ĐẦU THÊM MỚI --- #}
+            <a href="{{ url_for('admin.manage_question_sets') }}" class="action-button">
+                <i class="fas fa-tasks"></i>
+                <span>Quản lý Bộ câu hỏi</span>
+            </a>
+            {# --- KẾT THÚC THÊM MỚI --- #}
             <a href="{{ url_for('admin.add_user') }}" class="action-button">
                 <i class="fas fa-user-plus"></i>
                 <span>Thêm Thành viên</span>
             </a>
             <a href="{{ url_for('admin.add_set') }}" class="action-button">
                 <i class="fas fa-plus-circle"></i>
-                <span>Thêm Bộ thẻ</span>
+                <span>Thêm Bộ Flashcard</span>
             </a>
         </div>
     </div>

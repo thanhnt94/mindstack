@@ -7,8 +7,12 @@
 .main-container {
     display: flex;
     width: 100%;
+    /* --- BẮT ĐẦU SỬA: Thêm lại các thuộc tính căn giữa --- */
+    margin-left: auto;
+    margin-right: auto;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Căn trên để nội dung không bị kéo dãn */
+    /* --- KẾT THÚC SỬA --- */
     padding: 20px;
     box-sizing: border-box;
     flex-grow: 1;
@@ -19,6 +23,8 @@
     padding: 0;
     height: 100%;
     width: 100%;
+    margin: 0; /* Reset margin */
+    max-width: none; /* Reset max-width */
 }
 
 .flashcard-column {
@@ -58,9 +64,7 @@
     }
 
     .right-column-container {
-        /* BẮT ĐẦU SỬA: Căn chỉnh nội dung cột phải sang trái */
         align-items: flex-start; /* Căn trái panel stats trong cột của nó */
-        /* KẾT THÚC SỬA */
     }
 
     .flashcard-image-panel, .context-panel {
@@ -69,7 +73,6 @@
         overflow-y: auto; /* Cho phép panel tự cuộn */
     }
 
-    /* THÊM MỚI: Giới hạn kích thước cho cột phải */
     .right-column-container .context-panel {
         min-width: 320px;
         max-width: 400px;
@@ -82,7 +85,6 @@
 
 /* ========================== Giao diện Mobile (<= 1024px) ========================== */
 @media (max-width: 1024px) {
-    /* SỬA LỖI: Khôi phục lại quy tắc ẩn navbar và footer trên trang học của mobile */
     body.learn-page .main-navbar,
     body.learn-page .main-footer {
         display: none !important;

@@ -15,11 +15,7 @@ def create_app():
     # Khởi tạo DB
     db.init_app(app)
 
-    # --- BẮT ĐẦU SỬA: Bật extension 'do' cho Jinja2 ---
-    # Extension này cho phép sử dụng tag {% do ... %} trong template,
-    # cần thiết cho macro phân trang hoạt động chính xác.
     app.jinja_env.add_extension('jinja2.ext.do')
-    # --- KẾT THÚC SỬA ---
 
     # Đăng ký Jinja2 filter
     @app.template_filter('format_unix_timestamp')
@@ -35,17 +31,24 @@ def create_app():
             logger.error(f"Lỗi khi định dạng timestamp {timestamp}: {e}", exc_info=True)
             return "Invalid Date"
 
-    # --- TÁI CẤU TRÚC: Đăng ký các Blueprint đã được tách nhỏ ---
+    # Đăng ký các Blueprint
     from .routes.auth import auth_bp
     from .routes.flashcard import flashcard_bp
     from .routes.admin import admin_bp
     from .routes.api import api_bp
+    from .routes.quiz import quiz_bp
+    # --- BẮT ĐẦU THÊM MỚI ---
+    from .routes.main import main_bp
+    # --- KẾT THÚC THÊM MỚI ---
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(flashcard_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
-    # -----------------------------------------------------------
+    app.register_blueprint(quiz_bp) # url_prefix đã được định nghĩa trong file quiz.py
+    # --- BẮT ĐẦU THÊM MỚI ---
+    app.register_blueprint(main_bp)
+    # --- KẾT THÚC THÊM MỚI ---
 
     logger.info("Ứng dụng Flask đã được khởi tạo và cấu hình với các route đã tách.")
     return app

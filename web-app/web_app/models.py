@@ -3,6 +3,7 @@ from .db_instance import db
 from sqlalchemy.dialects.sqlite import TIMESTAMP
 from sqlalchemy import func
 import logging
+from .config import DEFAULT_QUIZ_MODE
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     telegram_id = db.Column(db.Integer, unique=True, nullable=True)
     current_set_id = db.Column(db.Integer, db.ForeignKey('VocabularySets.set_id', ondelete='SET NULL'))
+    current_question_set_id = db.Column(db.Integer, db.ForeignKey('QuestionSets.set_id', ondelete='SET NULL'))
     default_side = db.Column(db.Integer, default=0)
     daily_new_limit = db.Column(db.Integer, default=10)
     user_role = db.Column(db.String, default='user')
@@ -30,6 +32,7 @@ class User(db.Model):
     last_notification_sent_time = db.Column(db.Integer)
     show_review_summary = db.Column(db.Integer, default=1)
     current_mode = db.Column(db.String, default='sequential_interspersed')
+    current_quiz_mode = db.Column(db.String, default=DEFAULT_QUIZ_MODE)
     default_mode = db.Column(db.String, default='sequential_interspersed')
     notification_target_set_id = db.Column(db.Integer, db.ForeignKey('VocabularySets.set_id', ondelete='SET NULL'))
     enable_morning_brief = db.Column(db.Integer, default=1)
@@ -39,9 +42,16 @@ class User(db.Model):
     progresses = db.relationship('UserFlashcardProgress', backref='user', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('FlashcardNote', backref='user', lazy=True, cascade="all, delete-orphan")
     score_logs = db.relationship('ScoreLog', backref='user', lazy=True, cascade="all, delete-orphan")
+    created_question_sets = db.relationship('QuestionSet', backref='creator', lazy=True, foreign_keys='QuestionSet.creator_user_id')
+    quiz_progresses = db.relationship('UserQuizProgress', backref='user', lazy=True, cascade="all, delete-orphan")
+    # --- BẮT ĐẦU THÊM MỚI ---
+    quiz_notes = db.relationship('QuizQuestionNote', backref='user', lazy=True, cascade="all, delete-orphan")
+    # --- KẾT THÚC THÊM MỚI ---
 
     def __repr__(self):
         return f"<User {self.username or self.telegram_id}>"
+
+# ... (VocabularySet, Flashcard, UserFlashcardProgress, FlashcardNote, ScoreLog giữ nguyên) ...
 
 # ========================== VocabularySet ==========================
 class VocabularySet(db.Model):
@@ -119,7 +129,80 @@ class ScoreLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='CASCADE'), nullable=False)
     score_change = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.Integer, nullable=False)
-    reason = db.Column(db.String) # Ví dụ: 'review', 'new_card'
+    reason = db.Column(db.String)
+    source_type = db.Column(db.String(50)) # flashcard, quiz, etc.
 
     def __repr__(self):
         return f"<ScoreLog User:{self.user_id} Change:{self.score_change}>"
+
+# ========================== QuestionSet ==========================
+class QuestionSet(db.Model):
+    __tablename__ = 'QuestionSets'
+    set_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String, nullable=False)
+    description = db.Column(db.String)
+    creator_user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='SET NULL'))
+    creation_date = db.Column(TIMESTAMP, default=func.current_timestamp())
+    is_public = db.Column(db.Integer, default=1)
+
+    questions = db.relationship('QuizQuestion', backref='question_set', lazy=True, cascade="all, delete-orphan")
+    users_using_as_current = db.relationship('User', backref='current_question_set', lazy=True, foreign_keys='User.current_question_set_id')
+
+    def __repr__(self):
+        return f"<QuestionSet {self.title}>"
+
+# ========================== QuizQuestion ==========================
+class QuizQuestion(db.Model):
+    __tablename__ = 'QuizQuestions'
+    question_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    set_id = db.Column(db.Integer, db.ForeignKey('QuestionSets.set_id', ondelete='CASCADE'), nullable=False)
+    pre_question_text = db.Column(db.Text)
+    question = db.Column(db.Text, nullable=False)
+    option_a = db.Column(db.String, nullable=False)
+    option_b = db.Column(db.String, nullable=False)
+    option_c = db.Column(db.String, nullable=False)
+    option_d = db.Column(db.String, nullable=False)
+    correct_answer = db.Column(db.String(1), nullable=False) # 'A', 'B', 'C', 'D'
+    guidance = db.Column(db.Text)
+    question_image_file = db.Column(db.String)
+    question_audio_file = db.Column(db.String)
+
+    progresses = db.relationship('UserQuizProgress', backref='question', lazy=True, cascade="all, delete-orphan")
+    # --- BẮT ĐẦU THÊM MỚI ---
+    notes = db.relationship('QuizQuestionNote', backref='question', lazy=True, cascade="all, delete-orphan")
+    # --- KẾT THÚC THÊM MỚI ---
+
+    def __repr__(self):
+        return f"<QuizQuestion {self.question_id} - {self.question[:20]}>"
+
+# ========================== UserQuizProgress ==========================
+class UserQuizProgress(db.Model):
+    __tablename__ = 'UserQuizProgress'
+    progress_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='CASCADE'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('QuizQuestions.question_id', ondelete='CASCADE'), nullable=False)
+    
+    last_answered = db.Column(db.Integer)
+    times_correct = db.Column(db.Integer, default=0, nullable=False)
+    times_incorrect = db.Column(db.Integer, default=0, nullable=False)
+    is_mastered = db.Column(db.Boolean, default=False, nullable=False)
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'question_id', name='_user_question_uc'),)
+
+    def __repr__(self):
+        return f"<UserQuizProgress User:{self.user_id} Question:{self.question_id}>"
+
+# --- BẮT ĐẦU THÊM MỚI: Bảng ghi chú cho câu hỏi ---
+# ========================== QuizQuestionNote ==========================
+class QuizQuestionNote(db.Model):
+    __tablename__ = 'QuizQuestionNotes'
+    note_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    question_id = db.Column(db.Integer, db.ForeignKey('QuizQuestions.question_id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='CASCADE'), nullable=False)
+    note = db.Column(db.Text)
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'question_id', name='_user_question_note_uc'),)
+
+    def __repr__(self):
+        return f"<QuizNote ID:{self.note_id} Question:{self.question_id} User:{self.user_id}>"
+# --- KẾT THÚC THÊM MỚI ---

@@ -86,7 +86,12 @@ class SetService:
                 db.session.flush()
                 logger.info(f"{log_prefix} Flushed session to get new set ID: {new_set.set_id}")
 
-                workbook = openpyxl.load_workbook(file_stream)
+                # --- BẮT ĐẦU SỬA LỖI: Chuyển file stream sang BytesIO ---
+                file_content = file_stream.read()
+                in_memory_file = io.BytesIO(file_content)
+                workbook = openpyxl.load_workbook(in_memory_file)
+                # --- KẾT THÚC SỬA LỖI ---
+                
                 sheet = workbook.active
                 
                 headers = [str(cell.value).strip().lower() for cell in sheet[1]]
@@ -165,7 +170,13 @@ class SetService:
             # Nếu có file Excel, thực hiện logic đồng bộ hóa
             if file_stream:
                 logger.info(f"{log_prefix} Phát hiện file Excel, bắt đầu đồng bộ hóa thẻ.")
-                workbook = openpyxl.load_workbook(file_stream)
+                
+                # --- BẮT ĐẦU SỬA LỖI: Chuyển file stream sang BytesIO ---
+                file_content = file_stream.read()
+                in_memory_file = io.BytesIO(file_content)
+                workbook = openpyxl.load_workbook(in_memory_file)
+                # --- KẾT THÚC SỬA LỖI ---
+
                 sheet = workbook.active
                 
                 headers = [str(cell.value).strip().lower() for cell in sheet[1]]
@@ -253,7 +264,6 @@ class SetService:
             logger.error(f"{log_prefix} Lỗi khi xóa bộ thẻ: {e}", exc_info=True)
             return False, str(e)
 
-    # --- BẮT ĐẦU THÊM MỚI: Hàm xuất Excel ---
     def export_set_to_excel(self, set_id):
         """
         Mô tả: Xuất tất cả các flashcard của một bộ thẻ ra file Excel trong bộ nhớ.
@@ -302,4 +312,3 @@ class SetService:
         except Exception as e:
             logger.error(f"{log_prefix} Lỗi khi xuất bộ thẻ ra Excel: {e}", exc_info=True)
             return None
-    # --- KẾT THÚC THÊM MỚI ---

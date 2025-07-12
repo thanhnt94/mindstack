@@ -15,14 +15,14 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'mot_chuoi_bi_mat_rat_dai_va_phuc_tap_cho_flask_moi')
 
-# --- Hằng số Chế độ Học/Ôn tập (ĐÃ ĐƠN GIẢN HÓA) ---
-MODE_SEQUENTIAL_LEARNING = 'sequential_learning' # Chế độ học tuần tự (mặc định mới): Học mới tuần tự + ôn tập đến hạn
-MODE_NEW_CARDS_ONLY = 'new_cards_only'         # Chỉ học thẻ mới (tuần tự)
-MODE_REVIEW_ALL_DUE = 'review_all_due'          # Ôn tập tổng hợp tất cả thẻ đến hạn (ngẫu nhiên)
-MODE_REVIEW_HARDEST = 'review_hardest'          # Ôn tập các từ khó nhất (đến hạn)
-MODE_AUTOPLAY_REVIEW = 'autoplay_review'        # Chế độ Autoplay: Tự động lật thẻ đã học
+# --- Hằng số Chế độ Học/Ôn tập (Flashcard) ---
+MODE_SEQUENTIAL_LEARNING = 'sequential_learning' 
+MODE_NEW_CARDS_ONLY = 'new_cards_only'         
+MODE_REVIEW_ALL_DUE = 'review_all_due'          
+MODE_REVIEW_HARDEST = 'review_hardest'          
+MODE_AUTOPLAY_REVIEW = 'autoplay_review'        
 
-DEFAULT_LEARNING_MODE = MODE_SEQUENTIAL_LEARNING # Chế độ học mặc định mới
+DEFAULT_LEARNING_MODE = MODE_SEQUENTIAL_LEARNING
 
 LEARNING_MODE_DISPLAY_NAMES = {
     MODE_SEQUENTIAL_LEARNING: "Học tuần tự",
@@ -31,6 +31,20 @@ LEARNING_MODE_DISPLAY_NAMES = {
     MODE_REVIEW_HARDEST: "Chỉ từ khó",
     MODE_AUTOPLAY_REVIEW: "Autoplay",
 }
+
+# --- BẮT ĐẦU THÊM MỚI: Hằng số Chế độ Quiz ---
+QUIZ_MODE_NEW_SEQUENTIAL = 'quiz_new_sequential' # Làm mới tuần tự
+QUIZ_MODE_NEW_RANDOM = 'quiz_new_random'         # Làm mới ngẫu nhiên
+QUIZ_MODE_REVIEW = 'quiz_review'                 # Ôn tập ngẫu nhiên
+
+DEFAULT_QUIZ_MODE = QUIZ_MODE_NEW_SEQUENTIAL
+
+QUIZ_MODE_DISPLAY_NAMES = {
+    QUIZ_MODE_NEW_SEQUENTIAL: "Làm mới tuần tự",
+    QUIZ_MODE_NEW_RANDOM: "Làm mới ngẫu nhiên",
+    QUIZ_MODE_REVIEW: "Ôn tập",
+}
+# --- KẾT THÚC THÊM MỚI ---
 
 # --- Hằng số Thuật toán SRS & Review Logic ---
 SRS_INITIAL_INTERVAL_HOURS = 1.0
@@ -55,14 +69,7 @@ LEADERBOARD_LIMIT = 50
 # --- Hằng số Múi giờ ---
 DEFAULT_TIMEZONE_OFFSET = 7
 
-# --- Hằng số Audio (MỚI THÊM CHO WEB APP) ---
-
-
-# BẮT ĐẦU THAY ĐỔI: Hằng số cho Autoplay
-AUTOPLAY_CARD_DELAY_MS = 2000 # Khoảng thời gian chờ sau khi audio mặt sau kết thúc (miligiây)
-# KẾT THÚC THAY ĐỔI
-
-# --- Tạo các thư mục cần thiết (MỚI THÊM CHO WEB APP) ---
+# --- Tạo các thư mục cần thiết ---
 DIRECTORIES_TO_CREATE = [
     AUDIO_CACHE_DIR,
     IMAGES_DIR
@@ -79,3 +86,4 @@ for dir_path in DIRECTORIES_TO_CREATE:
         print(f"Lỗi: Không thể tạo thư mục {dir_path}: {e}")
     except Exception as e_create:
         print(f"Lỗi không mong muốn khi tạo thư mục {dir_path}: {e_create}")
+

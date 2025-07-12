@@ -25,7 +25,9 @@
                 <div class="flashcard-header">
                     <div class="header-left">
                         <button id="menu-toggle-btn" class="menu-toggle-btn header-icon-btn" aria-label="Mở menu"><i class="fas fa-bars"></i></button>
-                        <button id="open-note-btn" class="note-button header-icon-btn" aria-label="Mở ghi chú"><i class="fas fa-pencil-alt"></i></button>
+                        {# --- BẮT ĐẦU THAY ĐỔI: Thêm class có điều kiện --- #}
+                        <button id="open-note-btn" class="note-button header-icon-btn {% if has_note %}has-note{% endif %}" aria-label="Mở ghi chú"><i class="fas fa-pencil-alt"></i></button>
+                        {# --- KẾT THÚC THAY ĐỔI --- #}
                     </div>
                     <div class="header-center">
                         <p id="card-side-text" class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
@@ -38,7 +40,6 @@
                     </div>
                 </div>
 
-                {# --- BẮT ĐẦU SỬA: Thay đổi cấu trúc HTML của dynamic island --- #}
                 <div id="dynamic-card-details" class="dynamic-card-details">
                     <div class="dynamic-card-details-summary">
                         <span class="summary-value correct-streak">{{ progress.correct_streak }}</span>
@@ -88,7 +89,6 @@
                         </div>
                     </div>
                 </div>
-                {# --- KẾT THÚC SỬA --- #}
 
 
                 <div class="flashcard-body">

@@ -12,6 +12,14 @@ flashcard_bp = Blueprint('flashcard', __name__)
 logger = logging.getLogger(__name__)
 
 def _serialize_flashcard(flashcard_obj):
+    """
+    Mô tả: Chuyển đổi đối tượng flashcard thành một dictionary để sử dụng trong JSON.
+    Hàm này đảm bảo rằng chỉ các dữ liệu cần thiết được gửi xuống client.
+    Args:
+        flashcard_obj (Flashcard): Đối tượng flashcard từ model.
+    Returns:
+        dict: Một dictionary chứa các thuộc tính của flashcard.
+    """
     if not flashcard_obj: return {}
     return {
         'flashcard_id': flashcard_obj.flashcard_id, 'front': flashcard_obj.front,
@@ -24,6 +32,10 @@ def _serialize_flashcard(flashcard_obj):
 @flashcard_bp.route('/')
 @login_required
 def index():
+    """
+    Mô tả: Hiển thị trang chính cho phép người dùng chọn bộ thẻ để học.
+    Phân trang các bộ thẻ đã học và các bộ thẻ mới.
+    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     
@@ -66,6 +78,10 @@ def index():
 @flashcard_bp.route('/go-to-learn')
 @login_required
 def go_to_learn_page():
+    """
+    Mô tả: Chuyển hướng người dùng đến trang học của bộ thẻ hiện tại của họ.
+    Nếu không có bộ thẻ hiện tại, chuyển hướng đến trang chọn bộ thẻ.
+    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     
@@ -79,6 +95,9 @@ def go_to_learn_page():
 @flashcard_bp.route('/dashboard')
 @login_required
 def dashboard():
+    """
+    Mô tả: Hiển thị trang thống kê (dashboard) cho người dùng.
+    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     dashboard_data = stats_service.get_dashboard_stats(user_id)
@@ -93,6 +112,14 @@ def dashboard():
                            current_set_id=user.current_set_id)
 
 def _check_edit_permission(user, flashcard_obj):
+    """
+    Mô tả: Kiểm tra xem người dùng có quyền sửa một flashcard cụ thể hay không.
+    Args:
+        user (User): Đối tượng người dùng.
+        flashcard_obj (Flashcard): Đối tượng flashcard.
+    Returns:
+        bool: True nếu có quyền, False nếu không.
+    """
     if not user or not flashcard_obj:
         return False
     set_creator_id = flashcard_obj.vocabulary_set.creator_user_id
@@ -101,6 +128,9 @@ def _check_edit_permission(user, flashcard_obj):
 @flashcard_bp.route('/learn/<int:set_id>')
 @login_required
 def learn_set(set_id):
+    """
+    Mô tả: Hiển thị thẻ tiếp theo để học trong một bộ thẻ cụ thể.
+    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     selected_set = VocabularySet.query.get_or_404(set_id)
@@ -120,6 +150,11 @@ def learn_set(set_id):
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
     
     can_edit = _check_edit_permission(user, flashcard_obj)
+    
+    # --- BẮT ĐẦU THAY ĐỔI: Kiểm tra xem thẻ có ghi chú không ---
+    note = note_service.get_note_by_flashcard_id(user_id, flashcard_obj.flashcard_id)
+    has_note = note is not None
+    # --- KẾT THÚC THAY ĐỔI ---
 
     return render_template(
         'flashcard/learn_card.html', user=user, flashcard=flashcard_obj, progress=progress_obj,
@@ -128,12 +163,16 @@ def learn_set(set_id):
         user_audio_settings_json_string=json.dumps(user_audio_settings),
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
         audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
-        can_edit=can_edit
+        can_edit=can_edit,
+        has_note=has_note # Truyền biến mới vào template
     )
 
 @flashcard_bp.route('/flip/<int:progress_id>')
 @login_required
 def flip_card(progress_id):
+    """
+    Mô tả: Hiển thị mặt sau của một flashcard.
+    """
     progress = UserFlashcardProgress.query.get_or_404(progress_id)
     if progress.user_id != session.get('user_id'):
         flash("Thẻ không hợp lệ.", "error")
@@ -147,6 +186,11 @@ def flip_card(progress_id):
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
 
     can_edit = _check_edit_permission(user, flashcard_obj)
+    
+    # --- BẮT ĐẦU THAY ĐỔI: Kiểm tra xem thẻ có ghi chú không ---
+    note = note_service.get_note_by_flashcard_id(user.user_id, flashcard_obj.flashcard_id)
+    has_note = note is not None
+    # --- KẾT THÚC THAY ĐỔI ---
 
     return render_template(
         'flashcard/learn_card.html', user=user, flashcard=flashcard_obj, progress=progress,
@@ -155,12 +199,16 @@ def flip_card(progress_id):
         user_audio_settings_json_string=json.dumps(user_audio_settings),
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
         audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
-        can_edit=can_edit
+        can_edit=can_edit,
+        has_note=has_note # Truyền biến mới vào template
     )
 
 @flashcard_bp.route('/rate/<int:progress_id>/<string:response_str>')
 @login_required
 def rate_card(progress_id, response_str):
+    """
+    Mô tả: Xử lý đánh giá của người dùng cho một thẻ và chuyển đến thẻ tiếp theo.
+    """
     user_id = session.get('user_id')
     user = User.query.get(user_id)
     progress = UserFlashcardProgress.query.get(progress_id)
@@ -187,12 +235,18 @@ def rate_card(progress_id, response_str):
 @flashcard_bp.route('/select_mode')
 @login_required
 def select_mode():
+    """
+    Mô tả: Hiển thị trang cho phép người dùng chọn chế độ học.
+    """
     user = User.query.get(session.get('user_id'))
     return render_template('flashcard/select_mode.html', modes=LEARNING_MODE_DISPLAY_NAMES, current_mode=user.current_mode)
 
 @flashcard_bp.route('/set_learning_mode/<string:mode_code>')
 @login_required
 def set_learning_mode(mode_code):
+    """
+    Mô tả: Cập nhật chế độ học của người dùng và chuyển hướng họ.
+    """
     if mode_code not in LEARNING_MODE_DISPLAY_NAMES:
         flash("Chế độ học không hợp lệ.", "error")
         return redirect(url_for('flashcard.select_mode'))
@@ -211,4 +265,7 @@ def set_learning_mode(mode_code):
 @flashcard_bp.route('/select_set_page')
 @login_required
 def select_set_page():
+    """
+    Mô tả: Một route tiện ích để chuyển hướng về trang chọn bộ thẻ.
+    """
     return redirect(url_for('flashcard.index'))

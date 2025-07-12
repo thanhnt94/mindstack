@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Chọn Chế độ Làm bài - Trắc nghiệm{% endblock %}
+
+{% block content %}
+<div class="container select-set-container">
+    <div class="set-category">
+        <h2 class="set-category-header">🚀 Chọn Chế độ Làm bài</h2>
+        <p>Chọn một chế độ phù hợp với mục tiêu của bạn:</p>
+        {% if modes %}
+            <ul class="set-list">
+                {% for mode_code, mode_name in modes.items() %}
+                    {# Thêm class 'active-mode' nếu đây là chế độ hiện tại #}
+                    <li class="set-item-mode {% if mode_code == current_mode %}active-mode{% endif %}">
+                        <a href="{{ url_for('quiz.set_quiz_mode', mode_code=mode_code) }}">
+                            <div class="set-info">
+                                <span class="set-title">{{ mode_name }}</span>
+                            </div>
+                            {% if mode_code == current_mode %}
+                                <span class="set-status-indicator current-mode-indicator">
+                                    Hiện tại
+                                </span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-message">Không có chế độ nào khả dụng.</p>
+        {% endif %}
+        <div class="button-group" style="margin-top: 30px; justify-content: center;">
+            <a href="{{ url_for('quiz.index') }}" class="button secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

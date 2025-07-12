@@ -1,0 +1,79 @@
+/*
+ * home.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho trang chủ mới.
+ */
+
+.home-container {
+    text-align: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.home-header h1 {
+    font-size: 2.5em;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.home-header p {
+    font-size: 1.2em;
+    color: #7f8c8d;
+    margin-bottom: 40px;
+}
+
+.activity-selector {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .activity-selector {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.activity-card {
+    display: block;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 40px 30px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e7e9ed;
+}
+
+.activity-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.activity-icon {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.flashcard-card .activity-icon {
+    color: #3498db;
+}
+
+.quiz-card .activity-icon {
+    color: #9b59b6;
+}
+
+.activity-card h2 {
+    font-size: 1.8em;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #34495e;
+}
+
+.activity-card p {
+    font-size: 1em;
+    color: #555;
+    line-height: 1.6;
+}

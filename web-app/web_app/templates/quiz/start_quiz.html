@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Bắt đầu: {{ question_set.title }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; text-align: center;">
+    <div class="quiz-start-panel">
+        <h1>{{ question_set.title }}</h1>
+        <p class="quiz-description">{{ question_set.description or 'Một bài trắc nghiệm thú vị đang chờ bạn.' }}</p>
+        
+        <div class="quiz-info">
+            <p><strong>Số lượng câu hỏi:</strong> {{ total_questions }}</p>
+            <p><strong>Người tạo:</strong> {{ question_set.creator.username or 'Admin' }}</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('quiz.start_quiz', set_id=question_set.set_id) }}">
+            <div class="form-group">
+                <label for="num_questions">Chọn số lượng câu hỏi bạn muốn làm:</label>
+                <select id="num_questions" name="num_questions" class="form-control" style="max-width: 200px; margin: 10px auto;">
+                    <option value="10" {% if total_questions >= 10 %}selected{% endif %}>10 câu</option>
+                    <option value="20" {% if total_questions < 10 %}disabled{% endif %}>20 câu</option>
+                    <option value="50" {% if total_questions < 20 %}disabled{% endif %}>50 câu</option>
+                    <option value="{{ total_questions }}" {% if total_questions < 50 %}selected{% endif %}>Tất cả ({{ total_questions }} câu)</option>
+                </select>
+            </div>
+            <button type="submit" class="button primary large-button">
+                <i class="fas fa-play-circle"></i> Bắt đầu ngay
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
