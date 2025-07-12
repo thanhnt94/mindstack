@@ -58,7 +58,9 @@
     }
 
     .right-column-container {
-        align-items: center; /* Căn giữa panel stats trong cột của nó */
+        /* BẮT ĐẦU SỬA: Căn chỉnh nội dung cột phải sang trái */
+        align-items: flex-start; /* Căn trái panel stats trong cột của nó */
+        /* KẾT THÚC SỬA */
     }
 
     .flashcard-image-panel, .context-panel {

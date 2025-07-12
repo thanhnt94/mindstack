@@ -109,10 +109,26 @@
                         <a href="{{ url_for('flashcard.select_mode') }}" class="nav-action-button"><i class="fas fa-bolt"></i> Đổi Chế Độ</a>
                     </div>
                 </div>
+                
+                {# BẮT ĐẦU THÊM MỚI: Thông tin chi tiết của thẻ #}
+                <div class="nav-section">
+                    <h3 class="nav-section-title">Chi tiết thẻ</h3>
+                    <p>Lần đáp đúng liên tiếp: <span style="font-weight: bold;">{{ progress.correct_streak }}</span></p>
+                    <p>Tổng lần đáp đúng: <span style="font-weight: bold;">{{ progress.correct_count }}</span></p>
+                    <p>Tổng lần ôn tập: <span style="font-weight: bold;">{{ progress.review_count }}</span></p>
+                    <p>Tổng lần đáp sai: <span style="font-weight: bold;">{{ progress.incorrect_count }}</span></p>
+                    <p>Số lần lỡ hẹn: <span style="font-weight: bold;">{{ progress.lapse_count }}</span></p>
+                    <p>Lần cuối ôn: {% if progress.last_reviewed %}{{ progress.last_reviewed | format_unix_timestamp }}{% else %}Chưa ôn{% endif %}</p>
+                    <p>Đến hạn tiếp theo: {% if progress.due_time %}{{ progress.due_time | format_unix_timestamp }}{% else %}N/A{% endif %}</p>
+                </div>
+                {# KẾT THÚC THÊM MỚI #}
+
                 <hr class="nav-separator">
                 <ul class="side-nav-links">
-                    <li><a href="{{ url_for('flashcard.dashboard') }}"><i class="fas fa-chart-bar"></i> Thống kê</a></li>
-                    <li><a href="#"><i class="fas fa-trophy"></i> Bảng xếp hạng</a></li>
+                    {# BẮT ĐẦU SỬA: Xóa nút Thống kê và Bảng xếp hạng #}
+                    {# <li><a href="{{ url_for('flashcard.dashboard') }}"><i class="fas fa-chart-bar"></i> Thống kê</a></li> #}
+                    {# <li><a href="#"><i class="fas fa-trophy"></i> Bảng xếp hạng</a></li> #}
+                    {# KẾT THÚC SỬA #}
                     <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
                     <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
                 </ul>
@@ -154,8 +170,10 @@
                 </div>
                 <hr class="nav-separator">
                 <ul class="side-nav-links">
-                    <li><a href="{{ url_for('flashcard.dashboard') }}"><i class="fas fa-chart-bar"></i> Thống kê</a></li>
-                    <li><a href="#"><i class="fas fa-trophy"></i> Bảng xếp hạng</a></li>
+                    {# BẮT ĐẦU SỬA: Xóa nút Thống kê và Bảng xếp hạng trong side-nav #}
+                    {# <li><a href="{{ url_for('flashcard.dashboard') }}"><i class="fas fa-chart-bar"></i> Thống kê</a></li> #}
+                    {# <li><a href="#"><i class="fas fa-trophy"></i> Bảng xếp hạng</a></li> #}
+                    {# KẾT THÚC SỬA #}
                 </ul>
             </div>
             <div class="side-nav-footer">
