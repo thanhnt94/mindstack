@@ -6,7 +6,10 @@ import random
 import time
 from sqlalchemy import func
 from ..models import db, QuestionSet, User, QuizQuestion, UserQuizProgress, ScoreLog
-from ..config import SCORE_INCREASE_CORRECT, QUIZ_MODE_NEW_SEQUENTIAL, QUIZ_MODE_NEW_RANDOM, QUIZ_MODE_REVIEW
+from ..config import (
+    SCORE_QUIZ_CORRECT_FIRST_TIME, SCORE_QUIZ_CORRECT_REPEAT,
+    QUIZ_MODE_NEW_SEQUENTIAL, QUIZ_MODE_NEW_RANDOM, QUIZ_MODE_REVIEW
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +23,7 @@ class QuizService:
 
     def get_categorized_question_sets_for_user(self, user_id):
         """
-        Mô tả: Lấy và phân loại các bộ câu hỏi thành "đã bắt đầu" và "mới" cho một người dùng cụ thể,
-        kèm theo tiến độ làm bài.
+        Mô tả: Lấy và phân loại các bộ câu hỏi thành "đã bắt đầu" và "mới" cho một người dùng cụ thể.
         """
         log_prefix = f"[QUIZ_SERVICE|GetCategorized|User:{user_id}]"
         logger.info(f"{log_prefix} Bắt đầu lấy và phân loại bộ câu hỏi.")
@@ -87,7 +89,6 @@ class QuizService:
             new_q_ids = all_q_ids_in_set - answered_q_ids
             if new_q_ids:
                 next_question_id = min(new_q_ids)
-                logger.info(f"{log_prefix} Chế độ tuần tự: Chọn câu hỏi mới có ID nhỏ nhất: {next_question_id}")
             else:
                 logger.info(f"{log_prefix} Đã hoàn thành tất cả câu hỏi mới.")
 
@@ -95,14 +96,12 @@ class QuizService:
             new_q_ids = all_q_ids_in_set - answered_q_ids
             if new_q_ids:
                 next_question_id = random.choice(list(new_q_ids))
-                logger.info(f"{log_prefix} Chế độ ngẫu nhiên: Chọn câu hỏi mới ngẫu nhiên: {next_question_id}")
             else:
                 logger.info(f"{log_prefix} Đã hoàn thành tất cả câu hỏi mới.")
         
         elif mode == QUIZ_MODE_REVIEW:
             if answered_q_ids:
                 next_question_id = random.choice(list(answered_q_ids))
-                logger.info(f"{log_prefix} Chế độ ôn tập: Chọn câu hỏi đã trả lời ngẫu nhiên: {next_question_id}")
             else:
                 logger.info(f"{log_prefix} Chưa có câu hỏi nào để ôn tập.")
         
@@ -134,24 +133,36 @@ class QuizService:
             
             if progress.times_correct is None: progress.times_correct = 0
             if progress.times_incorrect is None: progress.times_incorrect = 0
+            if progress.correct_streak is None: progress.correct_streak = 0
 
             progress.last_answered = int(time.time())
             score_change = 0
+            
+            is_first_correct = False
             if is_correct:
+                is_first_correct = (progress.times_correct == 0)
+                
+                if is_first_correct:
+                    score_change = SCORE_QUIZ_CORRECT_FIRST_TIME
+                else:
+                    score_change = SCORE_QUIZ_CORRECT_REPEAT
+                
                 progress.times_correct += 1
-                score_change = SCORE_INCREASE_CORRECT 
+                progress.correct_streak += 1
             else:
                 progress.times_incorrect += 1
-
-            if score_change != 0:
+                progress.correct_streak = 0
+            
+            if score_change > 0:
                 user = User.query.get(user_id)
                 user.score = (user.score or 0) + score_change
                 
+                reason = f"quiz_answer_{'first_correct' if is_first_correct else 'correct'}"
                 score_log = ScoreLog(
                     user_id=user_id,
                     score_change=score_change,
                     timestamp=int(time.time()),
-                    reason=f"quiz_answer_{'correct' if is_correct else 'incorrect'}",
+                    reason=reason,
                     source_type='quiz'
                 )
                 db.session.add(score_log)
@@ -215,7 +226,6 @@ class QuizService:
             return None, "permission_denied"
 
         try:
-            # Cập nhật các trường từ dữ liệu được cung cấp
             question.pre_question_text = data.get('pre_question_text', question.pre_question_text)
             question.question = data.get('question', question.question)
             question.option_a = data.get('option_a', question.option_a)

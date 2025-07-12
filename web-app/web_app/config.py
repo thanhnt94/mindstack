@@ -32,7 +32,7 @@ LEARNING_MODE_DISPLAY_NAMES = {
     MODE_AUTOPLAY_REVIEW: "Autoplay",
 }
 
-# --- BẮT ĐẦU THÊM MỚI: Hằng số Chế độ Quiz ---
+# --- Hằng số Chế độ Quiz ---
 QUIZ_MODE_NEW_SEQUENTIAL = 'quiz_new_sequential' # Làm mới tuần tự
 QUIZ_MODE_NEW_RANDOM = 'quiz_new_random'         # Làm mới ngẫu nhiên
 QUIZ_MODE_REVIEW = 'quiz_review'                 # Ôn tập ngẫu nhiên
@@ -44,7 +44,6 @@ QUIZ_MODE_DISPLAY_NAMES = {
     QUIZ_MODE_NEW_RANDOM: "Làm mới ngẫu nhiên",
     QUIZ_MODE_REVIEW: "Ôn tập",
 }
-# --- KẾT THÚC THÊM MỚI ---
 
 # --- Hằng số Thuật toán SRS & Review Logic ---
 SRS_INITIAL_INTERVAL_HOURS = 1.0
@@ -60,6 +59,10 @@ SCORE_INCREASE_NEW_CARD = 10
 SCORE_INCREASE_QUICK_REVIEW_CORRECT = 1
 SCORE_INCREASE_QUICK_REVIEW_HARD = 0
 SKIP_STREAK_THRESHOLD = 10
+# --- BẮT ĐẦU THÊM MỚI: Điểm cho Quiz ---
+SCORE_QUIZ_CORRECT_FIRST_TIME = 10
+SCORE_QUIZ_CORRECT_REPEAT = 3
+# --- KẾT THÚC THÊM MỚI ---
 
 # --- Hằng số UI ---
 DAILY_HISTORY_MAX_DAYS = 30
@@ -86,4 +89,3 @@ for dir_path in DIRECTORIES_TO_CREATE:
         print(f"Lỗi: Không thể tạo thư mục {dir_path}: {e}")
     except Exception as e_create:
         print(f"Lỗi không mong muốn khi tạo thư mục {dir_path}: {e_create}")
-

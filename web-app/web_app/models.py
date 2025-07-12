@@ -44,14 +44,10 @@ class User(db.Model):
     score_logs = db.relationship('ScoreLog', backref='user', lazy=True, cascade="all, delete-orphan")
     created_question_sets = db.relationship('QuestionSet', backref='creator', lazy=True, foreign_keys='QuestionSet.creator_user_id')
     quiz_progresses = db.relationship('UserQuizProgress', backref='user', lazy=True, cascade="all, delete-orphan")
-    # --- BẮT ĐẦU THÊM MỚI ---
     quiz_notes = db.relationship('QuizQuestionNote', backref='user', lazy=True, cascade="all, delete-orphan")
-    # --- KẾT THÚC THÊM MỚI ---
 
     def __repr__(self):
         return f"<User {self.username or self.telegram_id}>"
-
-# ... (VocabularySet, Flashcard, UserFlashcardProgress, FlashcardNote, ScoreLog giữ nguyên) ...
 
 # ========================== VocabularySet ==========================
 class VocabularySet(db.Model):
@@ -168,9 +164,7 @@ class QuizQuestion(db.Model):
     question_audio_file = db.Column(db.String)
 
     progresses = db.relationship('UserQuizProgress', backref='question', lazy=True, cascade="all, delete-orphan")
-    # --- BẮT ĐẦU THÊM MỚI ---
     notes = db.relationship('QuizQuestionNote', backref='question', lazy=True, cascade="all, delete-orphan")
-    # --- KẾT THÚC THÊM MỚI ---
 
     def __repr__(self):
         return f"<QuizQuestion {self.question_id} - {self.question[:20]}>"
@@ -185,6 +179,9 @@ class UserQuizProgress(db.Model):
     last_answered = db.Column(db.Integer)
     times_correct = db.Column(db.Integer, default=0, nullable=False)
     times_incorrect = db.Column(db.Integer, default=0, nullable=False)
+    # --- BẮT ĐẦU THÊM MỚI ---
+    correct_streak = db.Column(db.Integer, default=0, nullable=False)
+    # --- KẾT THÚC THÊM MỚI ---
     is_mastered = db.Column(db.Boolean, default=False, nullable=False)
 
     __table_args__ = (db.UniqueConstraint('user_id', 'question_id', name='_user_question_uc'),)
@@ -192,7 +189,6 @@ class UserQuizProgress(db.Model):
     def __repr__(self):
         return f"<UserQuizProgress User:{self.user_id} Question:{self.question_id}>"
 
-# --- BẮT ĐẦU THÊM MỚI: Bảng ghi chú cho câu hỏi ---
 # ========================== QuizQuestionNote ==========================
 class QuizQuestionNote(db.Model):
     __tablename__ = 'QuizQuestionNotes'
@@ -205,4 +201,3 @@ class QuizQuestionNote(db.Model):
 
     def __repr__(self):
         return f"<QuizNote ID:{self.note_id} Question:{self.question_id} User:{self.user_id}>"
-# --- KẾT THÚC THÊM MỚI ---

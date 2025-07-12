@@ -36,11 +36,17 @@ def migrate_existing_tables():
         cursor = conn.cursor()
         logger.info("Đã kết nối tới database để thực hiện nâng cấp.")
 
+        # Lấy danh sách tất cả các bảng trong DB
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = [row[0] for row in cursor.fetchall()]
+
         # Xóa các bảng quiz cũ nếu tồn tại
-        logger.info("Đang kiểm tra và xóa các bảng quiz cũ không còn sử dụng (QuizAttempts, UserQuizAnswers)...")
-        cursor.execute("DROP TABLE IF EXISTS UserQuizAnswers")
-        cursor.execute("DROP TABLE IF EXISTS QuizAttempts")
-        logger.info("Đã xóa các bảng quiz cũ thành công (nếu có).")
+        if 'UserQuizAnswers' in tables:
+            cursor.execute("DROP TABLE UserQuizAnswers")
+            logger.info("Đã xóa bảng cũ: UserQuizAnswers.")
+        if 'QuizAttempts' in tables:
+            cursor.execute("DROP TABLE QuizAttempts")
+            logger.info("Đã xóa bảng cũ: QuizAttempts.")
 
         # Lấy danh sách các cột của bảng Users
         cursor.execute("PRAGMA table_info(Users)")
@@ -52,30 +58,29 @@ def migrate_existing_tables():
 
         # Nâng cấp bảng Users
         if 'current_question_set_id' not in users_columns:
-            logger.info("Đang thêm cột 'current_question_set_id' vào bảng Users...")
             cursor.execute("ALTER TABLE Users ADD COLUMN current_question_set_id INTEGER")
-            logger.info("Đã thêm cột 'current_question_set_id'.")
-        else:
-            logger.warning("Cột 'current_question_set_id' đã tồn tại trong bảng Users.")
-
+            logger.info("Đã thêm cột 'current_question_set_id' vào bảng Users.")
         if 'current_quiz_mode' not in users_columns:
-            logger.info("Đang thêm cột 'current_quiz_mode' vào bảng Users...")
             cursor.execute(f"ALTER TABLE Users ADD COLUMN current_quiz_mode VARCHAR(50) DEFAULT '{DEFAULT_QUIZ_MODE}'")
-            logger.info(f"Đã thêm cột 'current_quiz_mode' với giá trị mặc định là '{DEFAULT_QUIZ_MODE}'.")
-        else:
-            logger.warning("Cột 'current_quiz_mode' đã tồn tại trong bảng Users.")
+            logger.info(f"Đã thêm cột 'current_quiz_mode' vào bảng Users với giá trị mặc định.")
 
         # Nâng cấp bảng ScoreLogs
         if 'source_type' not in scorelogs_columns:
-            logger.info("Đang thêm cột 'source_type' vào bảng ScoreLogs...")
             cursor.execute("ALTER TABLE ScoreLogs ADD COLUMN source_type VARCHAR(50)")
-            logger.info("Đã thêm cột 'source_type'.")
-            
-            logger.info("Đang điền giá trị 'flashcard' cho các bản ghi điểm cũ...")
             cursor.execute("UPDATE ScoreLogs SET source_type = 'flashcard' WHERE source_type IS NULL")
-            logger.info(f"{cursor.rowcount} dòng đã được cập nhật với source_type = 'flashcard'.")
-        else:
-            logger.warning("Cột 'source_type' đã tồn tại trong bảng ScoreLogs.")
+            logger.info("Đã thêm và điền dữ liệu cho cột 'source_type' trong ScoreLogs.")
+
+        # --- BẮT ĐẦU THÊM MỚI: Nâng cấp bảng UserQuizProgress ---
+        if 'UserQuizProgress' in tables:
+            cursor.execute("PRAGMA table_info(UserQuizProgress)")
+            progress_columns = [row[1] for row in cursor.fetchall()]
+            if 'correct_streak' not in progress_columns:
+                logger.info("Đang thêm cột 'correct_streak' vào bảng UserQuizProgress...")
+                cursor.execute("ALTER TABLE UserQuizProgress ADD COLUMN correct_streak INTEGER DEFAULT 0 NOT NULL")
+                logger.info("Đã thêm cột 'correct_streak'.")
+            else:
+                logger.warning("Cột 'correct_streak' đã tồn tại trong bảng UserQuizProgress.")
+        # --- KẾT THÚC THÊM MỚI ---
 
         conn.commit()
     except Exception as e:
@@ -91,7 +96,6 @@ def migrate_existing_tables():
 def create_new_tables():
     """
     Mô tả: Sử dụng Flask-SQLAlchemy để tạo tất cả các bảng được định nghĩa trong models.py.
-    Hàm này sẽ không sửa đổi các bảng đã tồn tại.
     """
     try:
         from web_app import create_app, db
@@ -106,10 +110,6 @@ def create_new_tables():
 
 # --- Chạy script ---
 if __name__ == '__main__':
-    # Bước 1: Nâng cấp và dọn dẹp các bảng đã có bằng kết nối trực tiếp
     migrate_existing_tables()
-    
-    # Bước 2: Tạo các bảng mới bằng SQLAlchemy
     create_new_tables()
-    
     logger.info("Script cập nhật cơ sở dữ liệu đã hoàn tất.")

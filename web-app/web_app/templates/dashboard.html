@@ -36,6 +36,35 @@
         </div>
     </div>
 
+    {# --- BẮT ĐẦU THÊM MỚI: Thống kê Trắc nghiệm --- #}
+    <div class="stats-section">
+        <h2 class="section-title">Thống kê Trắc nghiệm</h2>
+        <div class="stat-cards-grid">
+            <div class="stat-card">
+                <div class="stat-card-icon score" style="background-color: #9b59b6;"><i class="fas fa-trophy"></i></div>
+                <div class="stat-card-info">
+                    <span class="stat-card-value">{{ dashboard_data.quiz_score }}</span>
+                    <span class="stat-card-label">Điểm Trắc nghiệm</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon learned" style="background-color: #e67e22;"><i class="fas fa-question-circle"></i></div>
+                <div class="stat-card-info">
+                    <span class="stat-card-value">{{ dashboard_data.questions_answered_count }}</span>
+                    <span class="stat-card-label">Câu đã trả lời</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon sets" style="background-color: #e74c3c;"><i class="fas fa-tasks"></i></div>
+                <div class="stat-card-info">
+                    <span class="stat-card-value">{{ dashboard_data.quiz_sets_started_count }}</span>
+                    <span class="stat-card-label">Bộ đã làm</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# --- KẾT THÚC THÊM MỚI --- #}
+
     {# --- Lịch Nhiệt Hoạt Động --- #}
     <div class="stats-section">
         <h2 class="section-title">Lịch sử hoạt động</h2>
@@ -62,7 +91,7 @@
     </div>
 
     <div class="stats-section">
-        <h2 class="section-title">Chi tiết theo bộ</h2>
+        <h2 class="section-title">Chi tiết theo bộ Flashcard</h2>
         {% if dashboard_data.sets_stats %}
             <div class="set-selector-container" data-current-set-id="{{ current_set_id or '' }}">
                 <label for="setSelector">Chọn một bộ để xem chi tiết:</label>
