@@ -9,7 +9,6 @@
 <div class="dashboard-container">
     <h1 class="dashboard-header"><i class="fas fa-chart-pie"></i> Bảng điều khiển Thống kê</h1>
 
-    <!-- Phần Thống kê tổng quan -->
     <div class="stats-section">
         <h2 class="section-title">Tổng quan</h2>
         <div class="stat-cards-grid">
@@ -37,52 +36,31 @@
         </div>
     </div>
 
-    {# --- BẮT ĐẦU THÊM MỚI: Lịch Nhiệt Hoạt Động --- #}
+    {# --- Lịch Nhiệt Hoạt Động --- #}
     <div class="stats-section">
         <h2 class="section-title">Lịch sử hoạt động</h2>
-        <div id="heatmap-container" class="heatmap-container">
-            <!-- Heatmap sẽ được vẽ ở đây bởi JavaScript -->
-        </div>
+        <div id="heatmap-container" class="heatmap-container"></div>
         <div class="heatmap-legend">
             <span>Ít</span>
-            <div class="legend-color-box" style="background-color: #c6e48b;"></div>
-            <div class="legend-color-box" style="background-color: #7bc96f;"></div>
-            <div class="legend-color-box" style="background-color: #239a3b;"></div>
-            <div class="legend-color-box" style="background-color: #196127;"></div>
+            <div class="legend-color-box" data-level="1"></div>
+            <div class="legend-color-box" data-level="2"></div>
+            <div class="legend-color-box" data-level="3"></div>
+            <div class="legend-color-box" data-level="4"></div>
             <span>Nhiều</span>
         </div>
     </div>
-    {# --- KẾT THÚC THÊM MỚI --- #}
 
-    <!-- Phần Biểu đồ hoạt động -->
     <div class="stats-section">
         <h2 class="section-title">Hoạt động 30 ngày qua</h2>
-        
         <div class="chart-controls">
-            <label class="chart-toggle">
-                <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="0" checked>
-                <span class="toggle-label color-reviews">Số lần ôn tập</span>
-            </label>
-            <label class="chart-toggle">
-                <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="1" checked>
-                <span class="toggle-label color-reviewed-cards">Số thẻ ôn tập</span>
-            </label>
-            <label class="chart-toggle">
-                <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="2" checked>
-                <span class="toggle-label color-new-cards">Thẻ học mới</span>
-            </label>
-            <label class="chart-toggle">
-                <input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="3" checked>
-                <span class="toggle-label color-score">Điểm đạt được</span>
-            </label>
+            <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="0" checked><span class="toggle-label color-reviews">Số lần ôn tập</span></label>
+            <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="1" checked><span class="toggle-label color-reviewed-cards">Số thẻ ôn tập</span></label>
+            <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="2" checked><span class="toggle-label color-new-cards">Thẻ học mới</span></label>
+            <label class="chart-toggle"><input type="checkbox" class="chart-toggle-checkbox" data-dataset-index="3" checked><span class="toggle-label color-score">Điểm đạt được</span></label>
         </div>
-
-        <div class="chart-container">
-            <canvas id="activityChart"></canvas>
-        </div>
+        <div class="chart-container"><canvas id="activityChart"></canvas></div>
     </div>
 
-    <!-- Phần Thống kê chi tiết theo bộ -->
     <div class="stats-section">
         <h2 class="section-title">Chi tiết theo bộ</h2>
         {% if dashboard_data.sets_stats %}
@@ -95,29 +73,23 @@
                     {% endfor %}
                 </select>
             </div>
-            <div id="set-details-container" class="set-details-container" style="display: none;">
-                <div class="chart-container pie-chart-container">
-                    <canvas id="setPieChart"></canvas>
-                </div>
-                <div id="set-details-text" class="set-details-text">
-                    <!-- Nội dung chi tiết sẽ được điền bởi JavaScript -->
-                </div>
-            </div>
+            <div id="set-details-container" style="display: none;"></div>
         {% else %}
             <p>Bạn chưa học bộ thẻ nào để xem thống kê chi tiết.</p>
         {% endif %}
     </div>
-    
-    <div class="button-group" style="margin-top: 30px;">
-        <a href="{{ url_for('flashcard.index') }}" class="button secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
-    </div>
-
 </div>
 
-<!-- Nhúng dữ liệu JSON vào một thẻ script để JS có thể truy cập -->
-<script id="dashboard-data" type="application/json">
-    {{ dashboard_data_json | safe }}
-</script>
+<div id="card-list-modal" class="card-list-modal" style="display: none;">
+    <div class="card-list-modal-content">
+        <span id="card-list-modal-close-btn" class="card-list-modal-close-btn">&times;</span>
+        <h2 id="card-list-modal-title">Danh sách thẻ</h2>
+        <div id="card-list-container" class="card-list-container"></div>
+        <div id="card-list-pagination" class="card-list-pagination"></div>
+    </div>
+</div>
+
+<script id="dashboard-data" type="application/json">{{ dashboard_data_json | safe }}</script>
 {% endblock %}
 
 {% block scripts_extra %}

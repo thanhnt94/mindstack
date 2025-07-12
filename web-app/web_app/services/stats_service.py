@@ -145,8 +145,9 @@ class StatsService:
         
         stats['learned_sets_count'] = len(learned_sets)
 
-        # --- BẮT ĐẦU SỬA: Thêm logic lấy chi tiết cho từng bộ ---
         current_ts = self._get_current_unix_timestamp(tz_offset)
+        ts_in_24_hours = current_ts + 86400 # 24 * 60 * 60
+
         for s in learned_sets:
             set_id = s.set_id
             total_cards = Flashcard.query.filter_by(set_id=set_id).count()
@@ -154,25 +155,29 @@ class StatsService:
             progress_in_set = UserFlashcardProgress.query.join(Flashcard)\
                 .filter(Flashcard.set_id == set_id, UserFlashcardProgress.user_id == user_id)
             
+            # --- TÍNH TOÁN CÁC CHỈ SỐ CHO LƯỚI 6 Ô ---
             learned_cards = progress_in_set.count()
+            unseen_cards = total_cards - learned_cards
             mastered_cards = progress_in_set.filter(UserFlashcardProgress.correct_streak > 5).count()
+            learning_cards = learned_cards - mastered_cards
             due_cards = progress_in_set.filter(UserFlashcardProgress.due_time <= current_ts).count()
             lapsed_cards = progress_in_set.filter(UserFlashcardProgress.lapse_count > 0).count()
-            learning_cards = learned_cards - mastered_cards
+            due_soon_cards = progress_in_set.filter(UserFlashcardProgress.due_time > current_ts, UserFlashcardProgress.due_time <= ts_in_24_hours).count()
 
             stats['sets_stats'][set_id] = {
                 'title': s.title,
                 'total_cards': total_cards,
                 'learned_cards': learned_cards,
-                'due_cards': due_cards,
-                'mastered_cards': mastered_cards,
-                'lapsed_cards': lapsed_cards,
-                'pie_chart_data': {
-                    'labels': ['Nhớ sâu', 'Đang học', 'Chưa học'],
-                    'data': [mastered_cards, learning_cards, total_cards - learned_cards]
+                # Dữ liệu cho lưới 6 ô
+                'stat_values': {
+                    'learning': learning_cards,
+                    'mastered': mastered_cards,
+                    'unseen': unseen_cards,
+                    'due': due_cards,
+                    'due_soon': due_soon_cards,
+                    'lapsed': lapsed_cards
                 }
             }
-        # --- KẾT THÚC SỬA ---
         
         logger.info(f"{log_prefix} Tổng hợp dữ liệu thành công.")
         return stats
