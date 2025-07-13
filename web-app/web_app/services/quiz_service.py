@@ -4,12 +4,17 @@ import openpyxl
 import io
 import random
 import time
+import hashlib # Import hashlib để tạo hash cho đoạn văn
 from sqlalchemy import func
-from ..models import db, QuestionSet, User, QuizQuestion, UserQuizProgress, ScoreLog
+from ..models import db, QuestionSet, User, QuizQuestion, UserQuizProgress, ScoreLog, QuizPassage # Thêm QuizPassage
+
+# BẮT ĐẦU SỬA LỖI: Đảm bảo tất cả các hằng số cần thiết được import từ config.py
 from ..config import (
     SCORE_QUIZ_CORRECT_FIRST_TIME, SCORE_QUIZ_CORRECT_REPEAT,
     QUIZ_MODE_NEW_SEQUENTIAL, QUIZ_MODE_NEW_RANDOM, QUIZ_MODE_REVIEW
 )
+# Vui lòng đảm bảo các hằng số trên đã được định nghĩa trong web_app/config.py của bạn.
+# KẾT THÚC SỬA LỖI
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +93,7 @@ class QuizService:
         
         next_question_id = None
         
-        # BẮT ĐẦU THÊM MỚI: Logic ưu tiên câu hỏi trong cùng nhóm đoạn văn
+        # Logic ưu tiên câu hỏi trong cùng nhóm đoạn văn (dựa trên passage_id và passage_order)
         user = User.query.get(user_id)
         if user and user.current_question_set_id == set_id: # Đảm bảo người dùng đang ở đúng bộ quiz
             # Tìm câu hỏi cuối cùng mà người dùng đã trả lời trong bộ này
@@ -97,24 +102,22 @@ class QuizService:
                                      .order_by(UserQuizProgress.last_answered.desc())\
                                      .first()
             
-            if last_answered_progress and last_answered_progress.question.passage_group_id:
-                current_passage_group_id = last_answered_progress.question.passage_group_id
+            if last_answered_progress and last_answered_progress.question.passage_id:
+                current_passage_id = last_answered_progress.question.passage_id
                 
-                # Tìm câu hỏi tiếp theo trong cùng nhóm đoạn văn chưa được trả lời
+                # Tìm câu hỏi tiếp theo trong cùng nhóm đoạn văn chưa được trả lời, sắp xếp theo passage_order
                 next_question_in_passage = QuizQuestion.query.filter(
                     QuizQuestion.set_id == set_id,
-                    QuizQuestion.passage_group_id == current_passage_group_id,
-                    QuizQuestion.question_id > last_answered_progress.question_id, # Lấy câu hỏi có ID lớn hơn
+                    QuizQuestion.passage_id == current_passage_id,
                     ~QuizQuestion.progresses.any(user_id=user_id) # Chưa được trả lời bởi người dùng này
-                ).order_by(QuizQuestion.question_id.asc()).first()
-
+                ).order_by(QuizQuestion.passage_order.asc(), QuizQuestion.question_id.asc()).first() # Sắp xếp theo order, sau đó ID
+                
                 if next_question_in_passage:
                     logger.info(f"{log_prefix} Tìm thấy câu hỏi tiếp theo trong cùng nhóm đoạn văn (ID: {next_question_in_passage.question_id}).")
                     return next_question_in_passage
                 else:
                     logger.info(f"{log_prefix} Đã hoàn thành nhóm đoạn văn hiện tại. Chuyển sang tìm câu hỏi mới/ôn tập.")
-        # KẾT THÚC THÊM MỚI
-
+        
         # Logic cũ để tìm câu hỏi mới/ôn tập
         if mode == QUIZ_MODE_NEW_SEQUENTIAL:
             new_q_ids = all_q_ids_in_set - answered_q_ids
@@ -281,12 +284,15 @@ class QuizService:
             question.option_d = data.get('option_d', question.option_d)
             question.correct_answer = data.get('correct_answer', question.correct_answer).upper()
             question.guidance = data.get('guidance', question.guidance)
-            # BẮT ĐẦU THÊM MỚI: Cập nhật các trường đoạn văn
-            # Chỉ cập nhật passage_content nếu đây là câu hỏi chính của đoạn văn
-            if question.is_passage_main_question:
-                question.passage_content = data.get('passage_content', question.passage_content)
-            # Không cho phép sửa passage_group_id và is_passage_main_question qua API này
-            # KẾT THÚC THÊM MỚI
+            question.question_image_file = data.get('question_image_file', question.question_image_file)
+            question.question_audio_file = data.get('question_audio_file', question.question_audio_file)
+            
+            # Cập nhật passage_order nếu có
+            if 'passage_order' in data and data['passage_order'] is not None:
+                try:
+                    question.passage_order = int(data['passage_order'])
+                except ValueError:
+                    logger.warning(f"{log_prefix} passage_order không hợp lệ: {data['passage_order']}. Bỏ qua cập nhật.")
             
             db.session.commit()
             logger.info(f"{log_prefix} Cập nhật câu hỏi thành công.")
@@ -327,25 +333,25 @@ class QuizService:
         
         column_map = {header: idx for idx, header in enumerate(headers)}
         
-        questions_from_excel = {} # Dùng để theo dõi các câu hỏi từ Excel (dùng question_text làm key)
+        questions_from_excel = [] # Sẽ lưu các dict dữ liệu câu hỏi từ Excel
+        passage_content_to_id_map = {} # Ánh xạ passage_hash -> passage_id
 
-        # BẮT ĐẦU THÊM MỚI: Logic quản lý đoạn văn khi import
-        current_passage_group_id = None
-        next_passage_group_counter = 1 # Bắt đầu từ 1 hoặc số lớn nhất hiện có trong DB để tránh trùng lặp
-                                      # Để đơn giản, ta sẽ dùng counter tăng dần trong phiên import.
-                                      # Trong thực tế, có thể cần lấy max(passage_group_id) từ DB.
-        
-        # Nếu đang ở chế độ sync, cần lấy các passage_group_id hiện có để tiếp tục
-        if sync:
-            max_existing_passage_group_id = db.session.query(func.max(QuizQuestion.passage_group_id)).scalar()
-            if max_existing_passage_group_id is not None:
-                next_passage_group_counter = max_existing_passage_group_id + 1
-            else:
-                next_passage_group_counter = 1
-        # KẾT THÚC THÊM MỚI
+        # Lấy tất cả các đoạn văn hiện có để tránh tạo trùng lặp
+        existing_passages = QuizPassage.query.all()
+        for p in existing_passages:
+            passage_content_to_id_map[p.passage_hash] = p.passage_id
 
         for row_index, row_cells in enumerate(sheet.iter_rows(min_row=2), start=2):
             row_values = [cell.value for cell in row_cells]
+            
+            # Lấy question_id từ Excel (nếu có)
+            question_id_from_excel = None
+            if 'question_id' in column_map and row_values[column_map['question_id']] is not None:
+                try:
+                    question_id_from_excel = int(row_values[column_map['question_id']])
+                except ValueError:
+                    logger.warning(f"{log_prefix} Hàng {row_index}: question_id không hợp lệ. Coi là câu hỏi mới.")
+
             question_text = str(row_values[column_map['question']]).strip()
             
             if not question_text:
@@ -372,35 +378,31 @@ class QuizService:
                 logger.warning(f"{log_prefix} Bỏ qua hàng {row_index} vì không tìm thấy đáp án đúng khớp với các lựa chọn.")
                 continue
 
-            # BẮT ĐẦU THÊM MỚI: Xử lý các trường đoạn văn khi đọc từ Excel
+            # Xử lý passage_text và passage_order
             passage_text_from_excel = str(row_values[column_map.get('passage_text')]).strip() \
                                       if column_map.get('passage_text') is not None and row_values[column_map.get('passage_text')] is not None else ''
             
-            is_main_question_for_passage = False
-            passage_content_for_db = None
-            passage_group_id_for_db = None
+            passage_order_from_excel = None
+            if 'passage_order' in column_map and row_values[column_map['passage_order']] is not None:
+                try:
+                    passage_order_from_excel = int(row_values[column_map['passage_order']])
+                except ValueError:
+                    logger.warning(f"{log_prefix} Hàng {row_index}: passage_order không hợp lệ. Đặt là None.")
 
-            if passage_text_from_excel: # Nếu có nội dung trong cột passage_text
-                current_passage_group_id = next_passage_group_counter
-                next_passage_group_counter += 1
-                is_main_question_for_passage = True
-                passage_content_for_db = passage_text_from_excel
-                passage_group_id_for_db = current_passage_group_id
-                logger.debug(f"{log_prefix} Hàng {row_index}: Bắt đầu đoạn văn mới, ID nhóm: {current_passage_group_id}")
-            elif current_passage_group_id is not None: # Nếu không có passage_text nhưng đang trong một nhóm
-                is_main_question_for_passage = False
-                passage_content_for_db = None # Không lưu nội dung đoạn văn ở câu hỏi con
-                passage_group_id_for_db = current_passage_group_id
-                logger.debug(f"{log_prefix} Hàng {row_index}: Câu hỏi con của nhóm: {current_passage_group_id}")
-            else: # Câu hỏi độc lập
-                current_passage_group_id = None # Đảm bảo reset nếu không có đoạn văn
-                is_main_question_for_passage = False
-                passage_content_for_db = None
-                passage_group_id_for_db = None
-                logger.debug(f"{log_prefix} Hàng {row_index}: Câu hỏi độc lập.")
-            # KẾT THÚC THÊM MỚI
-
+            passage_id_for_db = None
+            if passage_text_from_excel:
+                passage_hash = hashlib.sha256(passage_text_from_excel.encode('utf-8')).hexdigest()
+                if passage_hash not in passage_content_to_id_map:
+                    # Tạo đoạn văn mới nếu chưa tồn tại
+                    new_passage = QuizPassage(passage_content=passage_text_from_excel, passage_hash=passage_hash)
+                    db.session.add(new_passage)
+                    db.session.flush() # Flush để lấy passage_id
+                    passage_content_to_id_map[passage_hash] = new_passage.passage_id
+                    logger.info(f"{log_prefix} Đã tạo đoạn văn mới (ID: {new_passage.passage_id}) từ hàng {row_index}.")
+                passage_id_for_db = passage_content_to_id_map[passage_hash]
+            
             question_data = {
+                'question_id': question_id_from_excel, # Giữ lại ID để xử lý update/add
                 'question': question_text,
                 'option_a': option_a_text,
                 'option_b': option_b_text,
@@ -411,32 +413,45 @@ class QuizService:
                 'guidance': str(row_values[column_map.get('guidance')]).strip() if column_map.get('guidance') is not None and row_values[column_map.get('guidance')] is not None else None,
                 'question_image_file': str(row_values[column_map.get('question_image_file')]).strip() if column_map.get('question_image_file') is not None and row_values[column_map.get('question_image_file')] is not None else None,
                 'question_audio_file': str(row_values[column_map.get('question_audio_file')]).strip() if column_map.get('question_audio_file') is not None and row_values[column_map.get('question_audio_file')] is not None else None,
-                # BẮT ĐẦU THÊM MỚI: Thêm dữ liệu đoạn văn vào question_data
-                'passage_content': passage_content_for_db,
-                'passage_group_id': passage_group_id_for_db,
-                'is_passage_main_question': is_main_question_for_passage
-                # KẾT THÚC THÊM MỚI
+                'passage_id': passage_id_for_db,
+                'passage_order': passage_order_from_excel
             }
-            questions_from_excel[question_text] = question_data
+            questions_from_excel.append(question_data)
 
         if sync:
-            existing_questions = {q.question: q for q in question_set.questions}
-            
-            for q_text, q_data in questions_from_excel.items():
-                if q_text in existing_questions:
-                    q_to_update = existing_questions[q_text]
+            # Lấy tất cả các câu hỏi hiện có trong bộ này
+            existing_questions_map = {q.question_id: q for q in question_set.questions}
+            excel_question_ids = {q_data['question_id'] for q_data in questions_from_excel if q_data['question_id'] is not None}
+
+            for q_data in questions_from_excel:
+                q_id = q_data.pop('question_id') # Lấy và xóa question_id khỏi dict để tránh lỗi khi dùng **q_data
+                if q_id is not None and q_id in existing_questions_map:
+                    # Cập nhật câu hỏi đã có
+                    q_to_update = existing_questions_map[q_id]
                     for key, value in q_data.items():
                         setattr(q_to_update, key, value)
+                    db.session.add(q_to_update)
+                    logger.debug(f"{log_prefix} Cập nhật câu hỏi ID: {q_id}.")
                 else:
+                    # Thêm câu hỏi mới
                     new_question = QuizQuestion(set_id=question_set.set_id, **q_data)
                     db.session.add(new_question)
+                    logger.debug(f"{log_prefix} Thêm câu hỏi mới từ Excel.")
             
-            questions_to_delete = [q for q_text, q in existing_questions.items() if q_text not in questions_from_excel]
+            # Xóa các câu hỏi không còn trong file Excel
+            questions_to_delete = [q for q_id, q in existing_questions_map.items() if q_id not in excel_question_ids]
             for q in questions_to_delete:
                 db.session.delete(q)
+                logger.debug(f"{log_prefix} Xóa câu hỏi ID: {q.question_id} không có trong Excel.")
             logger.info(f"{log_prefix} Đồng bộ hóa hoàn tất. Thêm/cập nhật {len(questions_from_excel)}, xóa {len(questions_to_delete)} câu hỏi.")
         else:
-            questions_to_add = [QuizQuestion(set_id=question_set.set_id, **q_data) for q_data in questions_from_excel.values()]
+            # Chế độ thêm mới (không sync), chỉ thêm các câu hỏi mới từ Excel
+            questions_to_add = []
+            for q_data in questions_from_excel:
+                q_data.pop('question_id') # Loại bỏ question_id vì đây là thêm mới
+                new_question = QuizQuestion(set_id=question_set.set_id, **q_data)
+                questions_to_add.append(new_question)
+            
             if questions_to_add:
                 db.session.bulk_save_objects(questions_to_add)
             logger.info(f"{log_prefix} Đã thêm {len(questions_to_add)} câu hỏi mới từ file.")
@@ -460,7 +475,7 @@ class QuizService:
             if file_stream:
                 db.session.flush()
                 logger.info(f"{log_prefix} Flushed session to get new set ID: {new_set.set_id}")
-                self._process_excel_file(new_set, file_stream, sync=False)
+                self._process_excel_file(new_set, file_stream, sync=False) # sync=False để chỉ thêm mới
 
             db.session.commit()
             logger.info(f"{log_prefix} Tạo bộ câu hỏi '{new_set.title}' (ID: {new_set.set_id}) thành công.")
@@ -494,7 +509,7 @@ class QuizService:
             
             if file_stream:
                 logger.info(f"{log_prefix} Phát hiện file Excel, bắt đầu đồng bộ hóa câu hỏi.")
-                self._process_excel_file(set_to_update, file_stream, sync=True)
+                self._process_excel_file(set_to_update, file_stream, sync=True) # sync=True để đồng bộ hóa
 
             db.session.commit()
             logger.info(f"{log_prefix} Cập nhật bộ câu hỏi '{set_to_update.title}' thành công.")
@@ -547,14 +562,20 @@ class QuizService:
             sheet = workbook.active
             sheet.title = set_to_export.title[:30]
 
-            # BẮT ĐẦU THÊM MỚI: Thêm các cột cho đoạn văn khi xuất Excel
-            headers = ['pre_question_text', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 
+            # Thêm các cột mới cho export (question_id, passage_text, passage_order)
+            headers = ['question_id', 'pre_question_text', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 
                        'correct_answer_text', 'guidance', 'question_image_file', 'question_audio_file',
-                       'passage_text', 'passage_group_id', 'is_passage_main_question']
-            # KẾT THÚC THÊM MỚI
+                       'passage_text', 'passage_order']
             sheet.append(headers)
 
-            for q in set_to_export.questions:
+            # Sắp xếp câu hỏi để các câu trong cùng đoạn văn xuất hiện liền kề và theo thứ tự
+            # Ưu tiên sắp xếp theo passage_id, sau đó là passage_order, cuối cùng là question_id
+            sorted_questions = sorted(set_to_export.questions, 
+                                      key=lambda q: (q.passage_id if q.passage_id is not None else float('inf'), 
+                                                     q.passage_order if q.passage_order is not None else float('inf'), 
+                                                     q.question_id))
+
+            for q in sorted_questions: # Sử dụng danh sách đã sắp xếp
                 correct_answer_text = ""
                 if q.correct_answer == 'A':
                     correct_answer_text = q.option_a
@@ -565,17 +586,18 @@ class QuizService:
                 elif q.correct_answer == 'D':
                     correct_answer_text = q.option_d
 
+                # Lấy passage_content từ QuizPassage
+                passage_content_to_export = q.passage.passage_content if q.passage else None
+
                 row_data = [
+                    q.question_id, # Thêm question_id vào hàng xuất
                     q.pre_question_text, q.question,
                     q.option_a, q.option_b, q.option_c, q.option_d,
                     correct_answer_text,
                     q.guidance,
                     q.question_image_file, q.question_audio_file,
-                    # BẮT ĐẦU THÊM MỚI: Thêm dữ liệu đoạn văn vào hàng xuất
-                    q.passage_content if q.is_passage_main_question else '', # Chỉ xuất passage_content nếu là câu hỏi chính
-                    q.passage_group_id,
-                    q.is_passage_main_question
-                    # KẾT THÚC THÊM MỚI
+                    passage_content_to_export, # Sử dụng passage_content từ QuizPassage
+                    q.passage_order # Thêm passage_order vào hàng xuất
                 ]
                 sheet.append(row_data)
             
@@ -588,4 +610,3 @@ class QuizService:
         except Exception as e:
             logger.error(f"{log_prefix} Lỗi khi xuất bộ câu hỏi ra Excel: {e}", exc_info=True)
             return None
-

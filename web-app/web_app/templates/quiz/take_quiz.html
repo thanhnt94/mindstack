@@ -23,14 +23,14 @@
         <form id="quiz-form" data-question-id="{{ question.question_id }}" data-check-url="{{ url_for('quiz.check_answer', question_id=question.question_id) }}">
             
             <div class="question-section">
-                {# BẮT ĐẦU THÊM MỚI: Hiển thị đoạn văn nếu có #}
+                {# BẮT ĐẦU THAY ĐỔI: Hiển thị đoạn văn nếu có #}
                 {% if passage_content %}
                     <div class="passage-container">
                         <h3 class="passage-title">Đoạn văn</h3>
                         <div class="passage-content">{{ passage_content }}</div>
                     </div>
                 {% endif %}
-                {# KẾT THÚC THÊM MỚI #}
+                {# KẾT THÚC THAY ĐỔI #}
 
                 {% if question.pre_question_text %}
                     <p class="pre-question-text">{{ question.pre_question_text }}</p>
@@ -141,16 +141,19 @@
         <span id="quiz-edit-modal-close-btn" class="edit-modal-close-btn">&times;</span>
         <h2>Sửa Câu hỏi</h2>
         <div class="edit-modal-body">
-            {# BẮT ĐẦU THÊM MỚI: Trường đoạn văn #}
+            {# BẮT ĐẦU THAY ĐỔI: Trường đoạn văn và thứ tự #}
             <div class="form-group">
                 <label for="edit-passage-content">Nội dung đoạn văn:</label>
                 <textarea id="edit-passage-content" rows="5"></textarea>
                 <small id="passage-edit-info" style="display: none; color: #6c757d; font-style: italic; margin-top: 5px;">
-                    Đoạn văn này được chia sẻ giữa các câu hỏi trong cùng nhóm.
-                    Chỉ có thể chỉnh sửa tại câu hỏi chính của đoạn văn.
+                    Chỉnh sửa đoạn văn ở đây sẽ cập nhật cho tất cả các câu hỏi sử dụng cùng đoạn văn này.
                 </small>
             </div>
-            {# KẾT THÚC THÊM MỚI #}
+            <div class="form-group">
+                <label for="edit-passage-order">Thứ tự trong đoạn văn (để trống nếu không thuộc đoạn văn):</label>
+                <input type="number" id="edit-passage-order" placeholder="Số thứ tự">
+            </div>
+            {# KẾT THÚC THAY ĐỔI #}
             <div class="form-group"><label for="edit-pre-question-text">Văn bản trước câu hỏi:</label><textarea id="edit-pre-question-text" rows="2"></textarea></div>
             <div class="form-group"><label for="edit-question">Nội dung câu hỏi:</label><textarea id="edit-question" rows="3" required></textarea></div>
             <div class="form-group"><label for="edit-option-a">Lựa chọn A:</label><input type="text" id="edit-option-a" required></div>
@@ -180,9 +183,10 @@
 <div id="quizJsData"
      data-question-id="{{ question.question_id }}"
      data-question-audio-file="{{ question.question_audio_file or '' }}"
-     data-passage-content="{{ passage_content or '' }}" {# BẮT ĐẦU THÊM MỚI: Truyền passage_content #}
-     data-is-passage-main-question="{{ 'true' if is_passage_main_question else 'false' }}" {# BẮT ĐẦU THÊM MỚI: Truyền cờ câu hỏi chính #}
-     data-passage-group-id="{{ passage_group_id or '' }}"> {# BẮT ĐẦU THÊM MỚI: Truyền ID nhóm #}
+     {# BẮT ĐẦU THAY ĐỔI: Truyền passage_id và passage_order #}
+     data-passage-id="{{ question.passage_id or '' }}"
+     data-passage-order="{{ question.passage_order or '' }}">
+     {# KẾT THÚC THAY ĐỔI #}
 </div>
 
 {% endblock %}
@@ -195,3 +199,4 @@
     {% endif %}
     <script src="{{ url_for('static', filename='js/quiz_audio_image_handler.js') }}"></script>
 {% endblock %}
+

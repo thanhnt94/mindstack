@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 @admin_bp.route('/dashboard')
 @admin_required
 def dashboard():
+    """
+    Mô tả: Hiển thị bảng điều khiển quản trị viên với các số liệu thống kê tổng quan.
+    """
     admin_stats = stats_service.get_admin_dashboard_stats()
     if not admin_stats:
         flash("Không thể tải dữ liệu cho Admin Dashboard.", "error")
@@ -23,12 +26,18 @@ def dashboard():
 @admin_bp.route('/users')
 @admin_required
 def manage_users():
+    """
+    Mô tả: Hiển thị trang quản lý người dùng, liệt kê tất cả người dùng trong hệ thống.
+    """
     users = User.query.all()
     return render_template('admin/manage_users.html', users=users)
 
 @admin_bp.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_user(user_id):
+    """
+    Mô tả: Xử lý việc chỉnh sửa thông tin của một người dùng cụ thể.
+    """
     user_to_edit = User.query.get_or_404(user_id)
     if request.method == 'POST':
         data = request.form.to_dict()
@@ -43,6 +52,9 @@ def edit_user(user_id):
 @admin_bp.route('/users/delete/<int:user_id>', methods=['POST'])
 @admin_required
 def delete_user(user_id):
+    """
+    Mô tả: Xử lý việc xóa một người dùng khỏi hệ thống.
+    """
     if user_id == session.get('user_id'):
         flash("Bạn không thể tự xóa tài khoản của mình.", "error")
         return redirect(url_for('admin.manage_users'))
@@ -56,6 +68,9 @@ def delete_user(user_id):
 @admin_bp.route('/users/add', methods=['GET', 'POST'])
 @admin_required
 def add_user():
+    """
+    Mô tả: Xử lý việc thêm một người dùng mới vào hệ thống.
+    """
     if request.method == 'POST':
         data = request.form.to_dict()
         new_user, status = user_service.create_user(data)
@@ -71,12 +86,18 @@ def add_user():
 @admin_bp.route('/sets')
 @admin_required
 def manage_sets():
+    """
+    Mô tả: Hiển thị trang quản lý bộ thẻ flashcard.
+    """
     sets = set_service.get_all_sets_with_details()
     return render_template('admin/manage_sets.html', sets=sets)
 
 @admin_bp.route('/sets/add', methods=['GET', 'POST'])
 @admin_required
 def add_set():
+    """
+    Mô tả: Xử lý việc thêm một bộ thẻ flashcard mới, có thể kèm theo file Excel.
+    """
     if request.method == 'POST':
         data = request.form.to_dict()
         creator_id = session.get('user_id')
@@ -100,6 +121,9 @@ def add_set():
 @admin_bp.route('/sets/edit/<int:set_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_set(set_id):
+    """
+    Mô tả: Xử lý việc chỉnh sửa thông tin và nội dung của một bộ thẻ flashcard.
+    """
     set_to_edit = set_service.get_set_by_id(set_id)
     if not set_to_edit:
         flash("Không tìm thấy bộ thẻ.", "error")
@@ -126,6 +150,9 @@ def edit_set(set_id):
 @admin_bp.route('/sets/delete/<int:set_id>', methods=['POST'])
 @admin_required
 def delete_set(set_id):
+    """
+    Mô tả: Xử lý việc xóa một bộ thẻ flashcard khỏi hệ thống.
+    """
     success, status = set_service.delete_set(set_id)
     if success:
         flash("Bộ thẻ đã được xóa thành công.", "success")
@@ -136,6 +163,9 @@ def delete_set(set_id):
 @admin_bp.route('/sets/export/<int:set_id>')
 @admin_required
 def export_set(set_id):
+    """
+    Mô tả: Xử lý yêu cầu xuất một bộ thẻ flashcard ra file Excel.
+    """
     set_to_export = set_service.get_set_by_id(set_id)
     if not set_to_export:
         flash("Không tìm thấy bộ thẻ để xuất.", "error")
@@ -161,23 +191,31 @@ def export_set(set_id):
 @admin_bp.route('/question-sets')
 @admin_required
 def manage_question_sets():
+    """
+    Mô tả: Hiển thị trang quản lý bộ câu hỏi trắc nghiệm.
+    """
     question_sets = quiz_service.get_all_question_sets_with_details()
     return render_template('admin/manage_question_sets.html', question_sets=question_sets)
 
 @admin_bp.route('/question-sets/add', methods=['GET', 'POST'])
 @admin_required
 def add_question_set():
+    """
+    Mô tả: Xử lý việc thêm một bộ câu hỏi trắc nghiệm mới, có thể kèm theo file Excel.
+    """
     if request.method == 'POST':
         data = request.form.to_dict()
         creator_id = session.get('user_id')
         file_stream = None
+        # BẮT ĐẦU THAY ĐỔI: Xử lý file Excel được tải lên
         if 'excel_file' in request.files:
             file = request.files['excel_file']
             if file and file.filename != '':
                 if not file.filename.endswith('.xlsx'):
                     flash("File không hợp lệ. Vui lòng chỉ tải lên file .xlsx", "error")
                     return render_template('admin/add_question_set.html', set_data=data)
-                file_stream = file.stream
+                file_stream = file.stream # Lấy stream của file
+        # KẾT THÚC THAY ĐỔI
         new_set, status = quiz_service.create_question_set(data, creator_id, file_stream)
         if status == "success":
             flash(f"Bộ câu hỏi '{new_set.title}' đã được thêm thành công.", "success")
@@ -190,6 +228,9 @@ def add_question_set():
 @admin_bp.route('/question-sets/edit/<int:set_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_question_set(set_id):
+    """
+    Mô tả: Xử lý việc chỉnh sửa thông tin và nội dung của một bộ câu hỏi trắc nghiệm.
+    """
     set_to_edit = quiz_service.get_question_set_by_id(set_id)
     if not set_to_edit:
         flash("Không tìm thấy bộ câu hỏi.", "error")
@@ -217,6 +258,9 @@ def edit_question_set(set_id):
 @admin_bp.route('/question-sets/delete/<int:set_id>', methods=['POST'])
 @admin_required
 def delete_question_set(set_id):
+    """
+    Mô tả: Xử lý việc xóa một bộ câu hỏi trắc nghiệm khỏi hệ thống.
+    """
     success, status = quiz_service.delete_question_set(set_id)
     if success:
         flash("Bộ câu hỏi đã được xóa thành công.", "success")

@@ -1,12 +1,14 @@
 # web_app/routes/api.py
-from flask import Blueprint, send_file, session, jsonify, request
+from flask import Blueprint, send_file, session, jsonify, request, redirect
 import logging
 import os
 import asyncio
+import hashlib # Import hashlib để tạo hash cho đoạn văn
 from ..services import audio_service, note_service, flashcard_service, quiz_service, quiz_note_service
-from ..models import Flashcard, QuizQuestion, UserQuizProgress # BẮT ĐẦU SỬA ĐỔI: Import QuizQuestion
+from ..models import Flashcard, QuizQuestion, UserQuizProgress, QuizPassage # Thêm QuizPassage
 from ..config import IMAGES_DIR
 from .decorators import login_required
+from ..db_instance import db # BẮT ĐẦU SỬA LỖI: Import db instance
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
@@ -30,6 +32,7 @@ def get_card_audio(flashcard_id, side):
     if not audio_content:
         return {"error": "No audio content for this side"}, 404
     try:
+        # Vẫn sử dụng audio_service cho flashcard (TTS)
         audio_file_path = asyncio.run(audio_service.get_cached_or_generate_audio(audio_content))
         if audio_file_path and os.path.exists(audio_file_path):
             return send_file(audio_file_path, mimetype="audio/mpeg")
@@ -175,6 +178,23 @@ def handle_quiz_note(question_id):
             return jsonify({'status': 'error', 'message': message}), 500
         return jsonify({'status': status, 'message': message, 'note': note_obj.note})
 
+# API lấy nội dung đoạn văn Quiz
+@api_bp.route('/quiz_passage/<int:passage_id>', methods=['GET'])
+@login_required
+def get_quiz_passage(passage_id):
+    """
+    Mô tả: Lấy nội dung của một đoạn văn Quiz dựa trên passage_id.
+    Args:
+        passage_id (int): ID của đoạn văn.
+    Returns:
+        JSON: Nội dung đoạn văn hoặc JSON báo lỗi.
+    """
+    passage = QuizPassage.query.get(passage_id)
+    if not passage:
+        return jsonify({'status': 'error', 'message': 'Không tìm thấy đoạn văn.'}), 404
+    return jsonify({'status': 'success', 'passage_content': passage.passage_content})
+
+
 # API lấy chi tiết câu hỏi Quiz
 @api_bp.route('/quiz_question/details/<int:question_id>')
 @login_required
@@ -199,8 +219,11 @@ def get_quiz_question_details(question_id):
         'option_d': question.option_d,
         'correct_answer': question.correct_answer,
         'guidance': question.guidance,
-        'question_audio_file': question.question_audio_file, # BẮT ĐẦU THÊM MỚI: Thêm trường audio file
-        'question_image_file': question.question_image_file  # BẮT ĐẦU THÊM MỚI: Thêm trường image file
+        'question_image_file': question.question_image_file,
+        'question_audio_file': question.question_audio_file,
+        # Thêm passage_id và passage_order
+        'passage_id': question.passage_id,
+        'passage_order': question.passage_order
     }
     return jsonify({'status': 'success', 'data': question_data})
 
@@ -220,6 +243,46 @@ def edit_quiz_question(question_id):
     if not data:
         return jsonify({'status': 'error', 'message': 'Dữ liệu không hợp lệ.'}), 400
     
+    # Xử lý cập nhật passage_content và passage_order
+    passage_content_from_request = data.pop('passage_content', None) # Lấy passage_content ra khỏi data
+    passage_order_from_request = data.get('passage_order', None)
+
+    question = quiz_service.get_question_by_id(question_id)
+    if not question:
+        return jsonify({'status': 'error', 'message': 'Không tìm thấy câu hỏi.'}), 404
+
+    # Cập nhật hoặc tạo QuizPassage nếu passage_content được cung cấp
+    if passage_content_from_request is not None:
+        passage_content_from_request = passage_content_from_request.strip()
+        if passage_content_from_request:
+            passage_hash = hashlib.sha256(passage_content_from_request.encode('utf-8')).hexdigest()
+            existing_passage = QuizPassage.query.filter_by(passage_hash=passage_hash).first()
+
+            if existing_passage:
+                # Nếu đoạn văn đã tồn tại, chỉ cần liên kết câu hỏi với nó
+                question.passage_id = existing_passage.passage_id
+            else:
+                # Nếu đoạn văn chưa tồn tại, tạo mới
+                new_passage = QuizPassage(passage_content=passage_content_from_request, passage_hash=passage_hash)
+                db.session.add(new_passage)
+                db.session.flush() # Flush để lấy passage_id mới
+                question.passage_id = new_passage.passage_id
+            logger.info(f"Cập nhật/tạo đoạn văn cho câu hỏi {question_id}. Passage ID: {question.passage_id}")
+        else:
+            # Nếu passage_content rỗng, hủy liên kết với đoạn văn
+            question.passage_id = None
+            logger.info(f"Hủy liên kết đoạn văn cho câu hỏi {question_id}.")
+    
+    # Cập nhật passage_order
+    if passage_order_from_request is not None:
+        try:
+            question.passage_order = int(passage_order_from_request) if passage_order_from_request != '' else None
+        except ValueError:
+            question.passage_order = None # Đặt là None nếu không hợp lệ
+    else:
+        question.passage_order = None # Đặt là None nếu không được gửi
+
+    # Cập nhật các trường còn lại của câu hỏi
     updated_question, status = quiz_service.update_question(question_id, data, user_id)
     
     if status != "success":
@@ -228,33 +291,43 @@ def edit_quiz_question(question_id):
     
     return jsonify({'status': 'success', 'message': 'Cập nhật thành công!'})
 
-# BẮT ĐẦU THÊM MỚI: API phục vụ audio cho câu hỏi Quiz
+# API phục vụ audio cho câu hỏi Quiz
 @api_bp.route('/quiz_audio/<int:question_id>')
 @login_required
 def get_quiz_audio(question_id):
     """
     Mô tả: Phục vụ file audio cho câu hỏi trắc nghiệm dựa trên ID.
+           File audio có thể là một URL bên ngoài hoặc một file cục bộ.
     Args:
         question_id (int): ID của câu hỏi trắc nghiệm.
     Returns:
-        Response: File audio hoặc JSON báo lỗi.
+        Response: File audio hoặc chuyển hướng đến URL, hoặc JSON báo lỗi.
     """
     question = QuizQuestion.query.get_or_404(question_id)
-    audio_content = question.question_audio_file
-    if not audio_content:
-        return {"error": "No audio content for this question"}, 404
-    try:
-        audio_file_path = asyncio.run(audio_service.get_cached_or_generate_audio(audio_content))
-        if audio_file_path and os.path.exists(audio_file_path):
-            return send_file(audio_file_path, mimetype="audio/mpeg")
-        else:
-            return {"error": "Failed to generate or retrieve audio file"}, 500
-    except Exception as e:
-        logger.error(f"Lỗi khi phục vụ audio quiz question {question_id}: {e}", exc_info=True)
-        return {"error": "Internal server error"}, 500
-# KẾT THÚC THÊM MỚI
+    audio_file_ref = question.question_audio_file
 
-# BẮT ĐẦU THÊM MỚI: API lấy câu hỏi Quiz theo danh mục (để dùng trong Dashboard)
+    if not audio_file_ref:
+        logger.warning(f"Không có tham chiếu audio cho câu hỏi quiz ID: {question_id}")
+        return {"error": "No audio content for this question"}, 404
+
+    # Kiểm tra nếu là URL đầy đủ (http/https)
+    if audio_file_ref.startswith('http://') or audio_file_ref.startswith('https://'):
+        logger.info(f"Chuyển hướng đến URL audio bên ngoài: {audio_file_ref}")
+        return redirect(audio_file_ref)
+    else:
+        # Giả định đây là một đường dẫn file cục bộ tương đối trong IMAGES_DIR
+        try:
+            full_path = os.path.join(IMAGES_DIR, audio_file_ref)
+            if not os.path.exists(full_path):
+                logger.warning(f"Không tìm thấy file audio cục bộ: {full_path}")
+                return "Audio file not found", 404
+            logger.info(f"Phục vụ file audio cục bộ: {full_path}")
+            return send_file(full_path, mimetype="audio/mpeg")
+        except Exception as e:
+            logger.error(f"Lỗi khi phục vụ file audio cục bộ {audio_file_ref} cho câu hỏi {question_id}: {e}", exc_info=True)
+            return "Internal server error", 500
+
+# API lấy câu hỏi Quiz theo danh mục (để dùng trong Dashboard)
 @api_bp.route('/quiz_questions_by_category/<int:set_id>/<string:category>')
 @login_required
 def get_quiz_questions_by_category(set_id, category):
@@ -331,4 +404,4 @@ def get_quiz_questions_by_category(set_id, category):
     except Exception as e:
         logger.error(f"Lỗi khi lấy câu hỏi quiz theo danh mục '{category}' cho bộ {set_id}: {e}", exc_info=True)
         return jsonify({'status': 'error', 'message': 'Lỗi server nội bộ.'}), 500
-# KẾT THÚC THÊM MỚI
+

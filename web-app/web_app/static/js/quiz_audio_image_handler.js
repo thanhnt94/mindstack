@@ -14,37 +14,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const questionId = quizJsDataElement.dataset.questionId;
+    // Lấy trực tiếp giá trị của question_audio_file từ data attribute
     const questionAudioFile = quizJsDataElement.dataset.questionAudioFile;
-
-    // Xây dựng URL audio
-    let audioUrl = '';
-    if (questionAudioFile) {
-        // Kiểm tra nếu là URL đầy đủ (http/https)
-        if (questionAudioFile.startsWith('http://') || questionAudioFile.startsWith('https://')) {
-            audioUrl = questionAudioFile;
-        } else {
-            // Nếu là tên file cục bộ, sử dụng API endpoint
-            // url_for('api.get_quiz_audio', question_id=question.question_id)
-            // Vì đây là JS tĩnh, chúng ta không thể dùng url_for trực tiếp.
-            // Cần xây dựng thủ công hoặc truyền từ Jinja.
-            // Hiện tại, chúng ta sẽ xây dựng thủ công dựa trên cấu trúc đã biết.
-            audioUrl = `/api/quiz_audio/${questionId}`;
-        }
-    }
 
     /**
      * Mô tả: Hàm phát audio của câu hỏi.
      */
     function playQuizAudio() {
-        if (audioUrl) {
+        let audioSrc = '';
+
+        // BẮT ĐẦU THAY ĐỔI: Logic xác định nguồn audio
+        if (questionAudioFile) {
+            // Nếu questionAudioFile là một URL đầy đủ, sử dụng nó trực tiếp
+            if (questionAudioFile.startsWith('http://') || questionAudioFile.startsWith('https://')) {
+                audioSrc = questionAudioFile;
+                console.log("Sử dụng URL audio trực tiếp:", audioSrc);
+            } else {
+                // Nếu không phải URL đầy đủ, giả định là đường dẫn cục bộ
+                // và gọi API endpoint để phục vụ file
+                audioSrc = `/api/quiz_audio/${questionId}`;
+                console.log("Sử dụng API để phục vụ audio cục bộ:", audioSrc);
+            }
+        } else {
+            console.log("Không có URL audio cho câu hỏi quiz này.");
+            return; // Không có audio để phát
+        }
+        // KẾT THÚC THAY ĐỔI
+
+        if (audioSrc) {
             quizAudioPlayer.load(); // Reset trình phát
-            quizAudioPlayer.src = audioUrl;
+            quizAudioPlayer.src = audioSrc;
             quizAudioPlayer.play().catch(error => {
                 console.error("Lỗi khi phát audio quiz:", error);
                 // Có thể thêm thông báo cho người dùng tại đây
             });
-        } else {
-            console.log("Không có URL audio cho câu hỏi quiz này.");
         }
     }
 
@@ -53,8 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Tự động phát audio khi trang tải nếu có audio
     // (Có thể thêm cài đặt người dùng để bật/tắt tự động phát sau này)
-    if (audioUrl) {
+    if (questionAudioFile) { // Chỉ tự động phát nếu có file audio được chỉ định
         // Một độ trễ nhỏ để đảm bảo trình duyệt đã sẵn sàng
         setTimeout(playQuizAudio, 500); 
     }
 });
+

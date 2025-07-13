@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const quizForm = document.getElementById('quiz-form');
     const questionId = quizForm.dataset.questionId;
 
-    // BẮT ĐẦU THÊM MỚI: Lấy các phần tử và dữ liệu liên quan đến đoạn văn
+    // BẮT ĐẦU THAY ĐỔI: Lấy các phần tử liên quan đến đoạn văn và thứ tự
     const quizJsDataElement = document.getElementById('quizJsData');
-    const isPassageMainQuestion = quizJsDataElement.dataset.isPassageMainQuestion === 'true';
-    const passageGroupId = quizJsDataElement.dataset.passageGroupId;
-
+    const currentPassageId = quizJsDataElement.dataset.passageId; // Lấy passage_id hiện tại
+    
     const editPassageContent = document.getElementById('edit-passage-content');
+    const editPassageOrder = document.getElementById('edit-passage-order');
     const passageEditInfo = document.getElementById('passage-edit-info');
-    // KẾT THÚC THÊM MỚI
+    // KẾT THÚC THAY ĐỔI
 
     // Các trường input trong modal
     const fields = {
@@ -30,9 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
         option_d: document.getElementById('edit-option-d'),
         correct_answer: document.getElementById('edit-correct-answer'),
         guidance: document.getElementById('edit-guidance'),
-        // BẮT ĐẦU THÊM MỚI: Thêm trường passage_content vào fields
-        passage_content: editPassageContent
-        // KẾT THÚC THÊM MỚI
+        // BẮT ĐẦU THAY ĐỔI: Thêm trường passage_order vào fields
+        passage_order: editPassageOrder
+        // KẾT THÚC THAY ĐỔI
     };
 
     /**
@@ -45,6 +45,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 field.value = 'Đang tải...';
             }
         });
+        // BẮT ĐẦU THAY ĐỔI: Đặt trạng thái tải cho passage_content
+        if (editPassageContent) editPassageContent.value = 'Đang tải...';
+        // KẾT THÚC THAY ĐỔI
         editModal.style.display = 'flex';
 
         try {
@@ -62,26 +65,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // BẮT ĐẦU THÊM MỚI: Logic hiển thị/vô hiệu hóa trường đoạn văn
-                if (data.passage_group_id) { // Nếu câu hỏi thuộc một nhóm đoạn văn
-                    if (data.is_passage_main_question) {
-                        editPassageContent.disabled = false; // Cho phép chỉnh sửa
-                        passageEditInfo.style.display = 'none'; // Ẩn thông báo
+                // BẮT ĐẦU THAY ĐỔI: Xử lý hiển thị và chỉnh sửa passage_content
+                if (data.passage_id) { // Nếu câu hỏi thuộc một đoạn văn
+                    // Lấy nội dung đoạn văn từ API riêng
+                    const passageResponse = await fetch(`/api/quiz_passage/${data.passage_id}`);
+                    if (passageResponse.ok) {
+                        const passageData = await passageResponse.json();
+                        editPassageContent.value = passageData.passage_content || '';
                     } else {
-                        editPassageContent.disabled = true; // Vô hiệu hóa chỉnh sửa
-                        passageEditInfo.style.display = 'block'; // Hiển thị thông báo
-                        // Nếu là câu hỏi con, passage_content của nó sẽ rỗng.
-                        // Nội dung đoạn văn đã được hiển thị ở phần chính của trang bởi Jinja.
-                        // Ở đây ta chỉ hiển thị nội dung của chính câu hỏi này (nếu có)
-                        // hoặc để trống nếu nó là câu hỏi con không chứa đoạn văn.
-                        editPassageContent.value = data.passage_content || '';
+                        editPassageContent.value = 'Không thể tải đoạn văn.';
                     }
+                    editPassageContent.disabled = false; // Cho phép chỉnh sửa đoạn văn
+                    passageEditInfo.style.display = 'block'; // Hiển thị thông báo
                 } else { // Câu hỏi độc lập, không có đoạn văn
-                    editPassageContent.disabled = false; // Có thể nhập đoạn văn mới nếu muốn biến nó thành câu hỏi chính
                     editPassageContent.value = ''; // Đảm bảo trống
+                    editPassageContent.disabled = false; // Có thể nhập đoạn văn mới nếu muốn biến nó thành câu hỏi chính
                     passageEditInfo.style.display = 'none';
                 }
-                // KẾT THÚC THÊM MỚI
+                // KẾT THÚC THAY ĐỔI
 
             } else {
                 throw new Error(result.message);
@@ -89,11 +90,14 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Lỗi khi tải chi tiết câu hỏi:', error);
             fields.question.value = 'Không thể tải dữ liệu. Vui lòng thử lại.';
-            // BẮT ĐẦU THÊM MỚI: Vô hiệu hóa trường đoạn văn nếu tải lỗi
-            if (editPassageContent) editPassageContent.disabled = true;
+            // BẮT ĐẦU THAY ĐỔI: Vô hiệu hóa trường đoạn văn nếu tải lỗi
+            if (editPassageContent) {
+                editPassageContent.value = 'Lỗi tải dữ liệu.';
+                editPassageContent.disabled = true;
+            }
             if (passageEditInfo) passageEditInfo.style.display = 'block';
             if (passageEditInfo) passageEditInfo.textContent = 'Không thể tải đoạn văn.';
-            // KẾT THÚC THÊM MỚI
+            // KẾT THÚC THAY ĐỔI
         }
     }
 
@@ -114,13 +118,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const updatedData = {};
         for (const key in fields) {
-            // BẮT ĐẦU THÊM MỚI: Chỉ gửi passage_content nếu nó có thể chỉnh sửa
-            if (key === 'passage_content' && editPassageContent.disabled) {
-                continue; // Bỏ qua nếu trường bị vô hiệu hóa
-            }
-            // KẾT THÚC THÊM MỚI
             updatedData[key] = fields[key].value;
         }
+
+        // BẮT ĐẦU THAY ĐỔI: Thêm passage_content vào dữ liệu gửi đi nếu nó được phép chỉnh sửa
+        if (editPassageContent && !editPassageContent.disabled) {
+            updatedData['passage_content'] = editPassageContent.value;
+        } else {
+            // Nếu không được chỉnh sửa hoặc không có đoạn văn, đảm bảo không gửi passage_content
+            delete updatedData['passage_content'];
+        }
+        // KẾT THÚC THAY ĐỔI
 
         try {
             const response = await fetch(`/api/quiz_question/edit/${questionId}`, {
@@ -156,3 +164,4 @@ document.addEventListener('DOMContentLoaded', function() {
         if (event.target === editModal) closeEditModal();
     });
 });
+

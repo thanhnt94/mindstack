@@ -147,6 +147,19 @@ class QuestionSet(db.Model):
     def __repr__(self):
         return f"<QuestionSet {self.title}>"
 
+# BẮT ĐẦU THÊM MỚI: Bảng QuizPassages để lưu trữ đoạn văn duy nhất
+class QuizPassage(db.Model):
+    __tablename__ = 'QuizPassages'
+    passage_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    passage_content = db.Column(db.Text, nullable=False, unique=True) # Nội dung đoạn văn, phải là duy nhất
+    passage_hash = db.Column(db.String(64), nullable=False, unique=True) # Hash của nội dung để tìm kiếm nhanh
+
+    questions = db.relationship('QuizQuestion', backref='passage', lazy=True, cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<QuizPassage {self.passage_id} - {self.passage_content[:50]}>"
+# KẾT THÚC THÊM MỚI
+
 # ========================== QuizQuestion ==========================
 class QuizQuestion(db.Model):
     __tablename__ = 'QuizQuestions'
@@ -162,11 +175,11 @@ class QuizQuestion(db.Model):
     guidance = db.Column(db.Text)
     question_image_file = db.Column(db.String)
     question_audio_file = db.Column(db.String)
-    # BẮT ĐẦU THÊM MỚI: Các trường cho đoạn văn
-    passage_content = db.Column(db.Text, nullable=True) # Nội dung đoạn văn
-    passage_group_id = db.Column(db.Integer, nullable=True) # ID nhóm đoạn văn
-    is_passage_main_question = db.Column(db.Boolean, default=False, nullable=False) # Cờ câu hỏi chính của đoạn văn
-    # KẾT THÚC THÊM MỚI
+    
+    # BẮT ĐẦU THAY ĐỔI: Thay thế các trường đoạn văn cũ bằng khóa ngoại và thứ tự
+    passage_id = db.Column(db.Integer, db.ForeignKey('QuizPassages.passage_id', ondelete='SET NULL'), nullable=True)
+    passage_order = db.Column(db.Integer, nullable=True) # Thứ tự câu hỏi trong đoạn văn
+    # KẾT THÚC THAY ĐỔI
 
     progresses = db.relationship('UserQuizProgress', backref='question', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('QuizQuestionNote', backref='question', lazy=True, cascade="all, delete-orphan")
@@ -204,3 +217,4 @@ class QuizQuestionNote(db.Model):
 
     def __repr__(self):
         return f"<QuizNote ID:{self.note_id} Question:{self.question_id} User:{self.user_id}>"
+
