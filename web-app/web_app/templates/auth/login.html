@@ -15,7 +15,11 @@
                 <label for="password">Mật khẩu:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit" class="button primary">Đăng nhập</button>
+            {# BẮT ĐẦU SỬA ĐỔI: Bọc nút đăng nhập vào button-group để căn giữa #}
+            <div class="button-group">
+                <button type="submit" class="button primary">Đăng nhập</button>
+            </div>
+            {# KẾT THÚC SỬA ĐỔI #}
         </form>
     </div>
 {% endblock %}

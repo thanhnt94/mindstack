@@ -10,12 +10,27 @@
     max-width: 1200px; /* Thêm max-width để giới hạn chiều rộng nội dung */
     margin-left: auto; /* Căn giữa */
     margin-right: auto; /* Căn giữa */
-    justify-content: center;
-    align-items: flex-start; /* Căn trên để nội dung không bị kéo dãn */
-    padding: 20px;
+    /* BẮT ĐẦU THAY ĐỔI: Thêm padding và điều chỉnh flex-grow */
+    padding: 20px; /* Lề mặc định cho các cạnh */
     box-sizing: border-box;
     flex-grow: 1; /* Cho phép container này mở rộng để đẩy footer xuống */
+    margin-bottom: 20px; /* Khoảng cách với footer khi có cuộn */
+    /* KẾT THÚC THAY ĐỔI */
+    justify-content: center;
+    align-items: flex-start; /* Căn trên để nội dung không bị kéo dãn */
 }
+
+/* BẮT ĐẦU THÊM MỚI: Điều chỉnh container cho các trang căn giữa (như login) */
+body.body-centered-content .main-container {
+    flex-grow: 0; /* Không cần co giãn khi nội dung được căn giữa */
+    justify-content: center; /* Căn giữa nội dung theo chiều ngang */
+    align-items: center; /* Căn giữa nội dung theo chiều dọc */
+    height: auto; /* Chiều cao tự động */
+    margin: auto; /* Căn giữa hoàn toàn trong flex container cha */
+    padding: 20px; /* Đảm bảo có padding */
+}
+/* KẾT THÚC THÊM MỚI */
+
 
 .learn-page-container {
     align-items: stretch;
@@ -86,10 +101,8 @@
 @media (max-width: 1024px) {
     body.learn-page .main-navbar,
     body.learn-page .main-footer {
-        /* BẮT ĐẦU THÊM MỚI */
         height: 0 !important; /* Loại bỏ chiều cao */
         overflow: hidden !important; /* Đảm bảo không hiển thị gì */
-        /* KẾT THÚC THÊM MỚI */
         display: none !important; /* Giữ lại display none để đảm bảo không hiện */
     }
 
@@ -110,9 +123,7 @@
         width: 100%;
         height: 100%; /* Đảm bảo flashcard-column chiếm hết chiều cao khả dụng */
         max-width: none;
-        /* BẮT ĐẦU THÊM MỚI */
         display: flex; /* Đảm bảo là flex container */
         flex-direction: column; /* Xếp các phần tử con theo chiều dọc */
-        /* KẾT THÚC THÊM MỚI */
     }
 }

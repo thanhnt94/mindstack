@@ -4,9 +4,7 @@
  */
 
 html, body {
-    /* BẮT ĐẦU SỬA ĐỔI: Sử dụng biến CSS --vh */
-    height: calc(var(--vh, 1vh) * 100);
-    /* KẾT THÚC SỬA ĐỔI */
+    height: calc(var(--vh, 1vh) * 100); /* Sử dụng biến CSS --vh để tính chiều cao chính xác */
     width: 100%;
     margin: 0;
     padding: 0;
@@ -16,11 +14,9 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #f4f7f6;
     color: #333;
-    display: flex;
-    flex-direction: column;
-    /* BẮT ĐẦU SỬA ĐỔI: Sử dụng biến CSS --vh, bỏ min-height: 100vh */
-    /* Thay thế min-height: 100vh bằng height: calc(var(--vh, 1vh) * 100) đã áp dụng ở html, body */
-    /* KẾT THÚC SỬA ĐỔI */
+    display: flex; /* Bật Flexbox cho body */
+    flex-direction: column; /* Xếp các phần tử con theo cột */
+    min-height: calc(var(--vh, 1vh) * 100); /* Đảm bảo body chiếm ít nhất toàn bộ chiều cao viewport */
 }
 
 .page-wrapper {
@@ -42,13 +38,51 @@ body.no-scroll {
 
 /* SỬA: Đảm bảo page-wrapper trên trang học chiếm toàn bộ chiều cao viewport */
 body.learn-page .page-wrapper {
-    /* BẮT ĐẦU SỬA ĐỔI: Sử dụng biến CSS --vh */
     height: calc(var(--vh, 1vh) * 100);
-    /* KẾT THÚC SỬA ĐỔI */
     display: flex; /* Đảm bảo là flex container để quản lý chiều cao con */
     flex-direction: column;
 }
 
 * {
     box-sizing: border-box;
+}
+
+/* BẮT ĐẦU THAY ĐỔI: Điều chỉnh body-centered-content */
+/* Class này sẽ được dùng để căn giữa nội dung chính của trang (ví dụ: trang đăng nhập) */
+body.body-centered-content {
+    display: flex;
+    flex-direction: column; /* Xếp navbar, content, footer theo cột */
+    min-height: calc(var(--vh, 1vh) * 100); /* Đảm bảo chiếm toàn bộ chiều cao viewport */
+    /* Loại bỏ justify-content và align-items ở đây để form có thể nằm trong luồng */
+}
+
+/* Điều chỉnh page-wrapper bên trong body-centered-content để nó co giãn và căn giữa nội dung */
+body.body-centered-content .page-wrapper {
+    flex-grow: 1; /* Cho phép nó co giãn để đẩy footer xuống */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Căn giữa nội dung chính bên trong page-wrapper */
+    align-items: center;
+    /* BẮT ĐẦU SỬA ĐỔI: Thêm padding-top và padding-bottom để tạo khoảng cách với navbar/footer */
+    padding-top: 64px; /* Khoảng cách cho navbar */
+    padding-bottom: 50px; /* Khoảng cách cho footer (giả định chiều cao footer khoảng 50px) */
+    /* KẾT THÚC SỬA ĐỔI */
+}
+
+/* BẮT ĐẦU SỬA ĐỔI: Loại bỏ khối rỗng và các quy tắc không cần thiết */
+/* Các quy tắc mặc định của navbar/footer sẽ được áp dụng */
+/* @media (max-width: 768px) {
+    body.body-centered-content .main-navbar,
+    body.body-centered-content .main-footer {
+    }
+} */
+/* KẾT THÚC SỬA ĐỔI */
+
+/* Đảm bảo page-wrapper chiếm toàn bộ chiều cao còn lại trên mobile */
+/* Di chuyển quy tắc này ra ngoài media query nếu nó áp dụng cho mọi kích thước */
+/* Hoặc giữ nguyên trong media query nếu chỉ dành cho mobile */
+@media (max-width: 768px) {
+    body.body-centered-content .page-wrapper {
+        height: auto; /* Để nó tự co giãn theo nội dung */
+    }
 }
