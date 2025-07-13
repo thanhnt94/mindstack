@@ -276,16 +276,20 @@ class QuizService:
             return None, "permission_denied"
 
         try:
-            question.pre_question_text = data.get('pre_question_text', question.pre_question_text)
-            question.question = data.get('question', question.question)
-            question.option_a = data.get('option_a', question.option_a)
-            question.option_b = data.get('option_b', question.option_b)
-            question.option_c = data.get('option_c', question.option_c)
-            question.option_d = data.get('option_d', question.option_d)
+            # BẮT ĐẦU SỬA: Chuyển đổi chuỗi rỗng thành None cho các trường tùy chọn
+            question.pre_question_text = data.get('pre_question_text') or None
+            question.question = data.get('question') or None
+            question.question_image_file = data.get('question_image_file') or None
+            question.question_audio_file = data.get('question_audio_file') or None
+            
+            question.option_a = data.get('option_a')
+            question.option_b = data.get('option_b')
+            question.option_c = data.get('option_c') or None
+            question.option_d = data.get('option_d') or None
+            # KẾT THÚC SỬA
+
             question.correct_answer = data.get('correct_answer', question.correct_answer).upper()
-            question.guidance = data.get('guidance', question.guidance)
-            question.question_image_file = data.get('question_image_file', question.question_image_file)
-            question.question_audio_file = data.get('question_audio_file', question.question_audio_file)
+            question.guidance = data.get('guidance') or None # SỬA: guidance cũng có thể là None
             
             # Cập nhật passage_order nếu có
             if 'passage_order' in data and data['passage_order'] is not None:
@@ -293,6 +297,8 @@ class QuizService:
                     question.passage_order = int(data['passage_order'])
                 except ValueError:
                     logger.warning(f"{log_prefix} passage_order không hợp lệ: {data['passage_order']}. Bỏ qua cập nhật.")
+            else: # Nếu không có trong data hoặc là None, đặt về None
+                question.passage_order = None
             
             db.session.commit()
             logger.info(f"{log_prefix} Cập nhật câu hỏi thành công.")
@@ -323,7 +329,9 @@ class QuizService:
         sheet = workbook.active
         
         headers = [str(cell.value).strip().lower() if cell.value is not None else "" for cell in sheet[1]]
-        required_headers = ['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer_text']
+        # BẮT ĐẦU SỬA: Chỉ yêu cầu option_a và option_b là bắt buộc
+        required_headers = ['question', 'option_a', 'option_b', 'correct_answer_text']
+        # KẾT THÚC SỬA
         
         missing_headers = [h for h in required_headers if h not in headers]
         if missing_headers:
@@ -352,31 +360,42 @@ class QuizService:
                 except ValueError:
                     logger.warning(f"{log_prefix} Hàng {row_index}: question_id không hợp lệ. Coi là câu hỏi mới.")
 
-            question_text = str(row_values[column_map['question']]).strip()
-            
-            if not question_text:
-                logger.warning(f"{log_prefix} Bỏ qua hàng {row_index} do thiếu nội dung câu hỏi.")
+            # BẮT ĐẦU SỬA: Đọc giá trị và chuyển đổi rỗng thành None
+            question_text = str(row_values[column_map.get('question')]).strip() if column_map.get('question') is not None and row_values[column_map.get('question')] is not None else ''
+            question_image_file = str(row_values[column_map.get('question_image_file')]).strip() if column_map.get('question_image_file') is not None and row_values[column_map.get('question_image_file')] is not None else ''
+            question_audio_file = str(row_values[column_map.get('question_audio_file')]).strip() if column_map.get('question_audio_file') is not None and row_values[column_map.get('question_audio_file')] is not None else ''
+
+            # KẾT THÚC SỬA
+
+            # BẮT ĐẦU SỬA: question_text không bắt buộc nếu có image hoặc audio
+            if not question_text and not question_image_file and not question_audio_file:
+                logger.warning(f"{log_prefix} Bỏ qua hàng {row_index} do thiếu nội dung câu hỏi và không có file media.")
                 continue
+            # KẾT THÚC SỬA
 
             option_a_text = str(row_values[column_map['option_a']]).strip()
             option_b_text = str(row_values[column_map['option_b']]).strip()
-            option_c_text = str(row_values[column_map['option_c']]).strip()
-            option_d_text = str(row_values[column_map['option_d']]).strip()
+            # BẮT ĐẦU SỬA: option_c và option_d có thể rỗng
+            option_c_text = str(row_values[column_map.get('option_c')]).strip() if column_map.get('option_c') is not None and row_values[column_map.get('option_c')] is not None else ''
+            option_d_text = str(row_values[column_map.get('option_d')]).strip() if column_map.get('option_d') is not None and row_values[column_map.get('option_d')] is not None else ''
+            # KẾT THÚC SỬA
             correct_answer_text = str(row_values[column_map['correct_answer_text']]).strip()
 
             determined_answer = None
-            if correct_answer_text == option_a_text:
+            # BẮT ĐẦU SỬA: Kiểm tra đáp án đúng phải khớp với nội dung của option (nếu option đó không rỗng)
+            if correct_answer_text and option_a_text and correct_answer_text == option_a_text:
                 determined_answer = 'A'
-            elif correct_answer_text == option_b_text:
+            elif correct_answer_text and option_b_text and correct_answer_text == option_b_text:
                 determined_answer = 'B'
-            elif correct_answer_text == option_c_text:
+            elif correct_answer_text and option_c_text and correct_answer_text == option_c_text:
                 determined_answer = 'C'
-            elif correct_answer_text == option_d_text:
+            elif correct_answer_text and option_d_text and correct_answer_text == option_d_text:
                 determined_answer = 'D'
 
             if not determined_answer:
-                logger.warning(f"{log_prefix} Bỏ qua hàng {row_index} vì không tìm thấy đáp án đúng khớp với các lựa chọn.")
+                logger.warning(f"{log_prefix} Bỏ qua hàng {row_index} vì không tìm thấy đáp án đúng khớp với các lựa chọn hợp lệ.")
                 continue
+            # KẾT THÚC SỬA
 
             # Xử lý passage_text và passage_order
             passage_text_from_excel = str(row_values[column_map.get('passage_text')]).strip() \
@@ -403,16 +422,16 @@ class QuizService:
             
             question_data = {
                 'question_id': question_id_from_excel, # Giữ lại ID để xử lý update/add
-                'question': question_text,
+                'question': question_text or None, # Lưu rỗng thành None
                 'option_a': option_a_text,
                 'option_b': option_b_text,
-                'option_c': option_c_text,
-                'option_d': option_d_text,
+                'option_c': option_c_text or None, # Lưu rỗng thành None
+                'option_d': option_d_text or None, # Lưu rỗng thành None
                 'correct_answer': determined_answer, 
                 'pre_question_text': str(row_values[column_map.get('pre_question_text')]).strip() if column_map.get('pre_question_text') is not None and row_values[column_map.get('pre_question_text')] is not None else None,
                 'guidance': str(row_values[column_map.get('guidance')]).strip() if column_map.get('guidance') is not None and row_values[column_map.get('guidance')] is not None else None,
-                'question_image_file': str(row_values[column_map.get('question_image_file')]).strip() if column_map.get('question_image_file') is not None and row_values[column_map.get('question_image_file')] is not None else None,
-                'question_audio_file': str(row_values[column_map.get('question_audio_file')]).strip() if column_map.get('question_audio_file') is not None and row_values[column_map.get('question_audio_file')] is not None else None,
+                'question_image_file': question_image_file or None, # Lưu rỗng thành None
+                'question_audio_file': question_audio_file or None, # Lưu rỗng thành None
                 'passage_id': passage_id_for_db,
                 'passage_order': passage_order_from_excel
             }
@@ -563,9 +582,11 @@ class QuizService:
             sheet.title = set_to_export.title[:30]
 
             # Thêm các cột mới cho export (question_id, passage_text, passage_order)
+            # BẮT ĐẦU SỬA: option_c và option_d là tùy chọn trong Excel
             headers = ['question_id', 'pre_question_text', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 
                        'correct_answer_text', 'guidance', 'question_image_file', 'question_audio_file',
                        'passage_text', 'passage_order']
+            # KẾT THÚC SỬA
             sheet.append(headers)
 
             # Sắp xếp câu hỏi để các câu trong cùng đoạn văn xuất hiện liền kề và theo thứ tự
@@ -592,7 +613,7 @@ class QuizService:
                 row_data = [
                     q.question_id, # Thêm question_id vào hàng xuất
                     q.pre_question_text, q.question,
-                    q.option_a, q.option_b, q.option_c, q.option_d,
+                    q.option_a, q.option_b, q.option_c, q.option_d, # THÊM: option_c, option_d
                     correct_answer_text,
                     q.guidance,
                     q.question_image_file, q.question_audio_file,
@@ -610,3 +631,4 @@ class QuizService:
         except Exception as e:
             logger.error(f"{log_prefix} Lỗi khi xuất bộ câu hỏi ra Excel: {e}", exc_info=True)
             return None
+

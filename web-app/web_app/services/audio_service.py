@@ -19,8 +19,9 @@ from pydub import AudioSegment
 from .. import db # Import db instance
 from ..models import Flashcard, User # Import models nếu cần truy vấn trực tiếp
 
-# Import cấu hình từ web_app.config
-from ..config import AUDIO_CACHE_DIR, CACHE_GENERATION_DELAY
+# BẮT ĐẦU THAY ĐỔI: Cập nhật import để sử dụng FLASHCARD_AUDIO_CACHE_DIR
+from ..config import FLASHCARD_AUDIO_CACHE_DIR, CACHE_GENERATION_DELAY
+# KẾT THÚC THAY ĐỔI
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +33,12 @@ class AudioService:
     def __init__(self):
         # Đảm bảo thư mục cache tồn tại khi khởi tạo service
         try:
-            os.makedirs(AUDIO_CACHE_DIR, exist_ok=True)
-            logger.info(f"AudioService khởi tạo thành công. Thư mục cache: {AUDIO_CACHE_DIR}")
+            # BẮT ĐẦU THAY ĐỔI: Sử dụng FLASHCARD_AUDIO_CACHE_DIR
+            os.makedirs(FLASHCARD_AUDIO_CACHE_DIR, exist_ok=True)
+            logger.info(f"AudioService khởi tạo thành công. Thư mục cache: {FLASHCARD_AUDIO_CACHE_DIR}")
+            # KẾT THÚC THAY ĐỔI
         except OSError as e:
-            logger.critical(f"Lỗi: Không thể tạo thư mục cache audio tại {AUDIO_CACHE_DIR}: {e}", exc_info=True)
+            logger.critical(f"Lỗi: Không thể tạo thư mục cache audio tại {FLASHCARD_AUDIO_CACHE_DIR}: {e}", exc_info=True)
             # Có thể thêm logic để dừng ứng dụng hoặc cảnh báo nghiêm trọng tại đây
         except Exception as e:
             logger.critical(f"Lỗi không mong muốn khi khởi tạo AudioService: {e}", exc_info=True)
@@ -181,7 +184,9 @@ class AudioService:
         try:
             content_hash = hashlib.sha1(audio_content_string.encode('utf-8')).hexdigest()
             cache_filename = f"{content_hash}.{output_format}"
-            cached_file_path = os.path.join(AUDIO_CACHE_DIR, cache_filename)
+            # BẮT ĐẦU THAY ĐỔI: Sử dụng FLASHCARD_AUDIO_CACHE_DIR
+            cached_file_path = os.path.join(FLASHCARD_AUDIO_CACHE_DIR, cache_filename)
+            # KẾT THÚC THAY ĐỔI
             
             if os.path.exists(cached_file_path):
                 logger.info(f"{log_prefix} Cache HIT: {cached_file_path}")

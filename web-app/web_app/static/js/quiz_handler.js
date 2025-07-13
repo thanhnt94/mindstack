@@ -12,6 +12,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultSection = document.getElementById('result-section');
     const guidancePanel = document.getElementById('guidance-panel');
     const guidanceText = document.getElementById('guidance-text');
+    const progressBarFill = document.querySelector('.progress-bar-fill'); // Lấy thanh tiến trình
+
+    // BẮT ĐẦU THÊM MỚI: Áp dụng chiều rộng cho thanh tiến trình từ data attribute
+    if (progressBarFill) {
+        const percentage = progressBarFill.dataset.percentage;
+        if (percentage !== undefined) {
+            progressBarFill.style.width = `${percentage}%`;
+        }
+    }
+    // KẾT THÚC THÊM MỚI
 
     // --- BẮT ĐẦU SỬA: Thêm logic cho hiệu ứng chọn đáp án ---
     optionsGrid.addEventListener('change', function(event) {
@@ -109,3 +119,4 @@ document.addEventListener('DOMContentLoaded', function() {
         nextQuestionBtn.style.display = 'inline-flex';
     }
 });
+

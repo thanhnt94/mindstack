@@ -129,10 +129,115 @@
     text-align: center;
 }
 
-.question-audio-controls .button {
-    padding: 10px 20px;
-    font-size: 1em;
+/* BẮT ĐẦU THÊM MỚI: Kiểu cho trình phát audio tùy chỉnh */
+.audio-player-hidden {
+    display: none; /* Ẩn trình phát audio mặc định */
 }
+
+.quiz-audio-controls-custom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #f0f2f5;
+    padding: 10px 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    max-width: 450px; /* Giới hạn chiều rộng */
+    margin: 0 auto; /* Căn giữa */
+}
+
+.quiz-audio-controls-custom button {
+    background: none;
+    border: none;
+    color: #34495e;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.quiz-audio-controls-custom button:hover {
+    color: #007bff;
+}
+
+.quiz-audio-controls-custom .progress-container {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quiz-audio-controls-custom .progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.quiz-audio-controls-custom .progress-fill {
+    height: 100%;
+    width: 0%;
+    background-color: #007bff;
+    border-radius: 4px;
+    transition: width 0.1s linear; /* Chuyển động mượt mà hơn */
+}
+
+.quiz-audio-controls-custom .time-display {
+    font-size: 0.8em;
+    color: #555;
+    min-width: 35px; /* Đảm bảo đủ chỗ cho thời gian */
+    text-align: right;
+}
+
+.quiz-audio-controls-custom .volume-slider {
+    width: 80px; /* Chiều rộng cho thanh trượt âm lượng */
+    -webkit-appearance: none; /* Ẩn kiểu mặc định của trình duyệt */
+    appearance: none;
+    height: 5px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+    border-radius: 5px;
+}
+
+.quiz-audio-controls-custom .volume-slider:hover {
+    opacity: 1;
+}
+
+.quiz-audio-controls-custom .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+}
+
+.quiz-audio-controls-custom .volume-slider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+}
+
+.no-audio-message {
+    color: #888;
+    font-style: italic;
+    margin-top: 10px;
+    font-size: 0.9em;
+    text-align: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+/* KẾT THÚC THÊM MỚI */
 
 
 /* --- Phần lựa chọn đáp án --- */
@@ -265,3 +370,4 @@
 .quiz-controls .button {
     min-width: 120px; /* Đảm bảo nút có chiều rộng tối thiểu */
 }
+

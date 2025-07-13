@@ -166,11 +166,13 @@ class QuizQuestion(db.Model):
     question_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     set_id = db.Column(db.Integer, db.ForeignKey('QuestionSets.set_id', ondelete='CASCADE'), nullable=False)
     pre_question_text = db.Column(db.Text)
-    question = db.Column(db.Text, nullable=False)
+    # BẮT ĐẦU SỬA: question có thể nullable
+    question = db.Column(db.Text, nullable=True) 
+    # KẾT THÚC SỬA
     option_a = db.Column(db.String, nullable=False)
     option_b = db.Column(db.String, nullable=False)
-    option_c = db.Column(db.String, nullable=False)
-    option_d = db.Column(db.String, nullable=False)
+    option_c = db.Column(db.String, nullable=True) # SỬA: option_c có thể nullable
+    option_d = db.Column(db.String, nullable=True) # SỬA: option_d có thể nullable
     correct_answer = db.Column(db.String(1), nullable=False) # 'A', 'B', 'C', 'D'
     guidance = db.Column(db.Text)
     question_image_file = db.Column(db.String)
@@ -180,7 +182,6 @@ class QuizQuestion(db.Model):
     passage_id = db.Column(db.Integer, db.ForeignKey('QuizPassages.passage_id', ondelete='SET NULL'), nullable=True)
     passage_order = db.Column(db.Integer, nullable=True) # Thứ tự câu hỏi trong đoạn văn
     # KẾT THÚC THAY ĐỔI
-
     progresses = db.relationship('UserQuizProgress', backref='question', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('QuizQuestionNote', backref='question', lazy=True, cascade="all, delete-orphan")
 

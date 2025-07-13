@@ -9,8 +9,9 @@
         <!-- Thanh tiến trình và Chế độ -->
         <div class="quiz-header-bar">
             <div class="quiz-progress-bar">
-                {% set percentage = ((progress.current-1) / progress.total) * 100 if progress.total > 0 else 0 %}
-                <div class="progress-bar-fill" style="width: {{ percentage }}%;"></div>
+                {# Tính toán giá trị phần trăm và lưu vào data attribute để JS đọc #}
+                {% set percentage_value = ((progress.current-1) / progress.total) * 100 | int if progress.total > 0 else 0 %}
+                <div class="progress-bar-fill" data-percentage="{{ percentage_value }}"></div>
                 <span class="progress-bar-text">Câu {{ progress.current }} / {{ progress.total }}</span>
             </div>
             <a href="{{ url_for('quiz.select_mode') }}" class="button secondary small-button change-mode-button">
@@ -23,19 +24,21 @@
         <form id="quiz-form" data-question-id="{{ question.question_id }}" data-check-url="{{ url_for('quiz.check_answer', question_id=question.question_id) }}">
             
             <div class="question-section">
-                {# BẮT ĐẦU THAY ĐỔI: Hiển thị đoạn văn nếu có #}
                 {% if passage_content %}
                     <div class="passage-container">
                         <h3 class="passage-title">Đoạn văn</h3>
                         <div class="passage-content">{{ passage_content }}</div>
                     </div>
                 {% endif %}
-                {# KẾT THÚC THAY ĐỔI #}
 
                 {% if question.pre_question_text %}
                     <p class="pre-question-text">{{ question.pre_question_text }}</p>
                 {% endif %}
+                {# BẮT ĐẦU SỬA: Chỉ hiển thị question.question nếu nó có giá trị #}
+                {% if question.question %}
                 <h2 class="question-text">{{ question.question }}</h2>
+                {% endif %}
+                {# KẾT THÚC SỬA #}
 
                 {# Hiển thị hình ảnh câu hỏi nếu có #}
                 {% if question.question_image_file %}
@@ -43,19 +46,35 @@
                         {% if question.question_image_file.startswith('http://') or question.question_image_file.startswith('https://') %}
                             <img src="{{ question.question_image_file }}" alt="Hình ảnh câu hỏi">
                         {% else %}
-                            <img src="{{ url_for('api.serve_image', filename=question.question_image_file) }}" alt="Hình ảnh câu hỏi">
+                            <img src="{{ url_for('api.serve_quiz_image', filename=question.question_image_file) }}" alt="Hình ảnh câu hỏi">
                         {% endif %}
                     </div>
                 {% endif %}
 
-                {# Nút phát audio câu hỏi nếu có #}
-                {% if question.question_audio_file %}
-                    <div class="question-audio-controls">
-                        <button type="button" id="playQuizAudioButton" class="button primary small-button">
-                            <i class="fas fa-volume-up"></i> Phát âm thanh
-                        </button>
-                    </div>
-                {% endif %}
+                {# BẮT ĐẦU SỬA: Thay thế nút phát audio bằng thẻ audio và custom controls #}
+                <div class="question-audio-controls">
+                    <audio id="quizAudioPlayer" class="audio-player-hidden"></audio> {# Thẻ audio ẩn #}
+                    {% if question.question_audio_file %}
+                        <div class="quiz-audio-controls-custom">
+                            <button type="button" id="playPauseBtn" class="play-pause-btn" aria-label="Play/Pause">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <div class="progress-container">
+                                <div id="progressBar" class="progress-bar">
+                                    <div id="progressFill" class="progress-fill"></div>
+                                </div>
+                                <span id="currentTime" class="time-display">0:00</span> / <span id="durationTime" class="time-display">0:00</span>
+                            </div>
+                            <button type="button" id="volumeBtn" class="volume-btn" aria-label="Volume">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume slider">
+                        </div>
+                    {% else %}
+                        <p class="no-audio-message">Không có audio cho câu hỏi này.</p>
+                    {% endif %}
+                </div>
+                {# KẾT THÚC SỬA #}
             </div>
 
             <div class="options-grid" id="options-grid">
@@ -73,20 +92,24 @@
                         <p>{{ question.option_b }}</p>
                     </div>
                 </label>
+                {% if question.option_c %}
                 <label class="option-card" data-option="C">
-                    <input type="radio" name="option" value="C" required>
+                    <input type="radio" name="option" value="C">
                     <div class="option-content">
                         <span class="option-letter">C</span>
                         <p>{{ question.option_c }}</p>
                     </div>
                 </label>
+                {% endif %}
+                {% if question.option_d %}
                 <label class="option-card" data-option="D">
-                    <input type="radio" name="option" value="D" required>
+                    <input type="radio" name="option" value="D">
                     <div class="option-content">
                         <span class="option-letter">D</span>
                         <p>{{ question.option_d }}</p>
                     </div>
                 </label>
+                {% endif %}
             </div>
 
             <!-- Khu vực kết quả và hành động (ẩn ban đầu) -->
@@ -138,7 +161,7 @@
 {% if can_edit %}
 <div id="quiz-edit-modal" class="edit-modal" style="display: none;">
     <div class="edit-modal-content">
-        <span id="quiz-edit-modal-close-btn" class="edit-modal-close-btn">&times;</span>
+        <span id="quiz-edit-modal-close-btn" class="quiz-edit-modal-close-btn">&times;</span>
         <h2>Sửa Câu hỏi</h2>
         <div class="edit-modal-body">
             {# BẮT ĐẦU THAY ĐỔI: Trường đoạn văn và thứ tự #}
@@ -155,11 +178,11 @@
             </div>
             {# KẾT THÚC THAY ĐỔI #}
             <div class="form-group"><label for="edit-pre-question-text">Văn bản trước câu hỏi:</label><textarea id="edit-pre-question-text" rows="2"></textarea></div>
-            <div class="form-group"><label for="edit-question">Nội dung câu hỏi:</label><textarea id="edit-question" rows="3" required></textarea></div>
+            <div class="form-group"><label for="edit-question">Nội dung câu hỏi:</label><textarea id="edit-question" rows="3"></textarea> {# SỬA: question không còn required #}</div>
             <div class="form-group"><label for="edit-option-a">Lựa chọn A:</label><input type="text" id="edit-option-a" required></div>
             <div class="form-group"><label for="edit-option-b">Lựa chọn B:</label><input type="text" id="edit-option-b" required></div>
-            <div class="form-group"><label for="edit-option-c">Lựa chọn C:</label><input type="text" id="edit-option-c" required></div>
-            <div class="form-group"><label for="edit-option-d">Lựa chọn D:</label><input type="text" id="edit-option-d" required></div>
+            <div class="form-group"><label for="edit-option-c">Lựa chọn C:</label><input type="text" id="edit-option-c"> {# SỬA: option_c không còn required #}</div>
+            <div class="form-group"><label for="edit-option-d">Lựa chọn D:</label><input type="text" id="edit-option-d"> {# SỬA: option_d không còn required #}</div>
             <div class="form-group"><label for="edit-correct-answer">Đáp án đúng:</label>
                 <select id="edit-correct-answer" required>
                     <option value="A">A</option>
@@ -178,8 +201,9 @@
 </div>
 {% endif %}
 
-{# Thẻ audio player và dữ liệu JS #}
-<audio id="quizAudioPlayer" hidden></audio>
+{# BẮT ĐẦU SỬA: Loại bỏ thẻ audio ẩn cũ vì đã có thẻ audio hiển thị #}
+{# <audio id="quizAudioPlayer" hidden></audio> #}
+{# KẾT THÚC SỬA #}
 <div id="quizJsData"
      data-question-id="{{ question.question_id }}"
      data-question-audio-file="{{ question.question_audio_file or '' }}"
@@ -199,4 +223,3 @@
     {% endif %}
     <script src="{{ url_for('static', filename='js/quiz_audio_image_handler.js') }}"></script>
 {% endblock %}
-

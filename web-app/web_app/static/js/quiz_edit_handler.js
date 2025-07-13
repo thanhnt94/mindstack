@@ -61,7 +61,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 for (const key in fields) {
                     // Đảm bảo gán giá trị chỉ khi key tồn tại trong data
                     if (data.hasOwnProperty(key)) {
-                        fields[key].value = data[key] || '';
+                        // BẮT ĐẦU SỬA: Gán giá trị rỗng nếu là null để input hiển thị trống
+                        fields[key].value = data[key] === null ? '' : data[key];
+                        // KẾT THÚC SỬA
                     }
                 }
 
@@ -118,12 +120,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const updatedData = {};
         for (const key in fields) {
-            updatedData[key] = fields[key].value;
+            // BẮT ĐẦU SỬA: Gửi chuỗi rỗng nếu giá trị là rỗng, để backend có thể chuyển thành None
+            updatedData[key] = fields[key].value.trim();
+            // KẾT THÚC SỬA
         }
 
         // BẮT ĐẦU THAY ĐỔI: Thêm passage_content vào dữ liệu gửi đi nếu nó được phép chỉnh sửa
         if (editPassageContent && !editPassageContent.disabled) {
-            updatedData['passage_content'] = editPassageContent.value;
+            updatedData['passage_content'] = editPassageContent.value.trim(); // SỬA: trim()
         } else {
             // Nếu không được chỉnh sửa hoặc không có đoạn văn, đảm bảo không gửi passage_content
             delete updatedData['passage_content'];

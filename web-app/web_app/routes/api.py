@@ -5,10 +5,10 @@ import os
 import asyncio
 import hashlib # Import hashlib để tạo hash cho đoạn văn
 from ..services import audio_service, note_service, flashcard_service, quiz_service, quiz_note_service
-from ..models import Flashcard, QuizQuestion, UserQuizProgress, QuizPassage # Thêm QuizPassage
-from ..config import IMAGES_DIR
+from ..models import Flashcard, QuizQuestion, UserQuizProgress, QuizPassage 
+from ..config import FLASHCARD_IMAGES_DIR, QUIZ_IMAGES_DIR, QUIZ_AUDIO_CACHE_DIR # Cập nhật import
 from .decorators import login_required
-from ..db_instance import db # BẮT ĐẦU SỬA LỖI: Import db instance
+from ..db_instance import db 
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ def get_card_audio(flashcard_id, side):
         return {"error": "No audio content for this side"}, 404
     try:
         # Vẫn sử dụng audio_service cho flashcard (TTS)
+        # audio_service sẽ sử dụng AUDIO_CACHE_DIR (đã được đổi tên thành FLASHCARD_AUDIO_CACHE_DIR trong config)
         audio_file_path = asyncio.run(audio_service.get_cached_or_generate_audio(audio_content))
         if audio_file_path and os.path.exists(audio_file_path):
             return send_file(audio_file_path, mimetype="audio/mpeg")
@@ -42,25 +43,47 @@ def get_card_audio(flashcard_id, side):
         logger.error(f"Lỗi khi phục vụ audio flashcard {flashcard_id} ({side}): {e}", exc_info=True)
         return {"error": "Internal server error"}, 500
 
-# API phục vụ hình ảnh (dùng chung cho cả flashcard và quiz)
-@api_bp.route('/images/<path:filename>')
-def serve_image(filename):
+# BẮT ĐẦU THAY ĐỔI: Tách API phục vụ hình ảnh cho Flashcard và Quiz
+
+@api_bp.route('/flashcard_images/<path:filename>')
+def serve_flashcard_image(filename):
     """
-    Mô tả: Phục vụ file hình ảnh từ thư mục IMAGES_DIR.
+    Mô tả: Phục vụ file hình ảnh cho Flashcard từ thư mục FLASHCARD_IMAGES_DIR.
     Args:
-        filename (str): Tên file hình ảnh bao gồm cả đường dẫn tương đối trong IMAGES_DIR.
+        filename (str): Tên file hình ảnh bao gồm cả đường dẫn tương đối.
     Returns:
         Response: File hình ảnh hoặc chuỗi báo lỗi.
     """
     try:
-        full_path = os.path.join(IMAGES_DIR, filename)
+        full_path = os.path.join(FLASHCARD_IMAGES_DIR, filename)
         if not os.path.exists(full_path):
-            logger.warning(f"Không tìm thấy hình ảnh: {full_path}")
-            return "Image not found", 404
+            logger.warning(f"Không tìm thấy hình ảnh Flashcard: {full_path}")
+            return "Flashcard Image not found", 404
         return send_file(full_path)
     except Exception as e:
-        logger.error(f"Lỗi khi phục vụ hình ảnh {filename}: {e}", exc_info=True)
+        logger.error(f"Lỗi khi phục vụ hình ảnh Flashcard {filename}: {e}", exc_info=True)
         return "Internal server error", 500
+
+@api_bp.route('/quiz_images/<path:filename>')
+def serve_quiz_image(filename):
+    """
+    Mô tả: Phục vụ file hình ảnh cho Quiz từ thư mục QUIZ_IMAGES_DIR.
+    Args:
+        filename (str): Tên file hình ảnh bao gồm cả đường dẫn tương đối.
+    Returns:
+        Response: File hình ảnh hoặc chuỗi báo lỗi.
+    """
+    try:
+        full_path = os.path.join(QUIZ_IMAGES_DIR, filename)
+        if not os.path.exists(full_path):
+            logger.warning(f"Không tìm thấy hình ảnh Quiz: {full_path}")
+            return "Quiz Image not found", 404
+        return send_file(full_path)
+    except Exception as e:
+        logger.error(f"Lỗi khi phục vụ hình ảnh Quiz {filename}: {e}", exc_info=True)
+        return "Internal server error", 500
+
+# KẾT THÚC THAY ĐỔI
 
 # API cho Flashcard ghi chú
 @api_bp.route('/note/<int:flashcard_id>', methods=['GET', 'POST'])
@@ -243,9 +266,20 @@ def edit_quiz_question(question_id):
     if not data:
         return jsonify({'status': 'error', 'message': 'Dữ liệu không hợp lệ.'}), 400
     
+    # BẮT ĐẦU SỬA: Tiền xử lý dữ liệu để chuyển chuỗi rỗng thành None
+    processed_data = {}
+    for key, value in data.items():
+        # Chuyển đổi chuỗi rỗng thành None cho các trường có thể nullable
+        if isinstance(value, str) and value.strip() == '':
+            processed_data[key] = None
+        else:
+            processed_data[key] = value
+    # KẾT THÚC SỬA
+
     # Xử lý cập nhật passage_content và passage_order
-    passage_content_from_request = data.pop('passage_content', None) # Lấy passage_content ra khỏi data
-    passage_order_from_request = data.get('passage_order', None)
+    # Lấy passage_content ra khỏi processed_data
+    passage_content_from_request = processed_data.pop('passage_content', None) 
+    passage_order_from_request = processed_data.get('passage_order', None)
 
     question = quiz_service.get_question_by_id(question_id)
     if not question:
@@ -283,7 +317,7 @@ def edit_quiz_question(question_id):
         question.passage_order = None # Đặt là None nếu không được gửi
 
     # Cập nhật các trường còn lại của câu hỏi
-    updated_question, status = quiz_service.update_question(question_id, data, user_id)
+    updated_question, status = quiz_service.update_question(question_id, processed_data, user_id) # SỬA: Dùng processed_data
     
     if status != "success":
         message_map = {"permission_denied": "Bạn không có quyền sửa câu hỏi này.", "question_not_found": "Không tìm thấy câu hỏi."}
@@ -315,9 +349,9 @@ def get_quiz_audio(question_id):
         logger.info(f"Chuyển hướng đến URL audio bên ngoài: {audio_file_ref}")
         return redirect(audio_file_ref)
     else:
-        # Giả định đây là một đường dẫn file cục bộ tương đối trong IMAGES_DIR
+        # Giả định đây là một đường dẫn file cục bộ tương đối trong QUIZ_AUDIO_CACHE_DIR
         try:
-            full_path = os.path.join(IMAGES_DIR, audio_file_ref)
+            full_path = os.path.join(QUIZ_AUDIO_CACHE_DIR, audio_file_ref) # SỬA: Sử dụng QUIZ_AUDIO_CACHE_DIR
             if not os.path.exists(full_path):
                 logger.warning(f"Không tìm thấy file audio cục bộ: {full_path}")
                 return "Audio file not found", 404

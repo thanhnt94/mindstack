@@ -31,6 +31,7 @@
                     <label for="excel_file">Đồng bộ hóa từ file Excel (.xlsx):</label>
                     <input type="file" id="excel_file" name="excel_file" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
                     <small style="color: #dc3545; font-weight: bold;">CẢNH BÁO: Tải file lên sẽ GHI ĐÈ toàn bộ nội dung của bộ câu hỏi này. Các câu hỏi cũ không có trong file sẽ bị xóa.</small>
+                    <small>File phải có các cột bắt buộc: 'question' (hoặc 'question_image_file'/'question_audio_file'), 'option_a', 'option_b', 'correct_answer_text'. Các cột 'option_c', 'option_d', 'pre_question_text', 'guidance', 'question_id', 'passage_text', 'passage_order' là tùy chọn. Dòng đầu tiên sẽ được bỏ qua (coi như tiêu đề).</small>
                 </div>
                 
                 <div class="button-group">

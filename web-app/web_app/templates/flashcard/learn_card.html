@@ -13,7 +13,9 @@
                     {% if image_to_show.startswith('http://') or image_to_show.startswith('https://') %}
                         <img src="{{ image_to_show }}" alt="Hình ảnh thẻ">
                     {% else %}
-                        <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ">
+                        {# BẮT ĐẦU SỬA: Sử dụng route mới cho hình ảnh Flashcard #}
+                        <img src="{{ url_for('api.serve_flashcard_image', filename=image_to_show) }}" alt="Hình ảnh thẻ">
+                        {# KẾT THÚC SỬA #}
                     {% endif %}
                 </div>
             {% endif %}
@@ -104,7 +106,9 @@
                         {% if image_to_show.startswith('http://') or image_to_show.startswith('https://') %}
                             <img src="{{ image_to_show }}" alt="Hình ảnh thẻ" class="popup-image"> {# Thêm class popup-image #}
                         {% else %}
-                            <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image"> {# Thêm class popup-image #}
+                            {# BẮT ĐẦU SỬA: Sử dụng route mới cho hình ảnh Flashcard #}
+                            <img src="{{ url_for('api.serve_flashcard_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image"> {# Thêm class popup-image #}
+                            {# KẾT THÚC SỬA #}
                         {% endif %}
                     </div>
                 {% endif %}
@@ -281,3 +285,4 @@
     {# Script cho Dynamic Card Details #}
     <script src="{{ url_for('static', filename='js/card_details_handler.js') }}"></script>
 {% endblock %}
+
