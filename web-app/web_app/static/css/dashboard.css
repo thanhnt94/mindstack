@@ -5,11 +5,20 @@
 
 .dashboard-container {
     width: 100%;
-    max-width: 1200px; /* Tăng max-width để chứa 2 cột */
+    max-width: 1400px; /* Tăng max-width để rộng hơn trên màn hình lớn */
     margin: 20px auto;
     padding: 15px;
     box-sizing: border-box;
 }
+
+/* BẮT ĐẦU SỬA ĐỔI: Giảm padding trên mobile cho dashboard-container */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 15px 10px; /* Giảm padding ngang trên mobile */
+    }
+}
+/* KẾT THÚC SỬA ĐỔI */
+
 
 .dashboard-header {
     text-align: center;
@@ -23,11 +32,14 @@
     color: #3498db;
 }
 
-/* BẮT ĐẦU THÊM MỚI: Kiểu cho container 2 cột */
+/* Kiểu cho container 2 cột */
 .stats-two-column-grid {
     display: grid;
     grid-template-columns: 1fr; /* Mặc định 1 cột trên mobile */
     gap: 30px; /* Khoảng cách giữa các cột */
+    /* BẮT ĐẦU SỬA ĐỔI: Thêm margin-top để tạo khoảng cách với phần trên */
+    margin-top: 30px;
+    /* KẾT THÚC SỬA ĐỔI */
     margin-bottom: 25px; /* Khoảng cách với heatmap */
 }
 
@@ -43,7 +55,6 @@
     flex-direction: column;
     gap: 25px; /* Khoảng cách giữa các section trong cùng một cột */
 }
-/* KẾT THÚC THÊM MỚI */
 
 
 .stats-section {
@@ -66,17 +77,23 @@
 /* Lưới cho các thẻ thống kê tổng quan */
 .stat-cards-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Mặc định 1 cột trên mobile */
     gap: 15px;
 }
 
-/* BẮT ĐẦU SỬA: Điều chỉnh grid cho stat-cards-grid trên desktop */
-@media (min-width: 576px) {
+/* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh grid cho stat-cards-grid trên các kích thước khác nhau */
+@media (min-width: 480px) { /* Trên mobile lớn hơn một chút, có thể hiển thị 2 cột */
     .stat-cards-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* 2 hoặc 3 cột tùy kích thước */
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Giảm minmax để linh hoạt hơn */
     }
 }
-/* KẾT THÚC SỬA */
+
+@media (min-width: 768px) { /* Trên tablet/desktop, có thể hiển thị nhiều cột hơn */
+    .stat-cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Tăng minmax cho desktop */
+    }
+}
+/* KẾT THÚC SỬA ĐỔI */
 
 .stat-card {
     background-color: #f8f9fa;
@@ -86,6 +103,9 @@
     align-items: center;
     gap: 15px;
     border: 1px solid #e9ecef;
+    /* BẮT ĐẦU SỬA ĐỔI: Loại bỏ min-width cố định để thẻ linh hoạt hơn */
+    /* min-width: 180px; */ /* Bỏ min-width cố định để nó linh hoạt hơn trên mobile */
+    /* KẾT THÚC SỬA ĐỔI */
 }
 .stat-card-icon { font-size: 1.8em; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; }
 .stat-card-icon.score { background-color: #f1c40f; }
@@ -110,7 +130,15 @@
 .heatmap-legend .legend-color-box[data-level="4"] { background-color: #196127; }
 
 /* Kiểu cho các checkbox điều khiển biểu đồ */
-.chart-controls { display: grid; grid-template-columns: repeat(2, auto); justify-content: center; gap: 10px 25px; margin-bottom: 20px; }
+.chart-controls {
+    display: grid;
+    /* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh cột cho chart-controls trên mobile */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Cho phép 2 cột trên mobile */
+    /* KẾT THÚC SỬA ĐỔI */
+    justify-content: center;
+    gap: 10px 25px;
+    margin-bottom: 20px;
+}
 .chart-toggle { display: flex; align-items: center; cursor: pointer; font-size: 0.9em; white-space: nowrap; }
 .chart-toggle-checkbox { margin-right: 8px; cursor: pointer; }
 .toggle-label { font-weight: 500; color: #4a5568; position: relative; padding-left: 18px; }
@@ -121,7 +149,12 @@
 .toggle-label.color-score::before { background-color: rgba(241, 196, 15, 1); }
 
 /* Container cho biểu đồ */
-.chart-container { position: relative; width: 100%; height: 250px; }
+.chart-container { 
+    position: relative; 
+    width: 100%; 
+    height: 250px; 
+    overflow-x: auto; /* Cho phép cuộn ngang nếu biểu đồ quá rộng */
+}
 
 /* Dropdown chọn bộ thẻ */
 .set-selector-container { margin-bottom: 20px; }
@@ -162,7 +195,9 @@
 /* Lưới thống kê 2x3 */
 .key-stats-grid-2x3 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Tự động chia cột, tối thiểu 120px */
+    /* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh cột cho mobile để tránh vỡ */
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Giảm minmax cho mobile */
+    /* KẾT THÚC SỬA ĐỔI */
     gap: 15px;
 }
 
@@ -185,15 +220,203 @@
 .key-stat-card.due-soon { background-color: #3498db; }
 .key-stat-card.lapsed   { background-color: #f39c12; }
 
-/* BẮT ĐẦU THÊM MỚI: Màu sắc cho các ô thống kê Quiz */
+/* Màu sắc cho các ô thống kê Quiz */
 .key-stat-card.correct { background-color: #2ecc71; } /* Màu xanh lá cây */
 .key-stat-card.incorrect { background-color: #e74c3c; } /* Màu đỏ */
 .key-stat-card.unanswered { background-color: #95a5a6; } /* Màu xám */
-/* KẾT THÚC THÊM MỚI */
 
 
 .key-stat-value { display: block; font-size: 1.8em; font-weight: 700; }
 .key-stat-label { display: block; font-size: 0.85em; opacity: 0.9; }
+
+/* BẮT ĐẦU THÊM MỚI: Kiểu cho phần bảng xếp hạng người dùng */
+.leaderboard-section {
+    margin-top: 30px; /* Khoảng cách với phần trên */
+    margin-bottom: 30px; /* Khoảng cách với phần dưới */
+}
+
+.leaderboard-controls {
+    display: flex;
+    /* BẮT ĐẦU SỬA ĐỔI: Đảm bảo luôn ngang hàng trên desktop */
+    flex-direction: row; 
+    flex-wrap: nowrap; /* Đảm bảo không xuống dòng trên desktop */
+    /* KẾT THÚC SỬA ĐỔI */
+    gap: 20px; /* Khoảng cách giữa các form-group */
+    margin-bottom: 25px;
+    justify-content: center;
+}
+
+.leaderboard-controls .form-group {
+    flex: 1; 
+    min-width: 200px; 
+    max-width: 280px; 
+    margin-bottom: 0; 
+    /* BẮT ĐẦU SỬA ĐỔI: Thêm khoảng cách giữa label và select */
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Khoảng cách giữa label và select */
+    /* KẾT THÚC SỬA ĐỔI */
+}
+
+/* BẮT ĐẦU THÊM MỚI: Cải thiện kiểu dáng của dropdown trong leaderboard */
+.leaderboard-controls .form-control {
+    border: 1px solid #c0c0c0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.95em;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.leaderboard-controls .form-control:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+}
+/* KẾT THÚC THÊM MỚI */
+
+
+/* Kiểu cho danh sách xếp hạng */
+.leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Khoảng cách giữa các mục */
+}
+
+.leaderboard-item {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    /* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh gap để các phần tử gần nhau hơn */
+    gap: 10px; 
+    /* KẾT THÚC SỬA ĐỔI */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.leaderboard-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.leaderboard-item .rank {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #3498db; /* Màu xanh cho hạng */
+    min-width: 30px; /* Đảm bảo đủ chỗ cho hạng */
+    text-align: center;
+    /* BẮT ĐẦU THÊM MỚI: Định kiểu cho số hạng */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px; /* Kích thước cố định cho số hạng */
+    height: 35px;
+    border-radius: 50%; /* Hình tròn */
+    background-color: #eaf6ff; /* Nền nhẹ */
+    border: 1px solid #cce5ff;
+    flex-shrink: 0; /* Không co lại */
+    /* KẾT THÚC THÊM MỚI */
+}
+
+/* BẮT ĐẦU THÊM MỚI: Kiểu cho các huy chương */
+.leaderboard-item .rank .fas.fa-medal {
+    font-size: 1.8em; /* Kích thước lớn hơn cho huy chương */
+    width: auto; /* Để icon tự điều chỉnh chiều rộng */
+    height: auto; /* Để icon tự điều chỉnh chiều cao */
+    color: inherit; /* Kế thừa màu từ class medal cụ thể */
+    background: none; /* Bỏ nền tròn của .rank */
+    border: none; /* Bỏ viền của .rank */
+}
+
+.leaderboard-item .rank .gold-medal {
+    color: #FFD700; /* Vàng */
+}
+
+.leaderboard-item .rank .silver-medal {
+    color: #C0C0C0; /* Bạc */
+}
+
+.leaderboard-item .rank .bronze-medal {
+    color: #CD7F32; /* Đồng */
+}
+/* KẾT THÚC THÊM MỚI */
+
+
+.leaderboard-item .username {
+    flex-grow: 1; /* Cho phép tên người dùng chiếm hết không gian còn lại */
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1em;
+    /* BẮT ĐẦU SỬA ĐỔI: Đảm bảo không bị xuống dòng */
+    white-space: nowrap; /* Ngăn tên người dùng xuống dòng */
+    overflow: hidden; /* Ẩn phần tràn */
+    text-overflow: ellipsis; /* Thêm dấu ba chấm nếu tràn */
+    /* KẾT THÚC SỬA ĐỔI */
+}
+
+.leaderboard-item .score-value {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #2ecc71; /* Màu xanh lá cây cho giá trị điểm/lượt */
+    white-space: nowrap; /* Ngăn giá trị bị xuống dòng */
+    flex-shrink: 0; /* Không co lại */
+}
+
+/* Responsive cho bảng xếp hạng (danh sách) */
+@media (max-width: 768px) {
+    .leaderboard-item {
+        /* BẮT ĐẦU SỬA ĐỔI: Đảm bảo tên và giá trị cùng hàng trên mobile */
+        flex-wrap: nowrap; /* Ngăn không cho các phần tử xuống dòng */
+        padding: 10px 15px;
+        gap: 10px; /* Giảm khoảng cách để tiết kiệm không gian */
+        /* KẾT THÚC SỬA ĐỔI */
+    }
+
+    .leaderboard-item .rank {
+        font-size: 1em;
+        min-width: 25px;
+        width: 30px; /* Điều chỉnh kích thước trên mobile */
+        height: 30px;
+    }
+    .leaderboard-item .rank .fas.fa-medal {
+        font-size: 1.5em; /* Kích thước huy chương trên mobile */
+    }
+
+    .leaderboard-item .username {
+        font-size: 1em;
+        /* BẮT ĐẦU SỬA ĐỔI: Cho phép tên người dùng co giãn linh hoạt hơn */
+        flex-basis: auto; /* Đặt lại cơ sở linh hoạt */
+        min-width: 0; /* Cho phép co lại nếu cần */
+        /* KẾT THÚC SỬA ĐỔI */
+    }
+
+    .leaderboard-item .score-value {
+        font-size: 1em;
+        /* BẮT ĐẦU SỬA ĐỔI: Loại bỏ width: 100% và để nó tự điều chỉnh */
+        width: auto; 
+        text-align: right;
+        /* KẾT THÚC SỬA ĐỔI */
+    }
+
+    /* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh layout cho leaderboard-controls trên mobile */
+    .leaderboard-controls {
+        flex-direction: column; /* Xếp các dropdown theo cột */
+        gap: 15px; /* Khoảng cách giữa các dropdown */
+    }
+    .leaderboard-controls .form-group {
+        width: 100%; /* Chiếm toàn bộ chiều rộng */
+        min-width: unset; /* Bỏ giới hạn min-width */
+    }
+    /* KẾT THÚC SỬA ĐỔI */
+}
+/* KẾT THÚC THÊM MỚI */
+
 
 /* CSS cho Modal Danh sách thẻ (Không thay đổi) */
 .card-list-modal { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }

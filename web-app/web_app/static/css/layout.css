@@ -10,17 +10,23 @@
     max-width: 1200px; /* Thêm max-width để giới hạn chiều rộng nội dung */
     margin-left: auto; /* Căn giữa */
     margin-right: auto; /* Căn giữa */
-    /* BẮT ĐẦU THAY ĐỔI: Thêm padding và điều chỉnh flex-grow */
     padding: 20px; /* Lề mặc định cho các cạnh */
     box-sizing: border-box;
     flex-grow: 1; /* Cho phép container này mở rộng để đẩy footer xuống */
     margin-bottom: 20px; /* Khoảng cách với footer khi có cuộn */
-    /* KẾT THÚC THAY ĐỔI */
     justify-content: center;
     align-items: flex-start; /* Căn trên để nội dung không bị kéo dãn */
 }
 
-/* BẮT ĐẦU THÊM MỚI: Điều chỉnh container cho các trang căn giữa (như login) */
+/* BẮT ĐẦU THAY ĐỔI: Điều chỉnh padding trên mobile */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 15px 10px; /* Giảm padding ngang trên mobile */
+    }
+}
+/* KẾT THÚC THAY ĐỔI */
+
+/* Điều chỉnh container cho các trang căn giữa (như login) */
 body.body-centered-content .main-container {
     flex-grow: 0; /* Không cần co giãn khi nội dung được căn giữa */
     justify-content: center; /* Căn giữa nội dung theo chiều ngang */
@@ -29,7 +35,14 @@ body.body-centered-content .main-container {
     margin: auto; /* Căn giữa hoàn toàn trong flex container cha */
     padding: 20px; /* Đảm bảo có padding */
 }
-/* KẾT THÚC THÊM MỚI */
+
+/* BẮT ĐẦU THAY ĐỔI: Điều chỉnh padding cho body-centered-content trên mobile */
+@media (max-width: 768px) {
+    body.body-centered-content .main-container {
+        padding: 15px 10px; /* Giảm padding ngang trên mobile cho trang login */
+    }
+}
+/* KẾT THÚC THAY ĐỔI */
 
 
 .learn-page-container {

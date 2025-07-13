@@ -4,7 +4,8 @@ from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
 from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress, ScoreLog, QuizQuestion, UserQuizProgress, QuestionSet
-from ..config import DEFAULT_TIMEZONE_OFFSET, LEARNING_MODE_DISPLAY_NAMES
+from ..config import DEFAULT_TIMEZONE_OFFSET, LEARNING_MODE_DISPLAY_NAMES, DAILY_HISTORY_MAX_DAYS
+from sqlalchemy import func, case, and_ # Thêm import case và and_
 
 logger = logging.getLogger(__name__)
 
@@ -151,8 +152,10 @@ class StatsService:
             .all()
         new_card_activity_by_day = defaultdict(int)
         for new_card in new_cards_last_30_days:
-            learned_date = datetime.fromtimestamp(new_card.learned_date, tz).strftime('%d/%m')
-            new_card_activity_by_day[learned_date] += 1
+            # Logic này đếm tất cả các thẻ có learned_date trong 30 ngày qua.
+            if new_card.learned_date: # Chỉ xử lý nếu learned_date không phải None
+                learned_date = datetime.fromtimestamp(new_card.learned_date, tz).strftime('%d/%m')
+                new_card_activity_by_day[learned_date] += 1
         
         score_logs_last_30_days = db.session.query(ScoreLog.timestamp, ScoreLog.score_change, ScoreLog.source_type)\
             .filter(ScoreLog.user_id == user_id, ScoreLog.timestamp >= thirty_days_ago_ts)\
@@ -178,7 +181,7 @@ class StatsService:
             'datasets': [
                 {'label': 'Số lần ôn tập', 'data': review_actions_data},
                 {'label': 'Số thẻ ôn tập', 'data': distinct_cards_data},
-                {'label': 'Số thẻ học mới', 'data': new_card_activity_by_day}, # Changed to new_card_activity_by_day
+                {'label': 'Số thẻ học mới', 'data': new_cards_chart_data},
                 {'label': 'Điểm đạt được (Flashcard)', 'data': flashcard_score_chart_data}
             ]
         }
@@ -327,3 +330,113 @@ class StatsService:
                 stats['set_due_cards'] = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id, UserFlashcardProgress.due_time.isnot(None), UserFlashcardProgress.due_time <= current_ts).count()
         
         return stats
+
+    def get_user_leaderboard_data(self, sort_by='total_score', timeframe='all_time', limit=10):
+        """
+        Mô tả: Lấy dữ liệu bảng xếp hạng người dùng dựa trên tiêu chí sắp xếp và khung thời gian.
+        Args:
+            sort_by (str): Tiêu chí sắp xếp ('total_score', 'total_reviews', 'learned_cards', 'new_cards', 'total_quiz_answers').
+            timeframe (str): Khung thời gian ('day', 'week', 'month', 'all_time').
+            limit (int): Số lượng người dùng hàng đầu muốn lấy.
+        Returns:
+            list: Danh sách các dictionary chứa thông tin người dùng và các chỉ số xếp hạng.
+        """
+        log_prefix = f"[LEADERBOARD_STATS|Sort:{sort_by}|Time:{timeframe}]"
+        logger.info(f"{log_prefix} Bắt đầu lấy dữ liệu bảng xếp hạng.")
+
+        current_ts = self._get_current_unix_timestamp(DEFAULT_TIMEZONE_OFFSET)
+        start_ts = None
+
+        if timeframe == 'day':
+            start_ts = self._get_midnight_timestamp(current_ts, DEFAULT_TIMEZONE_OFFSET)
+        elif timeframe == 'week':
+            # Lấy ngày đầu tuần (Thứ Hai)
+            start_of_week = datetime.fromtimestamp(current_ts, timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))).date() - timedelta(days=datetime.fromtimestamp(current_ts, timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))).weekday())
+            start_ts = int(datetime.combine(start_of_week, datetime.min.time(), timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))).timestamp())
+        elif timeframe == 'month':
+            # Lấy ngày đầu tháng
+            start_of_month = datetime.fromtimestamp(current_ts, timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            start_ts = int(start_of_month.timestamp())
+        # 'all_time' means no start_ts filter
+
+        # Bắt đầu truy vấn chính để lấy điểm số tổng hợp theo thời gian
+        # và tổng điểm toàn thời gian
+        score_query = db.session.query(
+            User.user_id,
+            User.username,
+            User.score.label('total_score_overall'), # Tổng điểm toàn thời gian
+            func.sum(case((and_(ScoreLog.source_type == 'flashcard', ScoreLog.timestamp >= start_ts if start_ts else True), ScoreLog.score_change), else_=0)).label('flashcard_score_period'),
+            func.sum(case((and_(ScoreLog.source_type == 'quiz', ScoreLog.timestamp >= start_ts if start_ts else True), ScoreLog.score_change), else_=0)).label('quiz_score_period')
+        ).outerjoin(ScoreLog, User.user_id == ScoreLog.user_id)
+        
+        score_query = score_query.group_by(User.user_id, User.username, User.score)
+        score_results = score_query.all()
+
+        # Truy vấn riêng cho các chỉ số Flashcard (lượt ôn tập, thẻ đã học, thẻ mới)
+        flashcard_stats_query = db.session.query(
+            UserFlashcardProgress.user_id,
+            func.count(UserFlashcardProgress.progress_id).label('total_reviews'),
+            func.count(case((UserFlashcardProgress.learned_date.isnot(None), 1))).label('learned_cards'),
+            func.count(case((UserFlashcardProgress.learned_date == self._get_midnight_timestamp(current_ts, DEFAULT_TIMEZONE_OFFSET), 1))).label('new_cards_today')
+        )
+        if start_ts:
+            flashcard_stats_query = flashcard_stats_query.filter(UserFlashcardProgress.last_reviewed >= start_ts)
+        
+        flashcard_stats_query = flashcard_stats_query.group_by(UserFlashcardProgress.user_id)
+        flashcard_stats_map = {row.user_id: row for row in flashcard_stats_query.all()}
+
+        # Truy vấn riêng cho các chỉ số Quiz (số câu trả lời)
+        quiz_stats_query = db.session.query(
+            UserQuizProgress.user_id,
+            func.count(UserQuizProgress.progress_id).label('total_quiz_answers')
+        )
+        if start_ts:
+            quiz_stats_query = quiz_stats_query.filter(UserQuizProgress.last_answered >= start_ts)
+        
+        quiz_stats_query = quiz_stats_query.group_by(UserQuizProgress.user_id)
+        quiz_stats_map = {row.user_id: row for row in quiz_stats_query.all()}
+
+
+        leaderboard_data = []
+        for user_id, username, total_score_overall, flashcard_score_period, quiz_score_period in score_results:
+            flashcard_stats = flashcard_stats_map.get(user_id)
+            quiz_stats = quiz_stats_map.get(user_id)
+
+            total_reviews = flashcard_stats.total_reviews if flashcard_stats else 0
+            learned_cards = flashcard_stats.learned_cards if flashcard_stats else 0
+            new_cards_today = flashcard_stats.new_cards_today if flashcard_stats else 0
+            total_quiz_answers = quiz_stats.total_quiz_answers if quiz_stats else 0
+
+            # Tính toán tổng điểm cho khung thời gian hiện tại
+            current_period_score = (flashcard_score_period if flashcard_score_period else 0) + (quiz_score_period if quiz_score_period else 0)
+
+            leaderboard_data.append({
+                'user_id': user_id,
+                'username': username,
+                'total_score_overall': total_score_overall,
+                'current_period_score': current_period_score,
+                'total_reviews': total_reviews,
+                'learned_cards': learned_cards,
+                'new_cards_today': new_cards_today,
+                'total_quiz_answers': total_quiz_answers
+            })
+        
+        # Sắp xếp lại dữ liệu trong Python sau khi đã có tất cả các chỉ số
+        if sort_by == 'total_score':
+            leaderboard_data.sort(key=lambda x: x['current_period_score'], reverse=True)
+        elif sort_by == 'total_reviews':
+            leaderboard_data.sort(key=lambda x: x['total_reviews'], reverse=True)
+        elif sort_by == 'learned_cards':
+            leaderboard_data.sort(key=lambda x: x['learned_cards'], reverse=True)
+        elif sort_by == 'new_cards':
+            leaderboard_data.sort(key=lambda x: x['new_cards_today'], reverse=True)
+        elif sort_by == 'total_quiz_answers':
+            leaderboard_data.sort(key=lambda x: x['total_quiz_answers'], reverse=True)
+        else:
+            leaderboard_data.sort(key=lambda x: x['current_period_score'], reverse=True) # Mặc định
+
+        # Giới hạn số lượng kết quả
+        leaderboard_data = leaderboard_data[:limit]
+        
+        logger.info(f"{log_prefix} Đã lấy thành công {len(leaderboard_data)} người dùng cho bảng xếp hạng.")
+        return leaderboard_data

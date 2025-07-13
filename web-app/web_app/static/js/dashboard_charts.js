@@ -54,8 +54,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             if (chartInstance) {
-                chartInstance.setDatasetVisibility(datasetIndex, !this.checked);
+                // BẮT ĐẦU SỬA LỖI: Đảm bảo checkbox hoạt động đúng
+                // this.checked là TRUE nếu checkbox được chọn (muốn hiển thị dataset)
+                // this.checked là FALSE nếu checkbox bị bỏ chọn (muốn ẩn dataset)
+                chartInstance.setDatasetVisibility(datasetIndex, this.checked);
                 chartInstance.update();
+                // KẾT THÚC SỬA LỖI
             }
         });
     });
@@ -222,7 +226,13 @@ document.addEventListener('DOMContentLoaded', function () {
         quizSetSelector.addEventListener('change', function () {
             displaySetDetails('quiz', this.value);
         });
-        // Không có current_set_id cho Quiz, nên không cần dispatch Event khi tải trang
+        // BẮT ĐẦU THAY ĐỔI: Tự động chọn bộ quiz đang học
+        const currentQuizSetId = document.querySelector('.set-selector-container[data-type="quiz"]').dataset.currentSetId;
+        if (currentQuizSetId && dashboardData.quiz_sets_stats[currentQuizSetId]) {
+            quizSetSelector.value = currentQuizSetId;
+            quizSetSelector.dispatchEvent(new Event('change'));
+        }
+        // KẾT THÚC THAY ĐỔI
     }
 
 
@@ -269,14 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (type === 'flashcard') {
             apiUrl = `/api/cards_by_category/${setId}/${category}?page=${page}`;
         } else if (type === 'quiz') {
-            // LƯU Ý: Endpoint API này cần được tạo trong web_app/routes/api.py
-            // Hiện tại, nó sẽ không hoạt động nếu chưa có API tương ứng.
-            // Ví dụ: /api/quiz_questions_by_category/<set_id>/<category>?page=<page>
             apiUrl = `/api/quiz_questions_by_category/${setId}/${category}?page=${page}`;
-            // Để tránh lỗi 404 khi API chưa có, có thể tạm thời bỏ qua hoặc hiển thị thông báo.
-            cardListContainer.innerHTML = `<p style="text-align: center;">Chức năng này đang được phát triển cho Quiz.</p>`;
-            paginationContainer.innerHTML = '';
-            return; 
         }
 
         try {
@@ -314,12 +317,12 @@ document.addEventListener('DOMContentLoaded', function () {
             tableHTML = '<table class="card-list-table"><thead><tr><th>Câu hỏi</th><th>Đáp án A</th><th>Đáp án B</th><th>Đáp án C</th><th>Đáp án D</th><th>Đáp án đúng</th></tr></thead><tbody>';
             items.forEach(item => { 
                 tableHTML += `<tr>
-                    <td>${item.question}</td>
-                    <td>${item.option_a}</td>
-                    <td>${item.option_b}</td>
-                    <td>${item.option_c}</td>
-                    <td>${item.option_d}</td>
-                    <td>${item.correct_answer}</td>
+                    <td>${item.question || ''}</td>
+                    <td>${item.option_a || ''}</td>
+                    <td>${item.option_b || ''}</td>
+                    <td>${item.option_c || ''}</td>
+                    <td>${item.option_d || ''}</td>
+                    <td>${item.correct_answer || ''}</td>
                 </tr>`; 
             });
             tableHTML += '</tbody></table>';

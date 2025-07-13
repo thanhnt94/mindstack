@@ -7,22 +7,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const quizAudioPlayer = document.getElementById('quizAudioPlayer');
     const quizJsDataElement = document.getElementById('quizJsData');
 
-    // BẮT ĐẦU THÊM MỚI: Lấy các phần tử điều khiển tùy chỉnh
+    // Lấy các phần tử điều khiển tùy chỉnh
     const customControlsContainer = document.querySelector('.quiz-audio-controls-custom');
     const playPauseBtn = document.getElementById('playPauseBtn');
     const progressBar = document.getElementById('progressBar');
     const progressFill = document.getElementById('progressFill');
-    const currentTimeSpan = document.getElementById('currentTime');
+    // BẮT ĐẦU THÊM MỚI: Thêm lại tham chiếu đến durationTimeSpan
     const durationTimeSpan = document.getElementById('durationTime');
-    const volumeBtn = document.getElementById('volumeBtn');
-    const volumeSlider = document.getElementById('volumeSlider');
-    const noAudioMessage = document.querySelector('.no-audio-message');
     // KẾT THÚC THÊM MỚI
 
     // Chỉ chạy script nếu các phần tử cần thiết tồn tại
     if (!quizAudioPlayer || !quizJsDataElement) {
-        // Nếu không có player hoặc jsData, có thể không có audio, hoặc lỗi HTML
-        // Console log để debug, nhưng không dừng script hoàn toàn nếu chỉ thiếu customControlsContainer
         console.error("Thiếu các phần tử HTML cơ bản (quizAudioPlayer hoặc quizJsDataElement).");
         return;
     }
@@ -30,10 +25,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const questionId = quizJsDataElement.dataset.questionId;
     const questionAudioFile = quizJsDataElement.dataset.questionAudioFile;
 
-    // BẮT ĐẦU THÊM MỚI: Ẩn/hiện custom controls dựa vào questionAudioFile
+    // Chỉ xử lý customControlsContainer nếu có questionAudioFile
     if (questionAudioFile) {
         if (customControlsContainer) customControlsContainer.style.display = 'flex';
-        if (noAudioMessage) noAudioMessage.style.display = 'none';
         
         let audioSrc = '';
         if (questionAudioFile.startsWith('http://') || questionAudioFile.startsWith('https://')) {
@@ -44,26 +38,12 @@ document.addEventListener('DOMContentLoaded', function() {
         quizAudioPlayer.src = audioSrc; // Đặt nguồn âm thanh
         quizAudioPlayer.load(); // Tải âm thanh
         
-        // Tự động phát khi trang tải (với độ trễ nhỏ để trình duyệt sẵn sàng)
-        // Cần xử lý Promise để bắt lỗi chặn autoplay của trình duyệt
-        setTimeout(() => {
-            quizAudioPlayer.play().then(() => {
-                console.log("Audio tự động phát thành công.");
-            }).catch(error => {
-                console.warn("Tự động phát audio bị chặn hoặc lỗi:", error);
-                // Cập nhật icon play nếu không tự động phát được
-                if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            });
-        }, 500);
-
     } else {
         if (customControlsContainer) customControlsContainer.style.display = 'none';
-        if (noAudioMessage) noAudioMessage.style.display = 'block';
         return; // Không có audio thì không cần thiết lập các listener
     }
-    // KẾT THÚC THÊM MỚI
 
-    // BẮT ĐẦU THÊM MỚI: Logic điều khiển tùy chỉnh
+    // Logic điều khiển tùy chỉnh
     if (playPauseBtn) {
         playPauseBtn.addEventListener('click', () => {
             if (quizAudioPlayer.paused) {
@@ -86,19 +66,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     quizAudioPlayer.addEventListener('ended', () => {
         if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-        progressFill.style.width = '0%'; // Reset thanh tiến trình
-        currentTimeSpan.textContent = '0:00'; // Reset thời gian hiện tại
+        if (progressFill) progressFill.style.width = '0%'; // Reset thanh tiến trình
+        // BẮT ĐẦU SỬA ĐỔI: Loại bỏ reset thời gian hiện tại (vì không hiển thị)
+        // if (currentTimeSpan) currentTimeSpan.textContent = '0:00';
+        // KẾT THÚC SỬA ĐỔI
     });
 
     quizAudioPlayer.addEventListener('timeupdate', () => {
-        const progress = (quizAudioPlayer.currentTime / quizAudioPlayer.duration) * 100;
-        progressFill.style.width = `${progress}%`;
-        currentTimeSpan.textContent = formatTime(quizAudioPlayer.currentTime);
+        if (progressFill) {
+            const progress = (quizAudioPlayer.currentTime / quizAudioPlayer.duration) * 100;
+            progressFill.style.width = `${progress}%`;
+        }
+        // BẮT ĐẦU SỬA ĐỔI: Loại bỏ cập nhật thời gian hiện tại (vì không hiển thị)
+        // if (currentTimeSpan) currentTimeSpan.textContent = formatTime(quizAudioPlayer.currentTime);
+        // KẾT THÚC SỬA ĐỔI
     });
 
     quizAudioPlayer.addEventListener('loadedmetadata', () => {
-        durationTimeSpan.textContent = formatTime(quizAudioPlayer.duration);
-        volumeSlider.value = quizAudioPlayer.volume; // Cập nhật slider volume ban đầu
+        // BẮT ĐẦU THÊM MỚI: Cập nhật tổng thời gian
+        if (durationTimeSpan) durationTimeSpan.textContent = formatTime(quizAudioPlayer.duration);
+        // KẾT THÚC THÊM MỚI
+        // BẮT ĐẦU SỬA ĐỔI: Loại bỏ cập nhật slider volume (vì không hiển thị)
+        // if (volumeSlider) volumeSlider.value = quizAudioPlayer.volume;
+        // KẾT THÚC SỬA ĐỔI
     });
 
     if (progressBar) {
@@ -110,39 +100,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (volumeBtn) {
-        volumeBtn.addEventListener('click', () => {
-            if (quizAudioPlayer.muted) {
-                quizAudioPlayer.muted = false;
-                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                volumeSlider.value = quizAudioPlayer.volume; // Khôi phục slider về volume trước khi mute
-            } else {
-                quizAudioPlayer.muted = true;
-                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                volumeSlider.value = 0; // Đặt slider về 0 khi mute
-            }
-        });
-    }
+    // BẮT ĐẦU SỬA ĐỔI: Loại bỏ logic điều khiển âm lượng và thời gian hiện tại
+    // if (volumeBtn) { ... }
+    // if (volumeSlider) { ... }
+    // KẾT THÚC SỬA ĐỔI
 
-    if (volumeSlider) {
-        volumeSlider.addEventListener('input', () => {
-            quizAudioPlayer.volume = volumeSlider.value;
-            if (volumeSlider.value == 0) {
-                quizAudioPlayer.muted = true;
-                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-            } else {
-                quizAudioPlayer.muted = false;
-                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-            }
-        });
-    }
-
-    // Hàm định dạng thời gian (ví dụ: 0:00)
+    // Hàm định dạng thời gian (ví dụ: 0:00) - Giữ lại hàm vì vẫn dùng cho tổng thời gian
     function formatTime(seconds) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = Math.floor(seconds % 60);
         return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
     }
-    // KẾT THÚC THÊM MỚI
 });
-

@@ -88,6 +88,9 @@
     background-color: rgba(255, 255, 255, 0.5);
     padding: 3px 8px;
     border-radius: 10px;
+    /* BẮT ĐẦU THÊM MỚI */
+    white-space: nowrap; /* Ngăn không cho văn bản ngắt dòng */
+    /* KẾT THÚC THÊM MỚI */
 }
 
 /* --- BẮT ĐẦU SỬA: Hợp nhất và dọn dẹp CSS --- */

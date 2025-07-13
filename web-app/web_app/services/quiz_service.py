@@ -7,16 +7,50 @@ import time
 import hashlib # Import hashlib để tạo hash cho đoạn văn
 from sqlalchemy import func
 from ..models import db, QuestionSet, User, QuizQuestion, UserQuizProgress, ScoreLog, QuizPassage # Thêm QuizPassage
-
-# BẮT ĐẦU SỬA LỖI: Đảm bảo tất cả các hằng số cần thiết được import từ config.py
 from ..config import (
     SCORE_QUIZ_CORRECT_FIRST_TIME, SCORE_QUIZ_CORRECT_REPEAT,
     QUIZ_MODE_NEW_SEQUENTIAL, QUIZ_MODE_NEW_RANDOM, QUIZ_MODE_REVIEW
 )
-# Vui lòng đảm bảo các hằng số trên đã được định nghĩa trong web_app/config.py của bạn.
-# KẾT THÚC SỬA LỖI
 
 logger = logging.getLogger(__name__)
+
+# BẮT ĐẦU THÊM MỚI: Hàm sắp xếp tùy chỉnh cho các bộ (được sao chép từ flashcard.py)
+def _sort_sets_by_progress(set_items, total_key, completed_key):
+    """
+    Mô tả: Sắp xếp danh sách các bộ (Flashcard Sets hoặc Question Sets) dựa trên tiến độ hoàn thành.
+           Các bộ có phần trăm hoàn thành cao nhất sẽ được đưa lên đầu.
+           Các bộ đã hoàn thành 100% sẽ được đưa xuống cuối danh sách.
+           Nếu phần trăm hoàn thành bằng nhau, sẽ sắp xếp theo tiêu đề (alphabet).
+
+    Args:
+        set_items (list): Danh sách các đối tượng bộ.
+        total_key (str): Tên thuộc tính chứa tổng số mục trong bộ.
+        completed_key (str): Tên thuộc tính chứa số mục đã hoàn thành.
+
+    Returns:
+        list: Danh sách các bộ đã được sắp xếp.
+    """
+    def custom_sort_key(set_item):
+        total = getattr(set_item, total_key, 0)
+        completed = getattr(set_item, completed_key, 0)
+        title = getattr(set_item, 'title', '')
+
+        if total == 0:
+            # Đặt các bộ không có mục nào xuống cuối cùng
+            return (float('-inf'), title) 
+
+        percentage = (completed * 100 / total)
+
+        if percentage == 100:
+            # Đặt các bộ đã hoàn thành 100% xuống cuối cùng
+            return (0, title) 
+        
+        # Sắp xếp giảm dần theo phần trăm (sử dụng -percentage)
+        # Nếu phần trăm bằng nhau, sắp xếp tăng dần theo title
+        return (-percentage, title)
+
+    return sorted(set_items, key=custom_sort_key)
+# KẾT THÚC THÊM MỚI
 
 class QuizService:
     """
@@ -40,7 +74,7 @@ class QuizService:
             
             started_set_ids = {row[0] for row in started_set_ids_query.all()}
             
-            started_sets = []
+            started_sets_raw = []
             if started_set_ids:
                 total_questions_map = dict(db.session.query(
                     QuizQuestion.set_id, func.count(QuizQuestion.question_id)
@@ -58,15 +92,24 @@ class QuizService:
                     s.total_questions = total_questions_map.get(s.set_id, 0)
                     s.answered_questions = answered_questions_map.get(s.set_id, 0)
                     s.creator_username = s.creator.username if s.creator else "N/A"
-                    started_sets.append(s)
+                    started_sets_raw.append(s)
 
+            # BẮT ĐẦU THAY ĐỔI: Sắp xếp tùy chỉnh cho các bộ đã bắt đầu
+            # Sử dụng hàm _sort_sets_by_progress đã định nghĩa ở trên
+            started_sets = _sort_sets_by_progress(started_sets_raw, 
+                                                total_key='total_questions', 
+                                                completed_key='answered_questions')
+            # KẾT THÚC THAY ĐỔI
+
+            # BẮT ĐẦU THAY ĐỔI: Sắp xếp bộ mới theo alphabet
             new_sets_query = QuestionSet.query.filter(
                 QuestionSet.is_public == True,
                 ~QuestionSet.set_id.in_(started_set_ids)
-            ).order_by(QuestionSet.title)
+            ).order_by(QuestionSet.title.asc()) # Sắp xếp theo alphabet
             new_sets = new_sets_query.all()
             for s in new_sets:
                  s.creator_username = s.creator.username if s.creator else "N/A"
+            # KẾT THÚC THAY ĐỔI
 
             logger.info(f"{log_prefix} Tìm thấy {len(started_sets)} bộ đã bắt đầu và {len(new_sets)} bộ mới.")
             return started_sets, new_sets
@@ -287,7 +330,6 @@ class QuizService:
             question.option_c = data.get('option_c') or None
             question.option_d = data.get('option_d') or None
             # KẾT THÚC SỬA
-
             question.correct_answer = data.get('correct_answer', question.correct_answer).upper()
             question.guidance = data.get('guidance') or None # SỬA: guidance cũng có thể là None
             

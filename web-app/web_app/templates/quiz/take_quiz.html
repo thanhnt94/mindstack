@@ -51,30 +51,26 @@
                     </div>
                 {% endif %}
 
-                {# BẮT ĐẦU SỬA: Thay thế nút phát audio bằng thẻ audio và custom controls #}
+                {# BẮT ĐẦU SỬA ĐỔI: Kiểm tra chặt chẽ hơn question.question_audio_file #}
+                {% if question.question_audio_file and question.question_audio_file.strip() %}
                 <div class="question-audio-controls">
                     <audio id="quizAudioPlayer" class="audio-player-hidden"></audio> {# Thẻ audio ẩn #}
-                    {% if question.question_audio_file %}
-                        <div class="quiz-audio-controls-custom">
-                            <button type="button" id="playPauseBtn" class="play-pause-btn" aria-label="Play/Pause">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            <div class="progress-container">
-                                <div id="progressBar" class="progress-bar">
-                                    <div id="progressFill" class="progress-fill"></div>
-                                </div>
-                                <span id="currentTime" class="time-display">0:00</span> / <span id="durationTime" class="time-display">0:00</span>
+                    <div class="quiz-audio-controls-custom">
+                        <button type="button" id="playPauseBtn" class="play-pause-btn" aria-label="Play/Pause">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="progress-container">
+                            <div id="progressBar" class="progress-bar">
+                                <div id="progressFill" class="progress-fill"></div>
                             </div>
-                            <button type="button" id="volumeBtn" class="volume-btn" aria-label="Volume">
-                                <i class="fas fa-volume-up"></i>
-                            </button>
-                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume slider">
+                            {# BẮT ĐẦU THÊM MỚI: Hiển thị tổng thời gian #}
+                            <span id="durationTime" class="time-display">0:00</span>
+                            {# KẾT THÚC THÊM MỚI #}
                         </div>
-                    {% else %}
-                        <p class="no-audio-message">Không có audio cho câu hỏi này.</p>
-                    {% endif %}
+                    </div>
                 </div>
-                {# KẾT THÚC SỬA #}
+                {% endif %}
+                {# KẾT THÚC SỬA ĐỔI #}
             </div>
 
             <div class="options-grid" id="options-grid">
@@ -133,10 +129,10 @@
             <!-- Nút điều khiển -->
             <div class="quiz-controls">
                 <button type="submit" id="check-answer-btn" class="button primary">
-                    <i class="fas fa-check"></i> Kiểm tra
+                    Kiểm tra
                 </button>
                 <a href="{{ url_for('quiz.take_set', set_id=question.set_id) }}" id="next-question-btn" class="button success" style="display: none;">
-                    Tiếp theo <i class="fas fa-arrow-right"></i>
+                    Tiếp theo
                 </a>
             </div>
         </form>
@@ -201,9 +197,6 @@
 </div>
 {% endif %}
 
-{# BẮT ĐẦU SỬA: Loại bỏ thẻ audio ẩn cũ vì đã có thẻ audio hiển thị #}
-{# <audio id="quizAudioPlayer" hidden></audio> #}
-{# KẾT THÚC SỬA #}
 <div id="quizJsData"
      data-question-id="{{ question.question_id }}"
      data-question-audio-file="{{ question.question_audio_file or '' }}"

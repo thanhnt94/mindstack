@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, session,
 import logging
 import io
 from ..services import user_service, set_service, stats_service, quiz_service
-from ..models import db, User
+from ..models import db, User, UserFlashcardProgress # Import UserFlashcardProgress
 from .decorators import admin_required
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -21,7 +21,26 @@ def dashboard():
     if not admin_stats:
         flash("Không thể tải dữ liệu cho Admin Dashboard.", "error")
         admin_stats = {}
-    return render_template('admin/dashboard.html', stats=admin_stats)
+
+    # BẮT ĐẦU THÊM MỚI: Lấy dữ liệu bảng xếp hạng
+    # Lấy tham số sort_by và timeframe từ request, mặc định là 'total_score' và 'all_time'
+    sort_by = request.args.get('sort_by', 'total_score')
+    timeframe = request.args.get('timeframe', 'all_time')
+    
+    leaderboard_data = stats_service.get_user_leaderboard_data(
+        sort_by=sort_by,
+        timeframe=timeframe,
+        limit=10 # Giới hạn 10 người dùng hàng đầu
+    )
+    # KẾT THÚC THÊM MỚI
+
+    return render_template(
+        'admin/dashboard.html', 
+        stats=admin_stats, 
+        leaderboard_data=leaderboard_data,
+        current_sort_by=sort_by, # Truyền tham số hiện tại để giữ trạng thái trên UI
+        current_timeframe=timeframe
+    )
 
 @admin_bp.route('/users')
 @admin_required

@@ -11,6 +11,69 @@ from .decorators import login_required
 flashcard_bp = Blueprint('flashcard', __name__)
 logger = logging.getLogger(__name__)
 
+# BẮT ĐẦU THÊM MỚI: Lớp CustomPagination để phân trang thủ công
+class CustomPagination:
+    def __init__(self, page, per_page, total, items):
+        self.page = page
+        self.per_page = per_page
+        self.total = total
+        self.items = items
+        self.pages = (total + per_page - 1) // per_page
+        self.has_prev = page > 1
+        self.has_next = page < self.pages
+        self.prev_num = page - 1
+        self.next_num = page + 1
+    
+    def iter_pages(self, left_edge=1, right_edge=1, left_current=1, right_current=2):
+        last_page = 0
+        for num in range(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last_page + 1 != num:
+                    yield None
+                yield num
+                last_page = num
+# KẾT THÚC THÊM MỚI
+
+# BẮT ĐẦU THÊM MỚI: Hàm sắp xếp tùy chỉnh cho các bộ
+def _sort_sets_by_progress(set_items, total_key, completed_key):
+    """
+    Mô tả: Sắp xếp danh sách các bộ (Flashcard Sets hoặc Question Sets) dựa trên tiến độ hoàn thành.
+           Các bộ có phần trăm hoàn thành cao nhất sẽ được đưa lên đầu.
+           Các bộ đã hoàn thành 100% sẽ được đưa xuống cuối danh sách.
+           Nếu phần trăm hoàn thành bằng nhau, sẽ sắp xếp theo tiêu đề (alphabet).
+
+    Args:
+        set_items (list): Danh sách các đối tượng bộ.
+        total_key (str): Tên thuộc tính chứa tổng số mục trong bộ.
+        completed_key (str): Tên thuộc tính chứa số mục đã hoàn thành.
+
+    Returns:
+        list: Danh sách các bộ đã được sắp xếp.
+    """
+    def custom_sort_key(set_item):
+        total = getattr(set_item, total_key, 0)
+        completed = getattr(set_item, completed_key, 0)
+        title = getattr(set_item, 'title', '')
+
+        if total == 0:
+            # Đặt các bộ không có mục nào xuống cuối cùng
+            return (float('-inf'), title) 
+
+        percentage = (completed * 100 / total)
+
+        if percentage == 100:
+            # Đặt các bộ đã hoàn thành 100% xuống cuối cùng
+            return (0, title) 
+        
+        # Sắp xếp giảm dần theo phần trăm (sử dụng -percentage)
+        # Nếu phần trăm bằng nhau, sắp xếp tăng dần theo title
+        return (-percentage, title)
+
+    return sorted(set_items, key=custom_sort_key)
+# KẾT THÚC THÊM MỚI
+
 def _serialize_flashcard(flashcard_obj):
     """
     Mô tả: Chuyển đổi đối tượng flashcard thành một dictionary để sử dụng trong JSON.
@@ -48,12 +111,11 @@ def index():
         .distinct()
     progressed_set_ids = {row[0] for row in progressed_set_ids_query.all()}
 
-    started_sets_query = VocabularySet.query.filter(VocabularySet.set_id.in_(progressed_set_ids))\
-        .order_by(VocabularySet.title)
-    started_sets_pagination = started_sets_query.paginate(page=page_started, per_page=SETS_PER_PAGE, error_out=False)
+    started_sets_raw = VocabularySet.query.filter(VocabularySet.set_id.in_(progressed_set_ids)).all()
 
-    if started_sets_pagination.items:
-        set_ids = [s.set_id for s in started_sets_pagination.items]
+    started_sets_with_progress = []
+    if started_sets_raw:
+        set_ids = [s.set_id for s in started_sets_raw]
         
         total_cards_map = dict(db.session.query(Flashcard.set_id, func.count(Flashcard.flashcard_id))\
             .filter(Flashcard.set_id.in_(set_ids)).group_by(Flashcard.set_id).all())
@@ -62,13 +124,34 @@ def index():
             .join(Flashcard).filter(UserFlashcardProgress.user_id == user_id, Flashcard.set_id.in_(set_ids))\
             .group_by(Flashcard.set_id).all())
 
-        for set_item in started_sets_pagination.items:
+        for set_item in started_sets_raw:
             set_item.total_cards = total_cards_map.get(set_item.set_id, 0)
             set_item.learned_cards = learned_cards_map.get(set_item.set_id, 0)
+            started_sets_with_progress.append(set_item)
 
+    # BẮT ĐẦU SỬA LỖI VÀ TỐI ƯU: Sử dụng hàm sắp xếp chung và tạo đối tượng Pagination thủ công
+    # Sắp xếp tùy chỉnh: Phần trăm cao nhất lên đầu, 100% xuống cuối
+    # Sử dụng hàm _sort_sets_by_progress đã định nghĩa ở trên
+    sorted_started_sets = _sort_sets_by_progress(started_sets_with_progress, 
+                                                total_key='total_cards', 
+                                                completed_key='learned_cards')
+
+    # Phân trang thủ công sau khi sắp xếp
+    total_items_started = len(sorted_started_sets)
+    start_index_started = (page_started - 1) * SETS_PER_PAGE
+    end_index_started = start_index_started + SETS_PER_PAGE
+    paginated_started_sets_items = sorted_started_sets[start_index_started:end_index_started]
+
+    started_sets_pagination = CustomPagination(
+        page_started, SETS_PER_PAGE, total_items_started, paginated_started_sets_items
+    )
+    # KẾT THÚC SỬA LỖI VÀ TỐI ƯU
+
+    # BẮT ĐẦU THAY ĐỔI: Sắp xếp bộ mới theo alphabet
     new_sets_query = VocabularySet.query.filter(VocabularySet.is_public == 1, VocabularySet.set_id.notin_(progressed_set_ids))\
-        .order_by(VocabularySet.title)
+        .order_by(VocabularySet.title.asc()) # Sắp xếp theo alphabet
     new_sets_pagination = new_sets_query.paginate(page=page_new, per_page=SETS_PER_PAGE, error_out=False)
+    # KẾT THÚC THAY ĐỔI
     
     return render_template('flashcard/select_set.html', 
                            user=user, 
@@ -106,10 +189,33 @@ def dashboard():
         return redirect(url_for('flashcard.index'))
     dashboard_data_json = json.dumps(dashboard_data)
     
-    return render_template('dashboard.html', 
-                           dashboard_data=dashboard_data,
-                           dashboard_data_json=dashboard_data_json,
-                           current_set_id=user.current_set_id)
+    # BẮT ĐẦU THAY ĐỔI: Truyền current_question_set_id
+    current_question_set_id = user.current_question_set_id if user else None
+
+    # BẮT ĐẦU THÊM MỚI: Lấy dữ liệu bảng xếp hạng cho dashboard người dùng
+    # Lấy tham số sort_by và timeframe từ request, mặc định là 'total_score' và 'all_time'
+    sort_by = request.args.get('sort_by', 'total_score')
+    timeframe = request.args.get('timeframe', 'all_time')
+    
+    leaderboard_data = stats_service.get_user_leaderboard_data(
+        sort_by=sort_by,
+        timeframe=timeframe,
+        limit=10 # Giới hạn 10 người dùng hàng đầu cho bảng xếp hạng
+    )
+    # KẾT THÚC THÊM MỚI
+
+    return render_template(
+        'dashboard.html', 
+        dashboard_data=dashboard_data,
+        dashboard_data_json=dashboard_data_json,
+        current_set_id=user.current_set_id,
+        current_question_set_id=current_question_set_id,
+        # BẮT ĐẦU THÊM MỚI: Truyền dữ liệu bảng xếp hạng vào template
+        leaderboard_data=leaderboard_data,
+        current_sort_by=sort_by,
+        current_timeframe=timeframe
+        # KẾT THÚC THÊM MỚI
+    )
 
 def _check_edit_permission(user, flashcard_obj):
     """

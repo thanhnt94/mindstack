@@ -3,6 +3,28 @@
  * Mô tả: Chứa các kiểu CSS chung nhất cho toàn bộ ứng dụng Flashcard Web App.
  */
 
+/* BẮT ĐẦU THÊM MỚI */
+:root {
+    /*
+     * Định nghĩa kích thước font cơ bản cho toàn bộ ứng dụng.
+     * Mặc định là 16px. Các font-size khác nên dùng đơn vị 'rem'
+     * để dễ dàng điều chỉnh tỉ lệ tổng thể.
+     */
+    --base-font-size: 16px;
+}
+
+/*
+ * Điều chỉnh kích thước font cơ bản cho các thiết bị di động.
+ * Bạn có thể thay đổi giá trị '87.5%' để làm font nhỏ/lớn hơn trên mobile.
+ * Ví dụ: 80% để nhỏ hơn nữa, 90% để lớn hơn một chút.
+ */
+@media (max-width: 768px) {
+    :root {
+        --base-font-size: 80%; /* Giảm font chữ trên mobile xuống 87.5% của kích thước gốc */
+    }
+}
+/* KẾT THÚC THÊM MỚI */
+
 html, body {
     height: calc(var(--vh, 1vh) * 100); /* Sử dụng biến CSS --vh để tính chiều cao chính xác */
     width: 100%;
@@ -17,6 +39,9 @@ body {
     display: flex; /* Bật Flexbox cho body */
     flex-direction: column; /* Xếp các phần tử con theo cột */
     min-height: calc(var(--vh, 1vh) * 100); /* Đảm bảo body chiếm ít nhất toàn bộ chiều cao viewport */
+    /* BẮT ĐẦU THÊM MỚI */
+    font-size: var(--base-font-size); /* Áp dụng biến font size cơ bản cho body */
+    /* KẾT THÚC THÊM MỚI */
 }
 
 .page-wrapper {

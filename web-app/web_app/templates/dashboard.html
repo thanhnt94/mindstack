@@ -7,9 +7,111 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <h1 class="dashboard-header"><i class="fas fa-chart-pie"></i> Bảng điều khiển Thống kê</h1>
+    <h1 class="dashboard-header"><i class="fas fa-chart-pie"></i> Thống kê</h1>
 
-    {# BẮT ĐẦU THÊM MỚI: Container cho 2 cột #}
+    {# Lịch sử hoạt động #}
+    <div class="stats-section">
+        <h2 class="section-title">Lịch sử hoạt động</h2>
+        <div id="heatmap-container" class="heatmap-container"></div>
+        <div class="heatmap-legend">
+            <span>Ít</span>
+            <div class="legend-color-box" data-level="1"></div>
+            <div class="legend-color-box" data-level="2"></div>
+            <div class="legend-color-box" data-level="3"></div>
+            <div class="legend-color-box" data-level="4"></div>
+            <span>Nhiều</span>
+        </div>
+    </div>
+
+    {# BẮT ĐẦU SỬA ĐỔI: Phần Bảng xếp hạng Người dùng - Thay thế bảng bằng danh sách gọn gàng hơn #}
+    <div class="stats-section leaderboard-section">
+        <h2 class="section-title"><i class="fas fa-trophy"></i> Bảng xếp hạng Người dùng</h2>
+        <div class="leaderboard-controls">
+            {# Form này sẽ gửi lại request GET đến cùng URL, cập nhật các tham số sort_by và timeframe #}
+            <form id="leaderboard-filter-form" method="GET" action="{{ url_for('flashcard.dashboard') }}">
+                <div class="form-group">
+                    <label for="sort_by">Sắp xếp theo:</label>
+                    <select id="sort_by" name="sort_by" class="form-control" onchange="document.getElementById('leaderboard-filter-form').submit();">
+                        <option value="total_score" {% if current_sort_by == 'total_score' %}selected{% endif %}>Tổng điểm (trong kỳ)</option>
+                        <option value="total_reviews" {% if current_sort_by == 'total_reviews' %}selected{% endif %}>Số lượt ôn tập (Flashcard)</option>
+                        <option value="learned_cards" {% if current_sort_by == 'learned_cards' %}selected{% endif %}>Số thẻ đã học (Flashcard)</option>
+                        <option value="new_cards" {% if current_sort_by == 'new_cards' %}selected{% endif %}>Số thẻ học mới (Flashcard)</option>
+                        <option value="total_quiz_answers" {% if current_sort_by == 'total_quiz_answers' %}selected{% endif %}>Số câu trả lời (Trắc nghiệm)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="timeframe">Khung thời gian:</label>
+                    <select id="timeframe" name="timeframe" class="form-control" onchange="document.getElementById('leaderboard-filter-form').submit();">
+                        <option value="day" {% if current_timeframe == 'day' %}selected{% endif %}>Hôm nay</option>
+                        <option value="week" {% if current_timeframe == 'week' %}selected{% endif %}>Tuần này</option>
+                        <option value="month" {% if current_timeframe == 'month' %}selected{% endif %}>Tháng này</option>
+                        <option value="all_time" {% if current_timeframe == 'all_time' %}selected{% endif %}>Toàn bộ</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        {% if leaderboard_data %}
+            <ul class="leaderboard-list">
+                {% for entry in leaderboard_data %}
+                    {# Lấy giá trị hiển thị dựa trên tiêu chí sắp xếp hiện tại #}
+                    {% set display_value = 0 %}
+                    {% if current_sort_by == 'total_score' %}
+                        {% set display_value = entry.current_period_score %}
+                    {% elif current_sort_by == 'total_reviews' %}
+                        {% set display_value = entry.total_reviews %}
+                    {% elif current_sort_by == 'learned_cards' %}
+                        {% set display_value = entry.learned_cards %}
+                    {% elif current_sort_by == 'new_cards' %}
+                        {% set display_value = entry.new_cards_today %}
+                    {% elif current_sort_by == 'total_quiz_answers' %}
+                        {% set display_value = entry.total_quiz_answers %}
+                    {% endif %}
+
+                    {# Chỉ hiển thị nếu giá trị lớn hơn 0 hoặc là người dùng có điểm tổng thể (cho trường hợp 'all_time' và 'total_score') #}
+                    {% if display_value > 0 or (current_sort_by == 'total_score' and current_timeframe == 'all_time' and entry.total_score_overall > 0) %}
+                        <li class="leaderboard-item">
+                            {# BẮT ĐẦU THAY ĐỔI: Hiển thị biểu tượng cho top 3, còn lại là số #}
+                            <span class="rank">
+                                {% if loop.index == 1 %}
+                                    <i class="fas fa-medal gold-medal"></i>
+                                {% elif loop.index == 2 %}
+                                    <i class="fas fa-medal silver-medal"></i>
+                                {% elif loop.index == 3 %}
+                                    <i class="fas fa-medal bronze-medal"></i>
+                                {% else %}
+                                    {{ loop.index }}
+                                {% endif %}
+                            </span>
+                            {# KẾT THÚC THAY ĐỔI #}
+                            <span class="username">{{ entry.username or 'N/A' }}</span>
+                            <span class="score-value">
+                                {% if current_sort_by == 'total_score' %}
+                                    {{ display_value }} điểm
+                                {% elif current_sort_by == 'total_reviews' %}
+                                    {{ display_value }} lượt
+                                {% elif current_sort_by == 'learned_cards' %}
+                                    {{ display_value }} thẻ
+                                {% elif current_sort_by == 'new_cards' %}
+                                    {{ display_value }} thẻ
+                                {% elif current_sort_by == 'total_quiz_answers' %}
+                                    {{ display_value }} câu
+                                {% endif %}
+                            </span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            {% if not leaderboard_data %}
+                <p class="empty-message">Không có dữ liệu bảng xếp hạng để hiển thị.</p>
+            {% endif %}
+        {% else %}
+            <p class="empty-message">Không có dữ liệu bảng xếp hạng để hiển thị.</p>
+        {% endif %}
+    </div>
+    {# KẾT THÚC SỬA ĐỔI #}
+
+    {# Container cho 2 cột Flashcard và Quiz #}
     <div class="stats-two-column-grid">
         {# Cột Flashcard #}
         <div class="stats-column flashcard-stats-column">
@@ -112,7 +214,7 @@
             <div class="stats-section">
                 <h2 class="section-title">Chi tiết theo bộ Trắc nghiệm</h2>
                 {% if dashboard_data.quiz_sets_stats %}
-                    <div class="set-selector-container" data-type="quiz">
+                    <div class="set-selector-container" data-type="quiz" data-current-set-id="{{ current_question_set_id or '' }}">
                         <label for="quizSetSelector">Chọn một bộ để xem chi tiết:</label>
                         <select id="quizSetSelector" class="form-control">
                             <option value="">-- Chọn bộ câu hỏi --</option>
@@ -128,22 +230,6 @@
             </div>
         </div>
     </div>
-    {# KẾT THÚC THÊM MỚI #}
-
-    {# Lịch Nhiệt Hoạt Động (chung cho cả 2) #}
-    <div class="stats-section">
-        <h2 class="section-title">Lịch sử hoạt động</h2>
-        <div id="heatmap-container" class="heatmap-container"></div>
-        <div class="heatmap-legend">
-            <span>Ít</span>
-            <div class="legend-color-box" data-level="1"></div>
-            <div class="legend-color-box" data-level="2"></div>
-            <div class="legend-color-box" data-level="3"></div>
-            <div class="legend-color-box" data-level="4"></div>
-            <span>Nhiều</span>
-        </div>
-    </div>
-
 </div>
 
 {# Modal danh sách thẻ/câu hỏi (dùng chung) #}
