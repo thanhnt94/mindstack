@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Flashcard App{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {% block head_extra %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/viewport_height_fix.js') }}"></script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
     
@@ -17,7 +17,6 @@
         {% include 'includes/navbar.html' %}
     {% endblock %}
 
-    {# --- BẮT ĐẦU THAY ĐỔI: Thêm page-wrapper --- #}
     <div class="page-wrapper">
         {# Flash messages sẽ được include từ file riêng #}
         {% include 'includes/flashes.html' %}
@@ -25,10 +24,14 @@
         {# Nội dung chính của trang sẽ nằm trong block này #}
         {% block content %}{% endblock %}
 
-        {# Footer sẽ được include từ file riêng #}
-        {% include 'includes/footer.html' %}
+        {# BẮT ĐẦU SỬA ĐỔI: DI CHUYỂN FOOTER RA NGOÀI PAGE-WRAPPER #}
+        {# Footer sẽ được include từ file riêng, nhưng không còn trong page-wrapper nữa #}
+        {# <footer class="main-footer">...</footer> #}
+        {# KẾT THÚC SỬA ĐỔI #}
     </div>
-    {# --- KẾT THÚC THAY ĐỔI --- #}
+    {# BẮT ĐẦU THÊM MỚI: FOOTER HIỆN TẠI LÀ CON TRỰC TIẾP CỦA BODY #}
+    {% include 'includes/footer.html' %}
+    {# KẾT THÚC THÊM MỚI #}
 
     <script src="{{ url_for('static', filename='js/navbar_handler.js') }}"></script>
     {% block scripts_extra %}{% endblock %}

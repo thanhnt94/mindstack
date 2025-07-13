@@ -4,7 +4,9 @@
  */
 
 html, body {
-    height: 100%;
+    /* BẮT ĐẦU SỬA ĐỔI: Sử dụng biến CSS --vh */
+    height: calc(var(--vh, 1vh) * 100);
+    /* KẾT THÚC SỬA ĐỔI */
     width: 100%;
     margin: 0;
     padding: 0;
@@ -16,7 +18,9 @@ body {
     color: #333;
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Đảm bảo body chiếm ít nhất toàn bộ chiều cao viewport */
+    /* BẮT ĐẦU SỬA ĐỔI: Sử dụng biến CSS --vh, bỏ min-height: 100vh */
+    /* Thay thế min-height: 100vh bằng height: calc(var(--vh, 1vh) * 100) đã áp dụng ở html, body */
+    /* KẾT THÚC SỬA ĐỔI */
 }
 
 .page-wrapper {
@@ -38,10 +42,13 @@ body.no-scroll {
 
 /* SỬA: Đảm bảo page-wrapper trên trang học chiếm toàn bộ chiều cao viewport */
 body.learn-page .page-wrapper {
-    height: 100vh;
+    /* BẮT ĐẦU SỬA ĐỔI: Sử dụng biến CSS --vh */
+    height: calc(var(--vh, 1vh) * 100);
+    /* KẾT THÚC SỬA ĐỔI */
+    display: flex; /* Đảm bảo là flex container để quản lý chiều cao con */
+    flex-direction: column;
 }
 
 * {
     box-sizing: border-box;
 }
-

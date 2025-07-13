@@ -17,6 +17,9 @@
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
     overflow: hidden; /* Đặt overflow hidden để tránh scrollbar không mong muốn từ nội dung */
+    /* BẮT ĐẦU THÊM MỚI: Thêm min-height: 0 để cho phép co lại trong flex container */
+    min-height: 0; 
+    /* KẾT THÚC THÊM MỚI */
 }
 
 /* ========================== CỘT TRÁI - PANEL HÌNH ẢNH (DESKTOP) ========================== */
@@ -40,10 +43,8 @@
 /* ========================== POPUP HÌNH ẢNH (MOBILE) ========================== */
 .image-popup-container {
     width: 100%;
-    /* BẮT ĐẦU SỬA: Thay đổi cách quản lý chiều cao và loại bỏ position absolute */
     max-height: 33.33vh; /* Giữ giới hạn chiều cao tối đa */
     flex-shrink: 0; /* Đảm bảo nó không bị co lại */
-    /* KẾT THÚC SỬA */
     background-color: #f8f9fa;
     display: flex; /* Mặc định là flex để nó chiếm không gian */
     flex-direction: column;
@@ -51,7 +52,9 @@
     border-top: 1px solid #e0e0e0;
     position: relative; /* Giữ relative để nút đóng có thể position absolute bên trong */
     z-index: 90; /* Đảm bảo nó nằm dưới footer */
-    /* padding-bottom: 20px; */ /* Không cần padding bottom ở đây, sẽ dùng margin trong JS nếu cần */
+    top: auto; /* Hủy bỏ giá trị top tuyệt đối nếu có */
+    left: auto; /* Hủy bỏ giá trị left tuyệt đối nếu có */
+    transform: none; /* Hủy bỏ transform tuyệt đối nếu có */
 }
 
 .image-popup-container.hidden { 
@@ -154,6 +157,7 @@
     justify-content: center;
     align-items: center;
     min-height: 0; /* Quan trọng: Cho phép nó co lại */
+    overflow-y: auto; /* Cho phép cuộn nội dung nếu tràn */
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 .scrollable-card-content { width: 100%; max-height: 100%; overflow-y: auto; }
@@ -344,9 +348,13 @@
 @media (max-width: 768px) {
     .flashcard {
         height: 100%;
-        min-height: 0;
+        min-height: 0; /* BẮT ĐẦU THÊM MỚI */
         border-radius: 0;
         box-shadow: none;
+        /* BẮT ĐẦU THÊM MỚI */
+        flex-basis: auto; 
+        flex-grow: 1; /* Cho phép nó chiếm hết không gian */
+        /* KẾT THÚC THÊM MỚI */
     }
     .flashcard-header, .flashcard-body, .flashcard-footer { padding: 15px; }
     .card-text { font-size: 2.2em; }
