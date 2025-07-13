@@ -111,10 +111,8 @@ class StatsService:
             'quiz_score': 0,
             'questions_answered_count': 0,
             'quiz_sets_started_count': 0,
-            # BẮT ĐẦU THÊM MỚI: Khởi tạo các trường cho thống kê Quiz chi tiết và biểu đồ
             'quiz_activity_chart_data': {},
             'quiz_sets_stats': {}
-            # KẾT THÚC THÊM MỚI
         }
 
         # --- Thống kê Flashcard ---
@@ -161,15 +159,13 @@ class StatsService:
             .all()
         
         flashcard_score_gained_by_day = defaultdict(int)
-        quiz_score_gained_by_day = defaultdict(int) # BẮT ĐẦU THÊM MỚI: Dành cho điểm Quiz
+        quiz_score_gained_by_day = defaultdict(int)
         for log in score_logs_last_30_days:
             log_date = datetime.fromtimestamp(log.timestamp, tz).strftime('%d/%m')
             if log.source_type == 'flashcard':
                 flashcard_score_gained_by_day[log_date] += log.score_change
-            # BẮT ĐẦU THÊM MỚI: Phân loại điểm Quiz
             elif log.source_type == 'quiz':
                 quiz_score_gained_by_day[log_date] += log.score_change
-            # KẾT THÚC THÊM MỚI
 
         chart_labels = [(today - timedelta(days=i)).strftime('%d/%m') for i in range(29, -1, -1)]
         review_actions_data = [review_actions_by_day.get(label, 0) for label in chart_labels]
@@ -182,7 +178,7 @@ class StatsService:
             'datasets': [
                 {'label': 'Số lần ôn tập', 'data': review_actions_data},
                 {'label': 'Số thẻ ôn tập', 'data': distinct_cards_data},
-                {'label': 'Số thẻ học mới', 'data': new_cards_chart_data},
+                {'label': 'Số thẻ học mới', 'data': new_card_activity_by_day}, # Changed to new_card_activity_by_day
                 {'label': 'Điểm đạt được (Flashcard)', 'data': flashcard_score_chart_data}
             ]
         }
@@ -226,7 +222,7 @@ class StatsService:
                 }
             }
 
-        # --- BẮT ĐẦU THÊM MỚI: Thống kê Quiz ---
+        # --- Thống kê Quiz ---
         # Tổng điểm Quiz
         stats['quiz_score'] = db.session.query(db.func.sum(ScoreLog.score_change))\
             .filter(ScoreLog.user_id == user_id, ScoreLog.source_type == 'quiz').scalar() or 0
@@ -290,7 +286,44 @@ class StatsService:
                     'unanswered': total_questions - answered_questions # Số câu chưa trả lời
                 }
             }
-        # KẾT THÚC THÊM MỚI
         
         logger.info(f"{log_prefix} Tổng hợp dữ liệu thành công.")
+        return stats
+
+    def get_user_stats_for_context(self, user_id, set_id=None):
+        """
+        Mô tả: Lấy các số liệu thống kê cơ bản của người dùng để hiển thị trong panel ngữ cảnh
+               trên trang học thẻ.
+        Args:
+            user_id (int): ID của người dùng.
+            set_id (int, optional): ID của bộ thẻ hiện tại. Mặc định là None.
+        Returns:
+            dict: Một dictionary chứa các số liệu thống kê tóm tắt.
+        """
+        stats = {
+            'total_score': 0, 'learned_distinct_overall': 0, 'due_overall': 0,
+            'learned_sets_count': 0, 'set_title': 'N/A', 'set_total_cards': 0,
+            'set_learned_cards': 0, 'set_due_cards': 0, 'current_mode_display': 'N/A'
+        }
+        user = User.query.get(user_id)
+        if not user:
+            logger.warning(f"[GET_CONTEXT_STATS] User {user_id} not found.")
+            return stats
+        
+        stats['total_score'] = user.score
+        stats['current_mode_display'] = LEARNING_MODE_DISPLAY_NAMES.get(user.current_mode, user.current_mode)
+        current_ts = self._get_current_unix_timestamp(user.timezone_offset)
+        overall_progress = UserFlashcardProgress.query.filter_by(user_id=user_id)
+        stats['learned_distinct_overall'] = overall_progress.filter(UserFlashcardProgress.learned_date.isnot(None)).distinct(UserFlashcardProgress.flashcard_id).count()
+        stats['due_overall'] = overall_progress.filter(UserFlashcardProgress.due_time.isnot(None), UserFlashcardProgress.due_time <= current_ts).count()
+        stats['learned_sets_count'] = db.session.query(Flashcard.set_id).join(UserFlashcardProgress).filter(UserFlashcardProgress.user_id == user_id).distinct().count()
+
+        if set_id:
+            current_set = VocabularySet.query.get(set_id)
+            if current_set:
+                stats['set_title'] = current_set.title
+                stats['set_total_cards'] = db.session.query(Flashcard).filter(Flashcard.set_id == set_id).count()
+                stats['set_learned_cards'] = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id, UserFlashcardProgress.learned_date.isnot(None)).count()
+                stats['set_due_cards'] = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id, UserFlashcardProgress.due_time.isnot(None), UserFlashcardProgress.due_time <= current_ts).count()
+        
         return stats

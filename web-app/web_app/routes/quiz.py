@@ -50,11 +50,9 @@ def take_set(set_id):
         flash("Chúc mừng! Bạn đã hoàn thành tất cả câu hỏi trong chế độ này.", "success")
         return redirect(url_for('quiz.index'))
 
-    # --- BẮT ĐẦU SỬA ĐỔI: Thêm logic kiểm tra quyền và ghi chú ---
     can_edit = _check_quiz_edit_permission(user, question)
     note = quiz_note_service.get_note_by_question_id(user_id, question.question_id)
     has_note = note is not None
-    # --- KẾT THÚC SỬA ĐỔI ---
 
     total_questions = len(question.question_set.questions)
     answered_count = UserQuizProgress.query.join(QuizQuestion).filter(
@@ -67,13 +65,40 @@ def take_set(set_id):
         'total': total_questions
     }
     
+    # BẮT ĐẦU THÊM MỚI: Lấy nội dung đoạn văn nếu câu hỏi thuộc nhóm đoạn văn
+    passage_content_to_display = None
+    if question.passage_group_id:
+        if question.is_passage_main_question:
+            # Nếu đây là câu hỏi chính của đoạn văn, lấy nội dung từ chính nó
+            passage_content_to_display = question.passage_content
+            logger.debug(f"{log_prefix} Câu hỏi ID: {question.question_id} là câu hỏi chính của đoạn văn. Hiển thị passage_content từ nó.")
+        else:
+            # Nếu là câu hỏi con, tìm câu hỏi chính trong cùng nhóm để lấy đoạn văn
+            main_passage_question = QuizQuestion.query.filter_by(
+                set_id=set_id,
+                passage_group_id=question.passage_group_id,
+                is_passage_main_question=True
+            ).first()
+            if main_passage_question:
+                passage_content_to_display = main_passage_question.passage_content
+                logger.debug(f"{log_prefix} Câu hỏi ID: {question.question_id} là câu hỏi con. Lấy passage_content từ câu hỏi chính ID: {main_passage_question.question_id}.")
+            else:
+                logger.warning(f"{log_prefix} Câu hỏi ID: {question.question_id} có passage_group_id nhưng không tìm thấy câu hỏi chính của đoạn văn.")
+    # KẾT THÚC THÊM MỚI
+
     logger.info(f"{log_prefix} Hiển thị câu hỏi ID: {question.question_id} ở chế độ '{current_mode}'")
     return render_template('quiz/take_quiz.html', 
                            question=question, 
                            progress=progress, 
                            current_mode_display=QUIZ_MODE_DISPLAY_NAMES.get(current_mode, "Không rõ"),
                            can_edit=can_edit,
-                           has_note=has_note)
+                           has_note=has_note,
+                           # BẮT ĐẦU THÊM MỚI: Truyền dữ liệu đoạn văn đến template
+                           passage_content=passage_content_to_display,
+                           is_passage_main_question=question.is_passage_main_question,
+                           passage_group_id=question.passage_group_id
+                           # KẾT THÚC THÊM MỚI
+                           )
 
 @quiz_bp.route('/check_answer/<int:question_id>', methods=['POST'])
 @login_required

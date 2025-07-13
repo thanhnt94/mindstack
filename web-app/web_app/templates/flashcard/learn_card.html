@@ -25,9 +25,7 @@
                 <div class="flashcard-header">
                     <div class="header-left">
                         <button id="menu-toggle-btn" class="menu-toggle-btn header-icon-btn" aria-label="Mở menu"><i class="fas fa-bars"></i></button>
-                        {# --- BẮT ĐẦU THAY ĐỔI: Thêm class có điều kiện --- #}
                         <button id="open-note-btn" class="note-button header-icon-btn {% if has_note %}has-note{% endif %}" aria-label="Mở ghi chú"><i class="fas fa-pencil-alt"></i></button>
-                        {# --- KẾT THÚC THAY ĐỔI --- #}
                     </div>
                     <div class="header-center">
                         <p id="card-side-text" class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
@@ -99,16 +97,18 @@
                     </div>
                 </div>
 
+                {# BẮT ĐẦU SỬA: Di chuyển image-popup-container ra khỏi flashcard-body và đặt trước flashcard-footer #}
                 {% if image_to_show %}
-                    <div id="image-popup" class="image-popup-container">
+                    <div id="image-popup" class="image-popup-container {% if not show_image_popup %}hidden{% endif %}"> {# Thêm class 'hidden' nếu không muốn hiển thị ngay #}
                         <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
                         {% if image_to_show.startswith('http://') or image_to_show.startswith('https://') %}
-                            <img src="{{ image_to_show }}" alt="Hình ảnh thẻ">
+                            <img src="{{ image_to_show }}" alt="Hình ảnh thẻ" class="popup-image"> {# Thêm class popup-image #}
                         {% else %}
-                            <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ">
+                            <img src="{{ url_for('api.serve_image', filename=image_to_show) }}" alt="Hình ảnh thẻ" class="popup-image"> {# Thêm class popup-image #}
                         {% endif %}
                     </div>
                 {% endif %}
+                {# KẾT THÚC SỬA #}
 
                 <div class="flashcard-footer">
                     {% if is_autoplay_mode %}
@@ -266,7 +266,8 @@
          data-is-front="{{ 'true' if is_front else 'false' }}"
          data-has-back-audio-content="{{ 'true' if has_back_audio_content else 'false' }}"
          data-audio-url="{{ audio_url or '' }}"
-         data-can-edit="{{ 'true' if can_edit else 'false' }}">
+         data-can-edit="{{ 'true' if can_edit else 'false' }}"
+         data-has-image="{{ 'true' if image_to_show else 'false' }}"> {# BẮT ĐẦU THÊM MỚI: Thêm cờ có ảnh #}
     </div>
 {% endblock %}
 

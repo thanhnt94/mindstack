@@ -162,6 +162,11 @@ class QuizQuestion(db.Model):
     guidance = db.Column(db.Text)
     question_image_file = db.Column(db.String)
     question_audio_file = db.Column(db.String)
+    # BẮT ĐẦU THÊM MỚI: Các trường cho đoạn văn
+    passage_content = db.Column(db.Text, nullable=True) # Nội dung đoạn văn
+    passage_group_id = db.Column(db.Integer, nullable=True) # ID nhóm đoạn văn
+    is_passage_main_question = db.Column(db.Boolean, default=False, nullable=False) # Cờ câu hỏi chính của đoạn văn
+    # KẾT THÚC THÊM MỚI
 
     progresses = db.relationship('UserQuizProgress', backref='question', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('QuizQuestionNote', backref='question', lazy=True, cascade="all, delete-orphan")
@@ -179,9 +184,7 @@ class UserQuizProgress(db.Model):
     last_answered = db.Column(db.Integer)
     times_correct = db.Column(db.Integer, default=0, nullable=False)
     times_incorrect = db.Column(db.Integer, default=0, nullable=False)
-    # --- BẮT ĐẦU THÊM MỚI ---
     correct_streak = db.Column(db.Integer, default=0, nullable=False)
-    # --- KẾT THÚC THÊM MỚI ---
     is_mastered = db.Column(db.Boolean, default=False, nullable=False)
 
     __table_args__ = (db.UniqueConstraint('user_id', 'question_id', name='_user_question_uc'),)

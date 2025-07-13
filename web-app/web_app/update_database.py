@@ -70,7 +70,7 @@ def migrate_existing_tables():
             cursor.execute("UPDATE ScoreLogs SET source_type = 'flashcard' WHERE source_type IS NULL")
             logger.info("Đã thêm và điền dữ liệu cho cột 'source_type' trong ScoreLogs.")
 
-        # --- BẮT ĐẦU THÊM MỚI: Nâng cấp bảng UserQuizProgress ---
+        # Nâng cấp bảng UserQuizProgress
         if 'UserQuizProgress' in tables:
             cursor.execute("PRAGMA table_info(UserQuizProgress)")
             progress_columns = [row[1] for row in cursor.fetchall()]
@@ -80,7 +80,33 @@ def migrate_existing_tables():
                 logger.info("Đã thêm cột 'correct_streak'.")
             else:
                 logger.warning("Cột 'correct_streak' đã tồn tại trong bảng UserQuizProgress.")
-        # --- KẾT THÚC THÊM MỚI ---
+        
+        # BẮT ĐẦU THÊM MỚI: Nâng cấp bảng QuizQuestions
+        if 'QuizQuestions' in tables:
+            cursor.execute("PRAGMA table_info(QuizQuestions)")
+            quiz_question_columns = [row[1] for row in cursor.fetchall()]
+
+            if 'passage_content' not in quiz_question_columns:
+                logger.info("Đang thêm cột 'passage_content' vào bảng QuizQuestions...")
+                cursor.execute("ALTER TABLE QuizQuestions ADD COLUMN passage_content TEXT")
+                logger.info("Đã thêm cột 'passage_content'.")
+            else:
+                logger.warning("Cột 'passage_content' đã tồn tại trong bảng QuizQuestions.")
+
+            if 'passage_group_id' not in quiz_question_columns:
+                logger.info("Đang thêm cột 'passage_group_id' vào bảng QuizQuestions...")
+                cursor.execute("ALTER TABLE QuizQuestions ADD COLUMN passage_group_id INTEGER")
+                logger.info("Đã thêm cột 'passage_group_id'.")
+            else:
+                logger.warning("Cột 'passage_group_id' đã tồn tại trong bảng QuizQuestions.")
+
+            if 'is_passage_main_question' not in quiz_question_columns:
+                logger.info("Đang thêm cột 'is_passage_main_question' vào bảng QuizQuestions...")
+                cursor.execute("ALTER TABLE QuizQuestions ADD COLUMN is_passage_main_question BOOLEAN DEFAULT 0 NOT NULL")
+                logger.info("Đã thêm cột 'is_passage_main_question'.")
+            else:
+                logger.warning("Cột 'is_passage_main_question' đã tồn tại trong bảng QuizQuestions.")
+        # KẾT THÚC THÊM MỚI
 
         conn.commit()
     except Exception as e:

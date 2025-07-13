@@ -63,6 +63,33 @@
     text-align: left;
 }
 
+/* BẮT ĐẦU THÊM MỚI: Kiểu cho đoạn văn */
+.passage-container {
+    background-color: #f8f9fa;
+    border-left: 4px solid #4CAF50; /* Màu xanh lá cây cho đoạn văn */
+    padding: 15px;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.passage-title {
+    font-size: 1.1em;
+    color: #388E3C; /* Màu xanh đậm hơn */
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.passage-content {
+    font-size: 1em;
+    color: #444;
+    line-height: 1.6;
+    white-space: pre-wrap; /* Giữ định dạng xuống dòng và khoảng trắng */
+}
+/* KẾT THÚC THÊM MỚI */
+
+
 .pre-question-text {
     background-color: #f8f9fa;
     border-left: 4px solid #3498db;
@@ -78,6 +105,35 @@
     color: #2c3e50;
     line-height: 1.4;
 }
+
+/* Kiểu cho hình ảnh và audio của câu hỏi */
+.question-image-container {
+    margin: 20px 0;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fcfcfc;
+}
+
+.question-image-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    display: block; /* Loại bỏ khoảng trắng dưới ảnh */
+    margin: 0 auto; /* Căn giữa ảnh */
+}
+
+.question-audio-controls {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.question-audio-controls .button {
+    padding: 10px 20px;
+    font-size: 1em;
+}
+
 
 /* --- Phần lựa chọn đáp án --- */
 .options-grid {
