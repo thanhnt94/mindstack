@@ -2,8 +2,12 @@
 {% block title %}Chỉnh sửa Bộ thẻ - Flashcard Admin{% endblock %}
 {% block content %}
     <div class="container">
-        <h1><i class="fas fa-edit"></i> Chỉnh sửa Bộ thẻ: {{ set_data.title }}</h1>
+        {# BẮT ĐẦU SỬA: Bọc tiêu đề vào admin-panel-header #}
         <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h1><i class="fas fa-edit"></i> Chỉnh sửa Bộ thẻ: {{ set_data.title }}</h1>
+            </div>
+            {# KẾT THÚC SỬA #}
             <form method="POST" action="{{ url_for('admin.edit_set', set_id=set_data.set_id) }}" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="title">Tên bộ thẻ (Title): <span class="required-field">*</span></label>
@@ -34,12 +38,11 @@
                 
                 <div class="button-group">
                     <button type="submit" class="button primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
-                    {# --- BẮT ĐẦU THÊM MỚI: Nút Xuất Excel --- #}
                     <a href="{{ url_for('admin.export_set', set_id=set_data.set_id) }}" class="button success"><i class="fas fa-file-excel"></i> Xuất ra Excel</a>
-                    {# --- KẾT THÚC THÊM MỚI --- #}
                     <a href="{{ url_for('admin.manage_sets') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>
                 </div>
             </form>
         </div>
     </div>
 {% endblock %}
+

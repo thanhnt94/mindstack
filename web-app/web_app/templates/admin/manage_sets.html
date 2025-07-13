@@ -3,11 +3,14 @@
 {% block content %}
     {# BẮT ĐẦU SỬA LỖI: Xóa thẻ div.container bao bọc bên ngoài #}
     <div class="admin-panel">
-        <h1><i class="fas fa-layer-group"></i> Quản lý Bộ thẻ</h1>
-        <div class="button-group" style="margin-bottom: 20px; justify-content: flex-start;">
-            <a href="{{ url_for('admin.manage_users') }}" class="button secondary"><i class="fas fa-users"></i> Quản lý Thành viên</a>
-            <a href="{{ url_for('admin.add_set') }}" class="button primary"><i class="fas fa-plus-circle"></i> Thêm Bộ thẻ mới</a>
+        <div class="admin-panel-header"> {# THÊM MỚI: Bọc header #}
+            <h1><i class="fas fa-layer-group"></i> Quản lý Bộ thẻ</h1>
+            <div class="admin-actions"> {# THÊM MỚI: Bọc các nút hành động #}
+                <a href="{{ url_for('admin.manage_users') }}" class="button secondary"><i class="fas fa-users"></i> Quản lý Thành viên</a>
+                <a href="{{ url_for('admin.add_set') }}" class="button primary"><i class="fas fa-plus-circle"></i> Thêm Bộ thẻ mới</a>
+            </div>
         </div>
+        {# KẾT THÚC SỬA LỖI #}
         {% if sets %}
             <div class="table-responsive">
                 <table class="data-table">
@@ -52,5 +55,5 @@
             <p>Chưa có bộ thẻ nào trong hệ thống.</p>
         {% endif %}
     </div>
-    {# KẾT THÚC SỬA LỖI #}
 {% endblock %}
+
