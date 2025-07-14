@@ -306,7 +306,8 @@ class StatsService:
         stats = {
             'total_score': 0, 'learned_distinct_overall': 0, 'due_overall': 0,
             'learned_sets_count': 0, 'set_title': 'N/A', 'set_total_cards': 0,
-            'set_learned_cards': 0, 'set_due_cards': 0, 'current_mode_display': 'N/A'
+            'set_learned_cards': 0, 'set_due_cards': 0, 'current_mode_display': 'N/A',
+            'set_mastered_cards': 0 # THÊM MỚI: Thêm trường mastered_cards
         }
         user = User.query.get(user_id)
         if not user:
@@ -326,8 +327,14 @@ class StatsService:
             if current_set:
                 stats['set_title'] = current_set.title
                 stats['set_total_cards'] = db.session.query(Flashcard).filter(Flashcard.set_id == set_id).count()
-                stats['set_learned_cards'] = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id, UserFlashcardProgress.learned_date.isnot(None)).count()
-                stats['set_due_cards'] = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id, UserFlashcardProgress.due_time.isnot(None), UserFlashcardProgress.due_time <= current_ts).count()
+                
+                # BẮT ĐẦU SỬA ĐỔI: Tính toán learned_cards và mastered_cards
+                progress_in_set_query = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id)
+                
+                stats['set_learned_cards'] = progress_in_set_query.filter(UserFlashcardProgress.learned_date.isnot(None)).count()
+                stats['set_due_cards'] = progress_in_set_query.filter(UserFlashcardProgress.due_time.isnot(None), UserFlashcardProgress.due_time <= current_ts).count()
+                stats['set_mastered_cards'] = progress_in_set_query.filter(UserFlashcardProgress.correct_streak > 5).count()
+                # KẾT THÚC SỬA ĐỔI
         
         return stats
 
@@ -440,3 +447,4 @@ class StatsService:
         
         logger.info(f"{log_prefix} Đã lấy thành công {len(leaderboard_data)} người dùng cho bảng xếp hạng.")
         return leaderboard_data
+

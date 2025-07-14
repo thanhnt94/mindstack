@@ -5,7 +5,7 @@ import json
 from sqlalchemy import func
 from ..services import learning_logic_service, stats_service, note_service
 from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress
-from ..config import LEARNING_MODE_DISPLAY_NAMES, MODE_AUTOPLAY_REVIEW, SETS_PER_PAGE
+from ..config import LEARNING_MODE_DISPLAY_NAMES, MODE_AUTOPLAY_REVIEW, SETS_PER_PAGE, MODE_NEW_CARDS_ONLY, MODE_SEQUENTIAL_LEARNING, MODE_REVIEW_ALL_DUE, MODE_REVIEW_HARDEST
 from .decorators import login_required
 
 flashcard_bp = Blueprint('flashcard', __name__)
@@ -120,7 +120,7 @@ def index():
         total_cards_map = dict(db.session.query(Flashcard.set_id, func.count(Flashcard.flashcard_id))\
             .filter(Flashcard.set_id.in_(set_ids)).group_by(Flashcard.set_id).all())
             
-        learned_cards_map = dict(db.session.query(Flashcard.set_id, func.count(UserFlashcardProgress.progress_id))\
+        learned_cards_map = dict(db.session.query(UserFlashcardProgress.flashcard_id, func.count(UserFlashcardProgress.progress_id))\
             .join(Flashcard).filter(UserFlashcardProgress.user_id == user_id, Flashcard.set_id.in_(set_ids))\
             .group_by(Flashcard.set_id).all())
 
@@ -252,7 +252,11 @@ def learn_set(set_id):
     session['current_progress_id'] = progress_obj.progress_id
     
     audio_url = url_for('api.get_card_audio', flashcard_id=flashcard_obj.flashcard_id, side='front') if flashcard_obj.front_audio_content else None
+    
+    # BẮT ĐẦU THAY ĐỔI: Lấy context_stats đầy đủ hơn
     context_stats = stats_service.get_user_stats_for_context(user_id, set_id)
+    # KẾT THÚC THAY ĐỔI
+
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
     
     can_edit = _check_edit_permission(user, flashcard_obj)
@@ -260,7 +264,7 @@ def learn_set(set_id):
     # --- BẮT ĐẦU THAY ĐỔI: Kiểm tra xem thẻ có ghi chú không ---
     note = note_service.get_note_by_flashcard_id(user_id, flashcard_obj.flashcard_id)
     has_note = note is not None
-    # --- KẾT THÚC THAY ĐỔI ---
+    # KẾT THÚC THAY ĐỔI ---
 
     return render_template(
         'flashcard/learn_card.html', user=user, flashcard=flashcard_obj, progress=progress_obj,
@@ -270,7 +274,14 @@ def learn_set(set_id):
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
         audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
         can_edit=can_edit,
-        has_note=has_note # Truyền biến mới vào template
+        has_note=has_note, # Truyền biến mới vào template
+        # BẮT ĐẦU THÊM MỚI: Truyền các biến cần thiết cho Dynamic Island
+        current_mode=user.current_mode,
+        set_total_cards=context_stats['set_total_cards'],
+        set_learned_cards=context_stats['set_learned_cards'],
+        set_mastered_cards=context_stats['set_mastered_cards'],
+        set_due_cards=context_stats['set_due_cards'] # THÊM MỚI: Truyền set_due_cards
+        # KẾT THÚM THÊM MỚI
     )
 
 @flashcard_bp.route('/flip/<int:progress_id>')
@@ -288,7 +299,11 @@ def flip_card(progress_id):
     flashcard_obj = progress.flashcard
     
     audio_url = url_for('api.get_card_audio', flashcard_id=flashcard_obj.flashcard_id, side='back') if flashcard_obj.back_audio_content else None
+    
+    # BẮT ĐẦU THAY ĐỔI: Lấy context_stats đầy đủ hơn
     context_stats = stats_service.get_user_stats_for_context(user.user_id, flashcard_obj.set_id)
+    # KẾT THÚC THAY ĐỔI
+    
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
 
     can_edit = _check_edit_permission(user, flashcard_obj)
@@ -306,7 +321,14 @@ def flip_card(progress_id):
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
         audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
         can_edit=can_edit,
-        has_note=has_note # Truyền biến mới vào template
+        has_note=has_note, # Truyền biến mới vào template
+        # BẮT ĐẦU THÊM MỚI: Truyền các biến cần thiết cho Dynamic Island
+        current_mode=user.current_mode,
+        set_total_cards=context_stats['set_total_cards'],
+        set_learned_cards=context_stats['set_learned_cards'],
+        set_mastered_cards=context_stats['set_mastered_cards'],
+        set_due_cards=context_stats['set_due_cards'] # THÊM MỚI: Truyền set_due_cards
+        # KẾT THÚC THÊM MỚI
     )
 
 @flashcard_bp.route('/rate/<int:progress_id>/<string:response_str>')
@@ -375,3 +397,4 @@ def select_set_page():
     Mô tả: Một route tiện ích để chuyển hướng về trang chọn bộ thẻ.
     """
     return redirect(url_for('flashcard.index'))
+

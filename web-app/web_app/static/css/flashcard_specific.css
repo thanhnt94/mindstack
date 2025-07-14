@@ -17,9 +17,7 @@
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
     overflow: hidden; /* Đặt overflow hidden để tránh scrollbar không mong muốn từ nội dung */
-    /* BẮT ĐẦU THÊM MỚI: Thêm min-height: 0 để cho phép co lại trong flex container */
     min-height: 0; 
-    /* KẾT THÚC THÊM MỚI */
 }
 
 /* ========================== CỘT TRÁI - PANEL HÌNH ẢNH (DESKTOP) ========================== */
@@ -191,28 +189,49 @@
     border-radius: 20px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     overflow: hidden;
-    transition: all 0.3s ease-out;
+    transition: all 0.3s ease-out; 
     cursor: pointer;
     white-space: nowrap;
-    z-index: 101;
+    z-index: 101; /* Đảm bảo nó nằm trên các nút header */
 
     top: 15px;
-    left: 50%;
-    transform: translateX(-50%);
+    /* THAY ĐỔI: Sử dụng left/right để Dynamic Island tự căn giữa và co giãn */
+    left: 105px; /* Khoảng cách từ lề trái, lớn hơn padding của header-left và các nút */
+    right: 110px; /* Khoảng cách từ lề phải, lớn hơn padding của header-right và các nút */
+    transform: none; /* Bỏ transformX để left/right hoạt động */
+    width: auto; /* Để width tự động tính toán */
+    max-width: none; /* Bỏ giới hạn max-width cố định */
 
-    width: auto;
     height: 40px;
+    padding: 0; 
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Container cho nội dung chính của Dynamic Island */
+.dynamic-island-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%; 
     padding: 0 15px; 
+    box-sizing: border-box;
+    display: none; /* Mặc định ẩn, sẽ được JS điều khiển */
 }
 
 /* Màu sắc cho các giá trị trong tóm tắt */
 .dynamic-card-details-summary .summary-value.correct-streak { color: #28a745; font-weight: bold; }
 .dynamic-card-details-summary .summary-value.correct-count { color: #007bff; font-weight: bold; }
 .dynamic-card-details-summary .summary-value.review-count { color: #ffc107; font-weight: bold; }
+.dynamic-card-details-summary .summary-value.incorrect-count { color: #dc3545; font-weight: bold; } 
 .dynamic-card-details-summary .summary-separator { color: #888; margin: 0 5px; }
 
 .dynamic-card-details-summary {
-    display: flex;
+    display: flex; /* Mặc định ẩn, sẽ được JS điều khiển */
     align-items: center;
     justify-content: center;
     width: 100%;
@@ -240,43 +259,87 @@
 
 .dynamic-card-details.expanded {
     top: 65px; 
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 60px);
+    left: 15px; /* THAY ĐỔI: Khi mở rộng, sát lề hơn */
+    right: 15px; /* THAY ĐỔI: Khi mở rộng, sát lề hơn */
+    transform: none; /* Bỏ transformX để left/right hoạt động */
+    width: auto; /* Để width tự động tính toán */
+    max-width: none; /* Bỏ giới hạn max-width khi mở rộng */
     height: auto; 
     
     border-radius: 20px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.2);
     
-    padding: 15px;
+    padding: 15px; 
     z-index: 105;
+    
+    .dynamic-island-content {
+        display: flex;
+        flex-direction: column; 
+        padding: 0; 
+    }
 }
 
 .dynamic-card-details.expanded .dynamic-card-details-full {
     display: block; 
 }
 
+/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho các phần và tiêu đề trong Dynamic Island mở rộng --- */
+.details-section {
+    margin-bottom: 18px; /* Khoảng cách giữa các phần */
+    background-color: #fefefe; /* Nền trắng tinh cho các phần */
+    border: 1px solid #e7e9ed; /* Viền nhẹ */
+    border-radius: 12px; /* Bo góc nhiều hơn cho các phần */
+    padding: 15px; /* Tăng padding */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Đổ bóng nhẹ để tạo chiều sâu */
+}
+
+.details-section:last-child {
+    margin-bottom: 0; /* Không có margin-bottom cho phần cuối cùng */
+}
+
+.details-section-title {
+    font-size: 1.05em; /* Kích thước font tiêu đề lớn hơn một chút */
+    color: #34495e; /* Màu xám đậm hơn, chuyên nghiệp hơn cho tiêu đề */
+    margin-top: 0;
+    margin-bottom: 12px; /* Khoảng cách lớn hơn dưới tiêu đề */
+    padding-bottom: 8px; /* Thêm padding dưới tiêu đề để phân tách */
+    border-bottom: 1px solid #ebf0f1; /* Đường kẻ dưới nhẹ hơn cho cái nhìn sạch sẽ */
+    font-weight: 700; /* Tiêu đề in đậm hơn */
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Khoảng cách lớn hơn giữa icon và chữ tiêu đề */
+    text-transform: uppercase; /* Chữ hoa cho tiêu đề */
+    letter-spacing: 0.5px; /* Khoảng cách chữ nhẹ */
+}
+
+.details-section-title .fas {
+    font-size: 1.2em; /* Icon trong tiêu đề lớn hơn */
+    color: #4299e1; /* Màu xanh nổi bật cho icon tiêu đề */
+}
+/* --- KẾT THÚC THÊM MỚI --- */
+
 /* --- BẮT ĐẦU SỬA: Chuyển sang Flexbox để đảm bảo layout 2 cột --- */
 .details-grid {
     display: flex;
-    flex-wrap: wrap; /* Cho phép các item xuống dòng */
-    justify-content: space-between; /* Tạo khoảng trống đều giữa các item */
+    flex-wrap: wrap; 
+    justify-content: space-between; 
     gap: 10px;
     width: 100%;
 }
 
 .detail-item {
+    padding: 12px 15px; /* Tăng padding để có cảm giác rộng rãi hơn */
+    border: none; /* Bỏ đường viền mặc định */
+    border-radius: 10px; /* Bo góc nhiều hơn cho các mục chi tiết */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); /* Đổ bóng nhẹ cho các thẻ mục */
+    background-color: #ffffff; /* Đảm bảo nền trắng cho các thẻ con */
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 10px;
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
     font-size: 0.9em;
     color: #444;
-    flex-grow: 1; /* Cho phép item co giãn */
-    flex-basis: 45%; /* Chiều rộng cơ bản, để 2 item nằm vừa trên một hàng */
+    flex-grow: 1; 
+    flex-basis: 45%; 
 }
 /* --- KẾT THÚC SỬA --- */
 
@@ -298,16 +361,66 @@
 .detail-icon.last-reviewed-icon { color: #6c757d; }
 .detail-icon.due-time-icon { color: #6f42c1; }
 
+/* BẮT ĐẦU THÊM MỚI: Màu sắc icon cụ thể cho các chỉ số Bộ thẻ và Tổng điểm */
+.detail-icon.learned-set-icon { color: #20b2aa; } /* Màu xanh lam nhạt */
+.detail-icon.mastered-set-icon { color: #28a745; } /* Màu xanh lá cây đậm (như correct streak) */
+.detail-icon.due-set-icon { color: #ff8c00; } /* Màu cam đậm */
+.detail-icon.total-set-icon { color: #3498db; } /* Màu xanh dương (như default) */
+.detail-icon.overall-score-icon { color: #f1c40f; } /* Màu vàng (như score tổng) */
+/* KẾT THÚC THÊM MỚI */
+
 
 .detail-label {
     font-weight: 500;
 }
 
 .detail-value {
-    font-weight: bold;
+    font-size: 1.05em; /* Kích thước font giá trị lớn hơn một chút */
+    font-weight: bold; /* Giữ in đậm */
     color: #2c3e50; 
     margin-left: auto;
 }
+
+/* BẮT ĐẦU THAY ĐỔI: Kiểu cho thanh tiến trình Dynamic Island */
+.dynamic-island-progress-bar {
+    width: 100%;
+    height: 100%; 
+    background-color: #e9ecef; 
+    border-radius: 20px; 
+    position: relative;
+    overflow: hidden; 
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease-out;
+    /* Mặc định ẩn, sẽ được JS điều khiển */
+    display: none;
+}
+
+.dynamic-island-progress-bar .progress-fill {
+    height: 100%;
+    background-color: #28a745; /* Mặc định xanh lá cho học mới */
+    width: 0%; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: width 0.5s ease-out, background-color 0.3s ease;
+}
+
+.dynamic-island-progress-bar .progress-fill.review-mode-color {
+    background-color: #ffc107; /* Màu vàng cam cho chế độ ôn tập */
+}
+
+.dynamic-island-progress-bar .progress-text {
+    position: relative; 
+    color: #fff; 
+    font-weight: bold;
+    font-size: 0.9em;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    z-index: 1; 
+}
+/* KẾT THÚC THAY ĐỔI */
 
 
 /* ========================== RESPONSIVE & ẨN/HIỆN ========================== */
@@ -316,8 +429,8 @@
     #menu-toggle-btn,
     .side-nav,
     .side-nav-overlay,
-    .image-popup-container, /* BẮT ĐẦU SỬA: Ẩn popup ảnh trên desktop */
-    .dynamic-card-details,
+    .image-popup-container, 
+    .dynamic-card-details, 
     .card-details-modal {
         display: none !important;
     }
@@ -348,13 +461,11 @@
 @media (max-width: 768px) {
     .flashcard {
         height: 100%;
-        min-height: 0; /* BẮT ĐẦU THÊM MỚI */
+        min-height: 0; 
         border-radius: 0;
         box-shadow: none;
-        /* BẮT ĐẦU THÊM MỚI */
         flex-basis: auto; 
-        flex-grow: 1; /* Cho phép nó chiếm hết không gian */
-        /* KẾT THÚC THÊM MỚI */
+        flex-grow: 1; 
     }
     .flashcard-header, .flashcard-body, .flashcard-footer { padding: 15px; }
     .card-text { font-size: 2.2em; }
