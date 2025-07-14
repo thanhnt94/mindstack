@@ -407,16 +407,30 @@
     transition: width 0.5s ease-out, background-color 0.3s ease;
 }
 
-.dynamic-island-progress-bar .progress-fill.review-mode-color {
-    background-color: #ffc107; /* Màu vàng cam cho chế độ ôn tập */
+/* BẮT ĐẦU THÊM MỚI: Các lớp màu cho hiệu suất thẻ */
+.dynamic-island-progress-bar .progress-fill.high-performance {
+    background-color: #28a745; /* Xanh lá cây */
 }
+
+.dynamic-island-progress-bar .progress-fill.medium-performance {
+    background-color: #ffc107; /* Vàng/Cam */
+}
+
+.dynamic-island-progress-bar .progress-fill.low-performance {
+    background-color: #dc3545; /* Đỏ */
+}
+/* THÊM MỚI: Lớp màu xanh nước biển */
+.dynamic-island-progress-bar .progress-fill.set-progress-blue {
+    background-color: #3498db; /* Xanh nước biển */
+}
+/* KẾT THÚC THÊM MỚI */
 
 .dynamic-island-progress-bar .progress-text {
     position: relative; 
-    color: #fff; 
+    color: #000; /* THAY ĐỔI: Màu chữ đen */
     font-weight: bold;
     font-size: 0.9em;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.5); /* THAY ĐỔI: Đổ bóng trắng để dễ đọc trên nền màu */
     white-space: nowrap;
     z-index: 1; 
 }

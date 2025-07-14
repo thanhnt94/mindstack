@@ -72,21 +72,8 @@
                                         <span class="detail-label">Ôn tập:</span>
                                         <span class="detail-value">{{ progress.review_count }}</span>
                                     </div>
-                                    {# BẮT ĐẦU XÓA: Mục "Lỡ hẹn" #}
-                                    {# <div class="detail-item full-width"><i class="fas fa-exclamation-triangle detail-icon lapse-count-icon"></i><span class="detail-label">Lỡ hẹn:</span><span class="detail-value">{{ progress.lapse_count }}</span></div> #}
-                                    {# KẾT THÚC XÓA: Mục "Lỡ hẹn" #}
                                 </div>
                             </div>
-
-                            {# BẮT ĐẦU XÓA: Phần "Lịch trình ôn tập" #}
-                            {# <div class="details-section">
-                                <h4 class="details-section-title"><i class="fas fa-clock"></i> Lịch trình ôn tập</h4>
-                                <div class="details-grid">
-                                    <div class="detail-item full-width"><i class="fas fa-calendar-alt detail-icon last-reviewed-icon"></i><span class="detail-label">Lần cuối ôn:</span><span class="detail-value">{% if progress.last_reviewed %}{{ progress.last_reviewed | format_unix_timestamp }}{% else %}Chưa ôn{% endif %}</span></div>
-                                    <div class="detail-item full-width"><i class="fas fa-clock detail-icon due-time-icon"></i><span class="detail-label">Thời điểm ôn:</span><span class="detail-value">{% if progress.due_time %}{{ progress.due_time | format_unix_timestamp }}{% else %}N/A{% endif %}</span></div>
-                                </div>
-                            </div> #}
-                            {# KẾT THÚC XÓA: Phần "Lịch trình ôn tập" #}
 
                             <div class="details-section">
                                 <h4 class="details-section-title"><i class="fas fa-layer-group"></i> Tổng quan Bộ thẻ</h4>
@@ -127,8 +114,8 @@
                         </div>
                     </div>
                     <div id="dynamic-island-progress-bar" class="dynamic-island-progress-bar">
-                        <div class="progress-fill"></div>
-                        <span class="progress-text"></span>
+                        <div id="progressFill" class="progress-fill"></div>
+                        <span id="progressText" class="progress-text"></span>
                     </div>
                     {# KẾT THÚC THAY ĐỔI #}
                 </div>
@@ -344,8 +331,12 @@
          data-set-total-cards="{{ set_total_cards }}"
          data-set-learned-cards="{{ set_learned_cards }}"
          data-set-mastered-cards="{{ set_mastered_cards }}"
-         data-set-due-cards="{{ set_due_cards }}" {# THÊM MỚI: Truyền set_due_cards #}
-         data-progress-last-reviewed="{{ progress.last_reviewed or '' }}"> {# THAY ĐỔI: Truyền last_reviewed #}
+         data-set-due-cards="{{ set_due_cards }}" 
+         data-progress-last-reviewed="{{ progress.last_reviewed or '' }}"
+         {# THÊM MỚI: Các thuộc tính cần thiết cho hiệu suất thẻ cá nhân #}
+         data-card-correct-count="{{ progress.correct_count }}"
+         data-card-incorrect-count="{{ progress.incorrect_count }}"
+         data-card-review-count="{{ progress.review_count }}">
          {# KẾT THÚC THÊM MỚI #}
     </div>
 {% endblock %}
