@@ -26,9 +26,11 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url_for('flashcard.dashboard') }}" class="nav-link {% if request.endpoint == 'flashcard.dashboard' %}active{% endif %}">
+                    {# BẮT ĐẦU THAY ĐỔI: Cập nhật link Dashboard #}
+                    <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
                         <i class="fas fa-chart-line"></i> Thống kê
                     </a>
+                    {# KẾT THÚC THAY ĐỔI #}
                 </li>
             </ul>
         </div>

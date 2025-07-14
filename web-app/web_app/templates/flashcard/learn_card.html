@@ -106,8 +106,10 @@
                                 <div class="details-grid">
                                     <div class="detail-item full-width">
                                         <i class="fas fa-trophy detail-icon overall-score-icon"></i>
+                                        {# BẮT ĐẦU SỬA LỖI: Sử dụng context_stats.total_score thay vì dashboard_data.total_score #}
                                         <span class="detail-label">Tổng điểm:</span>
                                         <span class="detail-value">{{ context_stats.total_score or 0 }}</span>
+                                        {# KẾT THÚC SỬA LỖI #}
                                     </div>
                                 </div>
                             </div>
@@ -172,7 +174,7 @@
 
         <div class="right-column-container">
             <div class="context-panel">
-                <a href="{% if user.user_role == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('flashcard.dashboard') }}{% endif %}" class="user-profile-link">
+                <a href="{% if user.user_role == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('main.dashboard') }}{% endif %}" class="user-profile-link">
                     <div class="user-profile">
                         <div class="user-avatar"><i class="fas fa-user"></i></div>
                         <div class="user-info">
@@ -222,7 +224,7 @@
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
     <nav id="side-nav" class="side-nav">
         <div class="side-nav-header">
-            <a href="{% if user.user_role == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('flashcard.dashboard') }}{% endif %}" class="user-profile-link">
+            <a href="{% if user.user_role == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('main.dashboard') }}{% endif %}" class="user-profile-link">
                 <div class="user-profile">
                     <div class="user-avatar"><i class="fas fa-user"></i></div>
                     <div class="user-info">
@@ -268,7 +270,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('flashcard.dashboard') }}" class="nav-link">
+                        <a href="{{ url_for('main.dashboard') }}" class="nav-link">
                             <i class="fas fa-chart-line"></i> Thống kê
                         </a>
                     </li>

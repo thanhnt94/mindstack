@@ -22,8 +22,8 @@ class StatsService:
             int: Unix timestamp hiện tại.
         """
         try:
-            tz = timedelta(hours=tz_offset_hours)
-            now = datetime.now(timezone.utc).astimezone(timezone(tz))
+            tz = timezone(timedelta(hours=tz_offset_hours))
+            now = datetime.now(timezone.utc).astimezone(tz) # THAY ĐỔI: Chuyển đổi sang múi giờ cụ thể
             return int(now.timestamp())
         except Exception as e:
             logger.error(f"Lỗi khi lấy current timestamp: {e}", exc_info=True)
@@ -40,12 +40,13 @@ class StatsService:
             int: Unix timestamp của nửa đêm của ngày hiện tại.
         """
         try:
-            tz = timedelta(hours=tz_offset_hours)
-            dt_now = datetime.fromtimestamp(current_timestamp, timezone.utc).astimezone(timezone(tz))
-            dt_midnight = datetime.combine(dt_now.date(), datetime.min.time(), tzinfo=timezone(tz))
+            tz = timezone(timedelta(hours=tz_offset_hours))
+            dt_now = datetime.fromtimestamp(current_timestamp, tz) # THAY ĐỔI: Sử dụng múi giờ cụ thể
+            dt_midnight = datetime.combine(dt_now.date(), datetime.min.time(), tzinfo=tz)
             return int(dt_midnight.timestamp())
         except Exception as e:
             logger.error(f"Lỗi khi tính midnight timestamp: {e}", exc_info=True)
+            # Fallback an toàn nếu có lỗi, nhưng cần kiểm tra kỹ múi giờ
             return int(current_timestamp - (current_timestamp % 86400))
 
 
@@ -354,43 +355,61 @@ class StatsService:
         current_ts = self._get_current_unix_timestamp(DEFAULT_TIMEZONE_OFFSET)
         start_ts = None
 
+        tz = timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET)) # Lấy đối tượng timezone
+
         if timeframe == 'day':
             start_ts = self._get_midnight_timestamp(current_ts, DEFAULT_TIMEZONE_OFFSET)
+            logger.debug(f"{log_prefix} Timeframe 'day', start_ts: {datetime.fromtimestamp(start_ts, tz)}")
         elif timeframe == 'week':
             # Lấy ngày đầu tuần (Thứ Hai)
-            start_of_week = datetime.fromtimestamp(current_ts, timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))).date() - timedelta(days=datetime.fromtimestamp(current_ts, timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))).weekday())
-            start_ts = int(datetime.combine(start_of_week, datetime.min.time(), timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))).timestamp())
+            # datetime.weekday() trả về 0 cho Thứ Hai, 6 cho Chủ Nhật
+            dt_now_in_tz = datetime.fromtimestamp(current_ts, tz)
+            start_of_week = dt_now_in_tz.date() - timedelta(days=dt_now_in_tz.weekday())
+            start_ts = int(datetime.combine(start_of_week, datetime.min.time(), tzinfo=tz).timestamp())
+            logger.debug(f"{log_prefix} Timeframe 'week', start_ts: {datetime.fromtimestamp(start_ts, tz)}")
         elif timeframe == 'month':
             # Lấy ngày đầu tháng
-            start_of_month = datetime.fromtimestamp(current_ts, timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            start_of_month = datetime.fromtimestamp(current_ts, tz).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             start_ts = int(start_of_month.timestamp())
+            logger.debug(f"{log_prefix} Timeframe 'month', start_ts: {datetime.fromtimestamp(start_ts, tz)}")
         # 'all_time' means no start_ts filter
 
         # Bắt đầu truy vấn chính để lấy điểm số tổng hợp theo thời gian
         # và tổng điểm toàn thời gian
+        # THAY ĐỔI: Đảm bảo ScoreLog.timestamp được lọc chính xác theo start_ts
         score_query = db.session.query(
             User.user_id,
             User.username,
             User.score.label('total_score_overall'), # Tổng điểm toàn thời gian
             func.sum(case((and_(ScoreLog.source_type == 'flashcard', ScoreLog.timestamp >= start_ts if start_ts else True), ScoreLog.score_change), else_=0)).label('flashcard_score_period'),
             func.sum(case((and_(ScoreLog.source_type == 'quiz', ScoreLog.timestamp >= start_ts if start_ts else True), ScoreLog.score_change), else_=0)).label('quiz_score_period')
-        ).outerjoin(ScoreLog, User.user_id == ScoreLog.user_id)
+        ).outerjoin(ScoreLog, and_(User.user_id == ScoreLog.user_id, ScoreLog.timestamp >= start_ts if start_ts else True)) # THAY ĐỔI: Thêm điều kiện lọc timestamp ngay trong join
         
         score_query = score_query.group_by(User.user_id, User.username, User.score)
         score_results = score_query.all()
+
+        # THÊM LOG: In ra kết quả score_results thô
+        logger.debug(f"{log_prefix} Raw Score Results: {score_results}")
+
 
         # Truy vấn riêng cho các chỉ số Flashcard (lượt ôn tập, thẻ đã học, thẻ mới)
         flashcard_stats_query = db.session.query(
             UserFlashcardProgress.user_id,
             func.count(UserFlashcardProgress.progress_id).label('total_reviews'),
             func.count(case((UserFlashcardProgress.learned_date.isnot(None), 1))).label('learned_cards'),
-            func.count(case((UserFlashcardProgress.learned_date == self._get_midnight_timestamp(current_ts, DEFAULT_TIMEZONE_OFFSET), 1))).label('new_cards_today')
+            # THAY ĐỔI: Sử dụng learned_date để đếm thẻ mới trong ngày
+            func.count(case((UserFlashcardProgress.learned_date == self._get_midnight_timestamp(current_ts, DEFAULT_TIMEZONE_OFFSET), 1), else_=None)).label('new_cards_today')
         )
         if start_ts:
+            # Lọc theo last_reviewed cho total_reviews và learned_cards trong khung thời gian
             flashcard_stats_query = flashcard_stats_query.filter(UserFlashcardProgress.last_reviewed >= start_ts)
         
         flashcard_stats_query = flashcard_stats_query.group_by(UserFlashcardProgress.user_id)
         flashcard_stats_map = {row.user_id: row for row in flashcard_stats_query.all()}
+
+        # THÊM LOG: In ra kết quả flashcard_stats_map
+        logger.debug(f"{log_prefix} Raw Flashcard Stats Map: {flashcard_stats_map}")
+
 
         # Truy vấn riêng cho các chỉ số Quiz (số câu trả lời)
         quiz_stats_query = db.session.query(
@@ -402,6 +421,9 @@ class StatsService:
         
         quiz_stats_query = quiz_stats_query.group_by(UserQuizProgress.user_id)
         quiz_stats_map = {row.user_id: row for row in quiz_stats_query.all()}
+
+        # THÊM LOG: In ra kết quả quiz_stats_map
+        logger.debug(f"{log_prefix} Raw Quiz Stats Map: {quiz_stats_map}")
 
 
         leaderboard_data = []

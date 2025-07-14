@@ -156,7 +156,7 @@ def edit_set(set_id):
             if file and file.filename != '':
                 if not file.filename.endswith('.xlsx'):
                     flash("File không hợp lệ. Vui lòng chỉ tải lên file .xlsx", "error")
-                    return render_template('admin/edit_set.html', set_data=set_to_edit)
+                    return render_template('admin/edit_set.html', set_data=data)
                 file_stream = file.stream
         updated_set, status = set_service.update_set(set_id, data, file_stream)
         if status == "success":
@@ -313,3 +313,4 @@ def export_question_set(set_id):
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 # --- KẾT THÚC SỬA ĐỔI ---
+

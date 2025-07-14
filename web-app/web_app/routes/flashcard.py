@@ -175,47 +175,49 @@ def go_to_learn_page():
         logger.info(f"User {user_id} has no current set, going to index.")
         return redirect(url_for('flashcard.index'))
 
-@flashcard_bp.route('/dashboard')
-@login_required
-def dashboard():
-    """
-    Mô tả: Hiển thị trang thống kê (dashboard) cho người dùng.
-    """
-    user_id = session.get('user_id')
-    user = User.query.get(user_id)
-    dashboard_data = stats_service.get_dashboard_stats(user_id)
-    if not dashboard_data:
-        flash("Không thể tải dữ liệu thống kê.", "error")
-        return redirect(url_for('flashcard.index'))
-    dashboard_data_json = json.dumps(dashboard_data)
+# BẮT ĐẦU XÓA: Di chuyển route dashboard sang main.py
+# @flashcard_bp.route('/dashboard')
+# @login_required
+# def dashboard():
+#     """
+#     Mô tả: Hiển thị trang thống kê (dashboard) cho người dùng.
+#     """
+#     user_id = session.get('user_id')
+#     user = User.query.get(user_id)
+#     dashboard_data = stats_service.get_dashboard_stats(user_id)
+#     if not dashboard_data:
+#         flash("Không thể tải dữ liệu thống kê.", "error")
+#         return redirect(url_for('flashcard.index'))
+#     dashboard_data_json = json.dumps(dashboard_data)
     
-    # BẮT ĐẦU THAY ĐỔI: Truyền current_question_set_id
-    current_question_set_id = user.current_question_set_id if user else None
+#     # BẮT ĐẦU THAY ĐỔI: Truyền current_question_set_id
+#     current_question_set_id = user.current_question_set_id if user else None
 
-    # BẮT ĐẦU THÊM MỚI: Lấy dữ liệu bảng xếp hạng cho dashboard người dùng
-    # Lấy tham số sort_by và timeframe từ request, mặc định là 'total_score' và 'all_time'
-    sort_by = request.args.get('sort_by', 'total_score')
-    timeframe = request.args.get('timeframe', 'all_time')
+#     # BẮT ĐẦU THÊM MỚI: Lấy dữ liệu bảng xếp hạng cho dashboard người dùng
+#     # Lấy tham số sort_by và timeframe từ request, mặc định là 'total_score' và 'all_time'
+#     sort_by = request.args.get('sort_by', 'total_score')
+#     timeframe = request.args.get('timeframe', 'all_time')
     
-    leaderboard_data = stats_service.get_user_leaderboard_data(
-        sort_by=sort_by,
-        timeframe=timeframe,
-        limit=10 # Giới hạn 10 người dùng hàng đầu cho bảng xếp hạng
-    )
-    # KẾT THÚC THÊM MỚI
+#     leaderboard_data = stats_service.get_user_leaderboard_data(
+#         sort_by=sort_by,
+#         timeframe=timeframe,
+#         limit=10 # Giới hạn 10 người dùng hàng đầu cho bảng xếp hạng
+#     )
+#     # KẾT THÚC THÊM MỚI
 
-    return render_template(
-        'dashboard.html', 
-        dashboard_data=dashboard_data,
-        dashboard_data_json=dashboard_data_json,
-        current_set_id=user.current_set_id,
-        current_question_set_id=current_question_set_id,
-        # BẮT ĐẦU THÊM MỚI: Truyền dữ liệu bảng xếp hạng vào template
-        leaderboard_data=leaderboard_data,
-        current_sort_by=sort_by,
-        current_timeframe=timeframe
-        # KẾT THÚC THÊM MỚI
-    )
+#     return render_template(
+#         'dashboard.html', 
+#         dashboard_data=dashboard_data,
+#         dashboard_data_json=dashboard_data_json,
+#         current_set_id=user.current_set_id,
+#         current_question_set_id=current_question_set_id,
+#         # BẮT ĐẦU THÊM MỚI: Truyền dữ liệu bảng xếp hạng vào template
+#         leaderboard_data=leaderboard_data,
+#         current_sort_by=sort_by,
+#         current_timeframe=timeframe
+#         # KẾT THÚC THÊM MỚI
+#     )
+# KẾT THÚC XÓA: Di chuyển route dashboard sang main.py
 
 def _check_edit_permission(user, flashcard_obj):
     """
@@ -256,7 +258,7 @@ def learn_set(set_id):
     # BẮT ĐẦU THAY ĐỔI: Lấy context_stats đầy đủ hơn
     context_stats = stats_service.get_user_stats_for_context(user_id, set_id)
     # KẾT THÚC THAY ĐỔI
-
+    
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
     
     can_edit = _check_edit_permission(user, flashcard_obj)

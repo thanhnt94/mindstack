@@ -28,8 +28,8 @@
         <h2 class="section-title"><i class="fas fa-trophy"></i> Bảng xếp hạng Người dùng</h2>
         <div class="leaderboard-controls">
             {# Form này sẽ gửi lại request GET đến cùng URL, cập nhật các tham số sort_by và timeframe #}
-            <form id="leaderboard-filter-form" method="GET" action="{{ url_for('flashcard.dashboard') }}">
-                <div class="form-group">
+            <form id="leaderboard-filter-form" method="GET" action="{{ url_for('main.dashboard') }}">
+                <div class="form-group sort-by-group"> {# THÊM MỚI: class sort-by-group #}
                     <label for="sort_by">Sắp xếp theo:</label>
                     <select id="sort_by" name="sort_by" class="form-control" onchange="document.getElementById('leaderboard-filter-form').submit();">
                         <option value="total_score" {% if current_sort_by == 'total_score' %}selected{% endif %}>Tổng điểm (trong kỳ)</option>
@@ -39,15 +39,18 @@
                         <option value="total_quiz_answers" {% if current_sort_by == 'total_quiz_answers' %}selected{% endif %}>Số câu trả lời (Trắc nghiệm)</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="timeframe">Khung thời gian:</label>
-                    <select id="timeframe" name="timeframe" class="form-control" onchange="document.getElementById('leaderboard-filter-form').submit();">
-                        <option value="day" {% if current_timeframe == 'day' %}selected{% endif %}>Hôm nay</option>
-                        <option value="week" {% if current_timeframe == 'week' %}selected{% endif %}>Tuần này</option>
-                        <option value="month" {% if current_timeframe == 'month' %}selected{% endif %}>Tháng này</option>
-                        <option value="all_time" {% if current_timeframe == 'all_time' %}selected{% endif %}>Toàn bộ</option>
-                    </select>
+                {# BẮT ĐẦU THAY ĐỔI: Thay thế dropdown timeframe bằng button group dạng tab #}
+                <div class="form-group timeframe-group"> {# THAY ĐỔI: Thêm form-group và đổi tên class #}
+                    {# BỎ NHÃN "Khung thời gian" #}
+                    <div class="timeframe-tabs"> {# Đổi tên class từ timeframe-buttons sang timeframe-tabs #}
+                        <button type="button" class="tab-button {% if current_timeframe == 'day' %}active{% endif %}" data-timeframe="day">Hôm nay</button>
+                        <button type="button" class="tab-button {% if current_timeframe == 'week' %}active{% endif %}" data-timeframe="week">Tuần này</button>
+                        <button type="button" class="tab-button {% if current_timeframe == 'month' %}active{% endif %}" data-timeframe="month">Tháng này</button>
+                        <button type="button" class="tab-button {% if current_timeframe == 'all_time' %}active{% endif %}" data-timeframe="all_time">Toàn bộ</button>
+                    </div>
                 </div>
+                <input type="hidden" name="timeframe" id="hidden-timeframe-input" value="{{ current_timeframe }}">
+                {# KẾT THÚC THAY ĐỔI #}
             </form>
         </div>
 
@@ -68,38 +71,37 @@
                         {% set display_value = entry.total_quiz_answers %}
                     {% endif %}
 
-                    {# Chỉ hiển thị nếu giá trị lớn hơn 0 hoặc là người dùng có điểm tổng thể (cho trường hợp 'all_time' và 'total_score') #}
-                    {% if display_value > 0 or (current_sort_by == 'total_score' and current_timeframe == 'all_time' and entry.total_score_overall > 0) %}
-                        <li class="leaderboard-item">
-                            {# BẮT ĐẦU THAY ĐỔI: Hiển thị biểu tượng cho top 3, còn lại là số #}
-                            <span class="rank">
-                                {% if loop.index == 1 %}
-                                    <i class="fas fa-medal gold-medal"></i>
-                                {% elif loop.index == 2 %}
-                                    <i class="fas fa-medal silver-medal"></i>
-                                {% elif loop.index == 3 %}
-                                    <i class="fas fa-medal bronze-medal"></i>
-                                {% else %}
-                                    {{ loop.index }}
-                                {% endif %}
-                            </span>
-                            {# KẾT THÚC THAY ĐỔI #}
-                            <span class="username">{{ entry.username or 'N/A' }}</span>
-                            <span class="score-value">
-                                {% if current_sort_by == 'total_score' %}
-                                    {{ display_value }} điểm
-                                {% elif current_sort_by == 'total_reviews' %}
-                                    {{ display_value }} lượt
-                                {% elif current_sort_by == 'learned_cards' %}
-                                    {{ display_value }} thẻ
-                                {% elif current_sort_by == 'new_cards' %}
-                                    {{ display_value }} thẻ
-                                {% elif current_sort_by == 'total_quiz_answers' %}
-                                    {{ display_value }} câu
-                                {% endif %}
-                            </span>
-                        </li>
-                    {% endif %}
+                    {# BẮT ĐẦU THAY ĐỔI: Luôn hiển thị các mục trong bảng xếp hạng, bỏ điều kiện ẩn nếu 0 điểm #}
+                    <li class="leaderboard-item">
+                        {# BẮT ĐẦU THAY ĐỔI: Hiển thị biểu tượng cho top 3, còn lại là số #}
+                        <span class="rank">
+                            {% if loop.index == 1 %}
+                                <i class="fas fa-medal gold-medal"></i>
+                            {% elif loop.index == 2 %}
+                                <i class="fas fa-medal silver-medal"></i>
+                            {% elif loop.index == 3 %}
+                                <i class="fas fa-medal bronze-medal"></i>
+                            {% else %}
+                                {{ loop.index }}
+                            {% endif %}
+                        </span>
+                        {# KẾT THÚC THAY ĐỔI #}
+                        <span class="username">{{ entry.username or 'N/A' }}</span>
+                        <span class="score-value">
+                            {% if current_sort_by == 'total_score' %}
+                                {{ display_value }} điểm
+                            {% elif current_sort_by == 'total_reviews' %}
+                                {{ display_value }} lượt
+                            {% elif current_sort_by == 'learned_cards' %}
+                                {{ display_value }} thẻ
+                            {% elif current_sort_by == 'new_cards' %}
+                                {{ display_value }} thẻ
+                            {% elif current_sort_by == 'total_quiz_answers' %}
+                                {{ display_value }} câu
+                            {% endif %}
+                        </span>
+                    </li>
+                    {# KẾT THÚC THAY ĐỔI #}
                 {% endfor %}
             </ul>
             {% if not leaderboard_data %}
@@ -247,4 +249,33 @@
 
 {% block scripts_extra %}
     <script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
+    {# BẮT ĐẦU THÊM MỚI: Script để xử lý logic cho button group timeframe #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const timeframeTabsContainer = document.querySelector('.timeframe-tabs'); // THAY ĐỔI: Đổi tên biến
+            const hiddenTimeframeInput = document.getElementById('hidden-timeframe-input');
+            const leaderboardFilterForm = document.getElementById('leaderboard-filter-form');
+
+            if (timeframeTabsContainer && hiddenTimeframeInput && leaderboardFilterForm) {
+                timeframeTabsContainer.addEventListener('click', function(event) {
+                    if (event.target.tagName === 'BUTTON') {
+                        // Xóa lớp 'active' khỏi tất cả các nút
+                        timeframeTabsContainer.querySelectorAll('.tab-button').forEach(btn => { // THAY ĐỔI: Chọn .tab-button
+                            btn.classList.remove('active');
+                        });
+
+                        // Thêm lớp 'active' cho nút được click
+                        event.target.classList.add('active');
+
+                        // Cập nhật giá trị của input hidden
+                        hiddenTimeframeInput.value = event.target.dataset.timeframe;
+
+                        // Tự động submit form
+                        leaderboardFilterForm.submit();
+                    }
+                });
+            }
+        });
+    </script>
+    {# KẾT THÚC THÊM MỚI #}
 {% endblock %}

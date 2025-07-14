@@ -200,6 +200,7 @@ class QuizService:
         
         question = self.get_question_by_id(question_id)
         if not question:
+            logger.error(f"{log_prefix} Không tìm thấy câu hỏi ID: {question_id}")
             return None, None
 
         is_correct = (selected_option == question.correct_answer)
@@ -223,14 +224,17 @@ class QuizService:
                 
                 if is_first_correct:
                     score_change = SCORE_QUIZ_CORRECT_FIRST_TIME
+                    logger.info(f"{log_prefix} Câu trả lời ĐÚNG lần đầu. Điểm cộng: {score_change}")
                 else:
                     score_change = SCORE_QUIZ_CORRECT_REPEAT
+                    logger.info(f"{log_prefix} Câu trả lời ĐÚNG (lặp lại). Điểm cộng: {score_change}")
                 
                 progress.times_correct += 1
                 progress.correct_streak += 1
             else:
                 progress.times_incorrect += 1
                 progress.correct_streak = 0
+                logger.info(f"{log_prefix} Câu trả lời SAI. Không cộng điểm.")
             
             if score_change > 0:
                 user = User.query.get(user_id)
@@ -245,8 +249,13 @@ class QuizService:
                     source_type='quiz'
                 )
                 db.session.add(score_log)
+                logger.info(f"{log_prefix} Đã ghi ScoreLog cho Quiz: {score_change} điểm. Tổng điểm mới: {user.score}")
+            else:
+                logger.info(f"{log_prefix} score_change là 0, không ghi ScoreLog cho Quiz.")
+
 
             db.session.commit()
+            logger.info(f"{log_prefix} Cập nhật tiến độ Quiz thành công. Is Correct: {is_correct}")
             return is_correct, question.correct_answer
             
         except Exception as e:

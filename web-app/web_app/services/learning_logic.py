@@ -133,6 +133,9 @@ class LearningLogicService:
         score_to_add = 0
         score_reason = ''
         next_review_time = progress.due_time or current_ts + 60
+        
+        logger.debug(f"{log_prefix} Initial score_to_add: {score_to_add}, current_user_score: {user.score}")
+
 
         if is_quick_review_score_only_mode:
             if response == 1: 
@@ -186,10 +189,13 @@ class LearningLogicService:
                     user_id=user_id,
                     score_change=score_to_add,
                     timestamp=current_ts,
-                    reason=score_reason
+                    reason=score_reason,
+                    source_type='flashcard' # Đảm bảo source_type được đặt
                 )
                 db.session.add(score_log_entry)
-                logger.info(f"{log_prefix} Đã ghi log thay đổi điểm: {score_to_add}. Lý do: {score_reason}")
+                logger.info(f"{log_prefix} Đã ghi log thay đổi điểm: {score_to_add}. Lý do: {score_reason}. New user score: {user.score}")
+            else:
+                logger.info(f"{log_prefix} score_to_add là 0, không ghi log điểm.")
             # --- KẾT THÚC SỬA ---
 
             db.session.commit()
@@ -255,3 +261,4 @@ class LearningLogicService:
         else:
             logger.warning(f"{log_prefix} Không tìm thấy chiến lược cho chế độ '{mode}'. Chuyển sang logic chờ chung.")
             return self._get_wait_time_for_set(user_id, set_id, current_ts, user.timezone_offset, log_prefix)
+

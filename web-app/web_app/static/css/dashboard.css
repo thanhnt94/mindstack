@@ -217,13 +217,14 @@
 .key-stat-card.mastered { background-color: #2ecc71; }
 .key-stat-card.unseen   { background-color: #95a5a6; }
 .key-stat-card.due      { background-color: #e74c3c; }
-.key-stat-card.due-soon { background-color: #3498db; }
+.key-stat-card.due_soon { background-color: #3498db; } /* Đổi tên class để khớp với data-category */
 .key-stat-card.lapsed   { background-color: #f39c12; }
 
 /* Màu sắc cho các ô thống kê Quiz */
 .key-stat-card.correct { background-color: #2ecc71; } /* Màu xanh lá cây */
 .key-stat-card.incorrect { background-color: #e74c3c; } /* Màu đỏ */
 .key-stat-card.unanswered { background-color: #95a5a6; } /* Màu xám */
+.key-stat-card.mastered { background-color: #9b59b6; } /* Màu tím cho mastered quiz */
 
 
 .key-stat-value { display: block; font-size: 1.8em; font-weight: 700; }
@@ -231,32 +232,58 @@
 
 /* BẮT ĐẦU THÊM MỚI: Kiểu cho phần bảng xếp hạng người dùng */
 .leaderboard-section {
-    margin-top: 30px; /* Khoảng cách với phần trên */
-    margin-bottom: 30px; /* Khoảng cách với phần dưới */
+    background-color: #ffffff; /* Nền trắng cho toàn bộ section */
+    padding: 20px; /* Padding cho toàn bộ section */
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-top: 30px; 
+    margin-bottom: 30px; 
 }
 
+/* BẮT ĐẦU SỬA ĐỔI: Cải thiện bố cục cho leaderboard-controls */
 .leaderboard-controls {
     display: flex;
-    /* BẮT ĐẦU SỬA ĐỔI: Đảm bảo luôn ngang hàng trên desktop */
-    flex-direction: row; 
-    flex-wrap: nowrap; /* Đảm bảo không xuống dòng trên desktop */
-    /* KẾT THÚC SỬA ĐỔI */
-    gap: 20px; /* Khoảng cách giữa các form-group */
-    margin-bottom: 25px;
-    justify-content: center;
+    flex-direction: column; /* Mặc định xếp cột */
+    gap: 15px; /* Khoảng cách giữa các nhóm điều khiển */
+    margin-bottom: 0; /* Xóa margin-bottom để dính liền với tab */
+    align-items: flex-start; /* Căn trái các mục */
 }
 
-.leaderboard-controls .form-group {
-    flex: 1; 
-    min-width: 200px; 
-    max-width: 280px; 
+/* Nhóm form-group cho dropdown sắp xếp */
+.leaderboard-controls .sort-by-group { 
+    width: 100%; 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
     margin-bottom: 0; 
-    /* BẮT ĐẦU SỬA ĐỔI: Thêm khoảng cách giữa label và select */
-    display: flex;
-    flex-direction: column;
-    gap: 8px; /* Khoảng cách giữa label và select */
-    /* KẾT THÚC SỬA ĐỔI */
 }
+
+.leaderboard-controls .sort-by-group label { 
+    margin-bottom: 0; 
+    flex-shrink: 0; 
+    font-weight: bold;
+    color: #555;
+}
+
+.leaderboard-controls .sort-by-group select.form-control { 
+    flex-grow: 1; 
+    max-width: 250px; 
+}
+
+/* Trên desktop, xếp ngang hàng */
+@media (min-width: 768px) {
+    .leaderboard-controls {
+        flex-direction: row; 
+        justify-content: space-between; 
+        align-items: center; 
+        flex-wrap: wrap; 
+    }
+    .leaderboard-controls .sort-by-group { 
+        width: auto; 
+    }
+}
+/* KẾT THÚC SỬA ĐỔI */
+
 
 /* BẮT ĐẦU THÊM MỚI: Cải thiện kiểu dáng của dropdown trong leaderboard */
 .leaderboard-controls .form-control {
@@ -275,58 +302,138 @@
 }
 /* KẾT THÚC THÊM MỚI */
 
+/* BẮT ĐẦU SỬA ĐỔI: Kiểu cho nhóm nút khung thời gian (dạng tab) */
+.timeframe-group { /* THÊM MỚI: Container cho tabs */
+    width: 100%; /* Chiếm toàn bộ chiều rộng */
+    /* THAY ĐỔI: Giảm margin-top để dính liền hơn với dropdown sắp xếp */
+    margin-top: 15px; /* Tăng khoảng cách một chút để không quá sát */
+}
+
+.timeframe-tabs { /* THAY ĐỔI: Đổi tên class */
+    display: flex;
+    justify-content: flex-start; /* Căn trái các tab */
+    border-bottom: 1px solid #e0e0e0; /* Đường kẻ dưới chung cho tất cả các tab */
+    padding-bottom: 0; /* Xóa padding dưới nếu có */
+    /* THAY ĐỔI: Giảm margin-bottom để dính liền với danh sách xếp hạng */
+    margin-bottom: 0; 
+    border-top-left-radius: 8px; /* Bo góc trên trái cho toàn bộ khối tab */
+    border-top-right-radius: 8px; /* Bo góc trên phải cho toàn bộ khối tab */
+    overflow: hidden; /* Đảm bảo các góc bo tròn hoạt động tốt */
+    /* background-color: #f8f9fa; */ /* Bỏ nền cho nhóm tab, để nền của .leaderboard-section lo */
+    flex-shrink: 0; /* Ngăn co lại */
+    position: relative; /* Để z-index của tab active hoạt động */
+    z-index: 0; /* Đảm bảo tab active nằm trên đường kẻ dưới */
+}
+
+.timeframe-tabs .tab-button { /* THAY ĐỔI: Đổi tên class và kiểu dáng */
+    background-color: transparent; /* Nền trong suốt */
+    border: none; /* Bỏ tất cả border */
+    border-bottom: 3px solid transparent; /* Đường viền dưới mặc định trong suốt */
+    border-radius: 0; /* Xóa bo tròn */
+    padding: 10px 15px; /* Padding cho tab */
+    font-size: 0.95em; /* Kích thước font */
+    font-weight: 600; /* In đậm */
+    color: #666; /* Màu chữ mặc định */
+    cursor: pointer;
+    transition: all 0.3s ease; /* Hiệu ứng chuyển đổi mượt mà */
+    white-space: nowrap; /* Ngăn chữ xuống dòng */
+    text-align: center; /* Căn giữa chữ trong tab */
+    flex-grow: 1; /* Cho phép tab co giãn để lấp đầy không gian */
+    min-width: 20%; /* Đảm bảo mỗi tab có chiều rộng tối thiểu, hoặc tự động */
+}
+
+.timeframe-tabs .tab-button:hover {
+    color: #007bff; /* Màu xanh khi hover */
+    background-color: #f0f8ff; /* Nền nhẹ khi hover */
+}
+
+.timeframe-tabs .tab-button.active { /* THAY ĐỔI: Kiểu cho tab active */
+    color: #007bff; /* Màu xanh dương khi active */
+    border-bottom: 3px solid #007bff; /* Đường viền dưới màu xanh dương nổi bật */
+    background-color: #ffffff; /* Nền trắng cho tab active */
+    /* THÊM MỚI: Đổ bóng nhẹ cho tab active để tạo cảm giác nổi */
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.05); 
+    border-top-left-radius: 8px; /* Bo góc trên cho tab active */
+    border-top-right-radius: 8px;
+    z-index: 2; /* Đảm bảo tab active nằm trên đường kẻ dưới và các tab khác */
+    position: relative; /* Để z-index hoạt động */
+}
+
+/* Điều chỉnh lại khoảng cách giữa các tab để chúng liền mạch */
+.timeframe-tabs .tab-button + .tab-button {
+    margin-left: -1px; /* Xóa khoảng cách giữa các tab */
+}
+
+/* Đảm bảo tab active không bị đường kẻ dưới của tab khác đè lên */
+.timeframe-tabs .tab-button.active + .tab-button {
+    border-left: none; /* Xóa border trái của tab liền kề active */
+}
+
+/* THÊM MỚI: Điều chỉnh responsive cho tab */
+@media (max-width: 768px) {
+    .timeframe-tabs {
+        justify-content: space-around; /* Căn đều các tab trên mobile */
+        flex-wrap: nowrap; /* Ngăn xuống dòng */
+        overflow-x: auto; /* Cho phép cuộn ngang nếu quá nhiều tab */
+        -webkit-overflow-scrolling: touch; /* Cuộn mượt mà trên iOS */
+    }
+    .timeframe-tabs .tab-button {
+        flex-shrink: 0; /* Ngăn tab co lại quá mức */
+        min-width: unset; /* Bỏ min-width */
+    }
+}
+/* KẾT THÚC SỬA ĐỔI */
+
 
 /* Kiểu cho danh sách xếp hạng */
 .leaderboard-list {
     list-style: none;
     padding: 0;
-    margin: 0;
+    /* THAY ĐỔI: Xóa border-top và padding-top để nó dính liền với tab */
+    border-top: none; 
+    padding-top: 0; 
+    margin-top: 0; /* Đảm bảo không có margin-top */
     display: flex;
     flex-direction: column;
     gap: 10px; /* Khoảng cách giữa các mục */
 }
 
 .leaderboard-item {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 12px 20px;
+    background-color: #ffffff; /* Nền trắng cho item để nổi bật hơn */
+    border: 1px solid #e7e9ed; /* Viền nhẹ */
+    border-radius: 10px; /* Bo góc nhiều hơn */
+    padding: 15px 20px; /* Tăng padding */
     display: flex;
     align-items: center;
-    /* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh gap để các phần tử gần nhau hơn */
-    gap: 10px; 
-    /* KẾT THÚC SỬA ĐỔI */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    gap: 15px; /* Tăng khoảng cách giữa các phần tử */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Đổ bóng mềm mại */
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .leaderboard-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transform: translateY(-3px); /* Hiệu ứng nhấc nhẹ lên */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* Đổ bóng rõ hơn khi hover */
 }
 
 .leaderboard-item .rank {
-    font-size: 1.2em;
-    font-weight: bold;
+    font-size: 1.3em; /* Kích thước font lớn hơn cho hạng */
+    font-weight: 700; /* In đậm hơn */
     color: #3498db; /* Màu xanh cho hạng */
-    min-width: 30px; /* Đảm bảo đủ chỗ cho hạng */
-    text-align: center;
-    /* BẮT ĐẦU THÊM MỚI: Định kiểu cho số hạng */
+    min-width: 40px; /* Đảm bảo đủ chỗ cho hạng */
+    height: 40px; /* Kích thước cố định cho số hạng */
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 35px; /* Kích thước cố định cho số hạng */
-    height: 35px;
     border-radius: 50%; /* Hình tròn */
     background-color: #eaf6ff; /* Nền nhẹ */
     border: 1px solid #cce5ff;
     flex-shrink: 0; /* Không co lại */
-    /* KẾT THÚC THÊM MỚI */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Đổ bóng nhẹ cho hình tròn */
 }
 
 /* BẮT ĐẦU THÊM MỚI: Kiểu cho các huy chương */
 .leaderboard-item .rank .fas.fa-medal {
-    font-size: 1.8em; /* Kích thước lớn hơn cho huy chương */
+    font-size: 2em; /* Kích thước lớn hơn cho huy chương */
     width: auto; /* Để icon tự điều chỉnh chiều rộng */
     height: auto; /* Để icon tự điều chỉnh chiều cao */
     color: inherit; /* Kế thừa màu từ class medal cụ thể */
@@ -361,7 +468,7 @@
 }
 
 .leaderboard-item .score-value {
-    font-size: 1.1em;
+    font-size: 1.2em; /* Kích thước lớn hơn cho giá trị điểm */
     font-weight: bold;
     color: #2ecc71; /* Màu xanh lá cây cho giá trị điểm/lượt */
     white-space: nowrap; /* Ngăn giá trị bị xuống dòng */
@@ -440,3 +547,4 @@
 /* Đã điều chỉnh media query cho .stat-cards-grid ở trên */
 /* @media (min-width: 576px) { .stat-cards-grid { grid-template-columns: repeat(3, 1fr); } } */
 @media (min-width: 768px) { .dashboard-container { padding: 20px; } .chart-container { height: 300px; } }
+
