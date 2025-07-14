@@ -44,27 +44,28 @@ document.addEventListener('DOMContentLoaded', function() {
     let animationIntervalId = null; // ID của setInterval để điều khiển vòng lặp animation
     
     // THAY ĐỔI: Tăng thời gian animation lên gấp 3 lần
-    const ANIMATION_DURATION_MS = 1000; // Thời gian chạy animation bar (3 giây)
-    const TEXT_FADE_DURATION_MS = 1000; // Thời gian mờ/hiện chữ (1.5 giây)
-    const DISPLAY_DURATION_MS = 1000; // Thời gian hiển thị mỗi trạng thái (6 giây)
+    const ANIMATION_DURATION_MS = 1000; // Thời gian chạy animation bar (2 giây)
+    const TEXT_FADE_DURATION_MS = 1000; // Thời gian mờ/hiện chữ (1 giây)
+    const DISPLAY_DURATION_MS = 1000; // Thời gian hiển thị mỗi trạng thái (4 giây)
 
     /**
      * Mô tả: Tính toán tỷ lệ phần trăm và trả về màu sắc tương ứng.
+     * Hàm này vẫn được giữ để tính toán percentage, nhưng colorClass trả về sẽ bị bỏ qua
+     * khi chúng ta muốn màu cố định.
      * @param {number} correct - Số lần đúng.
      * @param {number} total - Tổng số lần.
      * @returns {object} {percentage: number, colorClass: string}
      */
     function calculatePerformance(correct, total) {
-        if (total === 0) return { percentage: 0, colorClass: 'low-performance' }; // Hoặc 'neutral-performance'
-        
+        if (total === 0) return { percentage: 0, colorClass: 'low-performance' }; 
         const percentage = (correct / total) * 100;
         let colorClass = '';
         if (percentage >= 80) {
-            colorClass = 'high-performance'; // Xanh lá
+            colorClass = 'high-performance'; 
         } else if (percentage >= 60) {
-            colorClass = 'medium-performance'; // Vàng/Cam
+            colorClass = 'medium-performance'; 
         } else {
-            colorClass = 'low-performance'; // Đỏ
+            colorClass = 'low-performance'; 
         }
         return { percentage: Math.round(percentage), colorClass: colorClass };
     }
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {number} targetPercentage - Phần trăm cuối cùng của thanh bar.
      * @param {string} initialText - Văn bản ban đầu (ví dụ: "X/Y").
      * @param {string} finalPercentageText - Văn bản phần trăm cuối cùng (ví dụ: "Z%").
-     * @param {string} colorClass - Lớp CSS cho màu sắc của thanh bar.
+     * @param {string} colorClass - Lớp CSS cho màu sắc của thanh bar (được truyền cố định).
      * @returns {Promise<void>} Một Promise sẽ được giải quyết khi hoạt ảnh hoàn tất.
      */
     function animateProgressBar(targetPercentage, initialText, finalPercentageText, colorClass) {
@@ -82,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Đặt lại trạng thái ban đầu
             progressFill.style.width = '0%';
             progressFill.className = 'progress-fill'; // Xóa tất cả các lớp màu cũ
-            progressFill.classList.add(colorClass); // Thêm lớp màu mới
+            progressFill.classList.add(colorClass); // Thêm lớp màu mới cố định
             progressText.innerHTML = initialText; // Sử dụng innerHTML để hiển thị icon
             progressText.style.opacity = '1';
 
@@ -129,16 +130,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const masteredLearnedInitialText = `<i class="fas fa-brain"></i> Trí nhớ dài hạn: ${setMasteredCards} / ${setLearnedCards}`;
             const masteredLearnedFinalText = `<i class="fas fa-brain"></i> ${Math.round(masteredLearnedPercentage)}%`;
             animationSequence.push(async () => {
-                await animateProgressBar(masteredLearnedPercentage, masteredLearnedInitialText, masteredLearnedFinalText, 'medium-performance');
+                await animateProgressBar(masteredLearnedPercentage, masteredLearnedInitialText, masteredLearnedFinalText, 'medium-performance'); // Luôn màu vàng
                 await new Promise(resolve => setTimeout(resolve, DISPLAY_DURATION_MS));
             });
 
             // 2. Xanh lá cây: Số lần đáp đúng / Tổng số lần ôn tập (của thẻ này)
-            const cardPerformance = calculatePerformance(cardCorrectCount, cardReviewCount);
+            const cardPerformance = calculatePerformance(cardCorrectCount, cardReviewCount); // Vẫn dùng để lấy percentage
             const cardInitialText = `<i class="fas fa-check-circle"></i> Số lần đáp đúng: ${cardCorrectCount} / ${cardReviewCount}`;
             const cardFinalText = `<i class="fas fa-check-circle"></i> ${cardPerformance.percentage}%`;
             animationSequence.push(async () => {
-                await animateProgressBar(cardPerformance.percentage, cardInitialText, cardFinalText, cardPerformance.colorClass);
+                await animateProgressBar(cardPerformance.percentage, cardInitialText, cardFinalText, 'high-performance'); // Luôn màu xanh lá
                 await new Promise(resolve => setTimeout(resolve, DISPLAY_DURATION_MS));
             });
 
@@ -147,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const setInitialText = `<i class="fas fa-layer-group"></i> Tiến độ bộ: ${setLearnedCards} / ${setTotalCards}`;
             const setFinalText = `<i class="fas fa-layer-group"></i> ${Math.round(setProgressPercentage)}%`;
             animationSequence.push(async () => {
-                await animateProgressBar(setProgressPercentage, setInitialText, setFinalText, 'set-progress-blue');
+                await animateProgressBar(setProgressPercentage, setInitialText, setFinalText, 'set-progress-blue'); // Luôn màu xanh nước biển
                 await new Promise(resolve => setTimeout(resolve, DISPLAY_DURATION_MS));
             });
 
@@ -157,16 +158,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const setInitialText = `<i class="fas fa-layer-group"></i> Tiến độ bộ: ${setLearnedCards} / ${setTotalCards}`;
             const setFinalText = `<i class="fas fa-layer-group"></i> ${Math.round(setProgressPercentage)}%`;
             animationSequence.push(async () => {
-                await animateProgressBar(setProgressPercentage, setInitialText, setFinalText, 'set-progress-blue');
+                await animateProgressBar(setProgressPercentage, setInitialText, setFinalText, 'set-progress-blue'); // Luôn màu xanh nước biển
                 await new Promise(resolve => setTimeout(resolve, DISPLAY_DURATION_MS));
             });
 
             // 2. Màu vàng: Số thẻ nhớ sâu / Số thẻ đã học
             const masteredLearnedPercentage = setLearnedCards > 0 ? (setMasteredCards / setLearnedCards) * 100 : 0;
-            const masteredLearnedInitialText = `<i class="fas fa-brain"></i> Trí nhớ dài hạn: ${setMasteredCards} / ${setLearnedCards}`;
+            const masteredLearnedInitialText = `<i class="fas fa-brain"></i> Trí nhớ dài hạn: ${masteredLearnedCards} / ${setLearnedCards}`;
             const masteredLearnedFinalText = `<i class="fas fa-brain"></i> ${Math.round(masteredLearnedPercentage)}%`;
             animationSequence.push(async () => {
-                await animateProgressBar(masteredLearnedPercentage, masteredLearnedInitialText, masteredLearnedFinalText, 'medium-performance');
+                await animateProgressBar(masteredLearnedPercentage, masteredLearnedInitialText, masteredLearnedFinalText, 'medium-performance'); // Luôn màu vàng
                 await new Promise(resolve => setTimeout(resolve, DISPLAY_DURATION_MS));
             });
         }
