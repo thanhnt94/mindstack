@@ -12,6 +12,15 @@
     box-sizing: border-box;
 }
 
+/* THÊM MỚI: Điều chỉnh margin-top trên mobile */
+@media (max-width: 768px) {
+    .select-set-container {
+        margin-top: 0; /* Xóa margin-top trên mobile để giảm khoảng trống */
+        padding-top: 15px; /* Giữ padding để nội dung không dính sát navbar */
+    }
+}
+/* KẾT THÚC THÊM MỚI */
+
 /* Kiểu cho từng khu vực (Bộ của bạn, Khám phá) */
 .set-category {
     background-color: #ffffff;

@@ -13,7 +13,7 @@
     left: 0;
     width: 100%;
     z-index: 1000;
-    height: 64px;
+    height: 64px; /* Giữ nguyên chiều cao mặc định cho desktop */
     display: flex;
     align-items: center;
     box-sizing: border-box;
@@ -25,6 +25,8 @@
     margin: 0 auto;
     display: flex;
     align-items: center;
+    /* THAY ĐỔI: Thêm khoảng cách giữa các phần tử trên desktop */
+    justify-content: space-between; /* Đảm bảo các phần tử giãn ra */
 }
 
 /* Container cho logo/brand để định vị dropdown */
@@ -44,32 +46,29 @@
     padding: 0.5rem;
     border-radius: 8px;
     transition: background-color 0.2s;
+    cursor: pointer; /* Luôn có cursor pointer cho logo */
 }
 
 .navbar-brand .fa-brain {
     color: #4299e1;
 }
 
-/* --- BẮT ĐẦU SỬA LỖI: Tăng độ ưu tiên cho selector --- */
-/* Mặc định ẩn mũi tên đi bằng một selector cụ thể hơn */
-.navbar-brand .nav-chevron-main {
-    display: none;
+/* THAY ĐỔI: Ẩn text và chevron trên mobile, hiện trên desktop */
+.navbar-brand .brand-text {
+    display: block; /* Mặc định hiển thị */
 }
 
 /* Wrapper cho các link điều hướng */
-.main-nav-wrapper {
-    flex-grow: 1; 
-    display: flex;
-    justify-content: center; 
-}
-/* --- KẾT THÚC SỬA LỖI --- */
-
-.navbar-nav {
+/* THAY ĐỔI: main-nav-wrapper không còn là dropdown trên mobile */
+/* Nó sẽ luôn hiển thị dưới dạng tab */
+.navbar-nav { /* Đổi từ .main-nav-wrapper sang .navbar-nav */
+    flex-grow: 1; /* Đảm bảo navbar-nav chiếm hết không gian còn lại */
     display: flex;
     list-style: none;
     margin: 0;
     padding: 0;
-    gap: 1rem;
+    gap: 1rem; /* Khoảng cách giữa các tab trên desktop */
+    justify-content: center; /* Căn giữa các tab trên desktop */
 }
 
 .nav-link {
@@ -98,7 +97,8 @@
 /* Menu người dùng (bên phải) */
 .navbar-user-menu {
     position: relative;
-    margin-left: auto; 
+    margin-left: auto;
+    flex-shrink: 0; /* Ngăn co lại */
 }
 
 .user-menu-trigger {
@@ -115,12 +115,19 @@
     background-color: #f7fafc;
 }
 
-.user-menu-trigger .username {
+.user-menu-trigger .username-text { /* THAY ĐỔI: Thêm class */
     font-weight: 500;
     color: #2d3748;
+    display: block; /* Mặc định hiển thị */
 }
 
-.user-menu-trigger .fa-chevron-down {
+.user-menu-trigger .user-icon { /* THÊM MỚI: Icon người dùng */
+    font-size: 1.25rem; /* Kích thước icon */
+    color: #4a5568;
+    display: none; /* Mặc định ẩn trên desktop */
+}
+
+.user-menu-trigger .user-chevron { /* THAY ĐỔI: Thêm class */
     font-size: 0.75rem;
     color: #a0aec0;
     transition: transform 0.2s;
@@ -178,54 +185,133 @@
 /* --- CSS cho giao diện Mobile (<= 768px) --- */
 @media (max-width: 768px) {
     .main-navbar {
-        padding: 0 1rem;
+        height: 50px; /* GIỮ NGUYÊN CHIỀU CAO NAVBAR TRÊN MOBILE */
+        padding: 0; /* Xóa padding ngang của main-navbar */
     }
     .navbar-container {
-        justify-content: space-between; 
-    }
-    
-    /* Biến wrapper thành dropdown */
-    .main-nav-wrapper {
-        position: absolute;
-        top: calc(100% + 5px); 
-        left: 1rem;
-        background-color: #ffffff;
-        border: 1px solid #e7e9ed;
-        border-radius: 8px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        width: 220px;
-        z-index: 1001;
-        display: none; 
-    }
-
-    .main-nav-wrapper.open {
-        display: block; 
-    }
-
-    /* Các link trong navbar sẽ xếp dọc */
-    .navbar-nav {
-        flex-direction: column;
+        justify-content: space-between;
         gap: 0;
-        padding: 0.5rem;
+        padding: 0; /* XÓA HOÀN TOÀN PADDING CỦA CONTAINER */
     }
 
-    .nav-link {
-        justify-content: flex-start; 
+    /* Đảm bảo logo và user menu không co giãn và có padding cân đối */
+    .navbar-brand-container {
+        flex-shrink: 0;
+        flex-grow: 0;
+        /* THAY ĐỔI: Tăng padding ngang để tạo vùng hình vuông và cân đối hơn */
+        padding: 0 1.25rem; /* Tăng padding ngang từ 1rem lên 1.25rem */
+        height: 100%; /* Chiếm toàn bộ chiều cao của navbar */
+        display: flex; /* Bật flex để căn giữa nội dung */
+        align-items: center; /* Căn giữa theo chiều dọc */
+        justify-content: center; /* Căn giữa theo chiều ngang */
+    }
+    .navbar-user-menu {
+        flex-shrink: 0;
+        flex-grow: 0;
+        /* THAY ĐỔI: Tăng padding ngang để tạo vùng hình vuông và cân đối hơn */
+        padding: 0 1.25rem; /* Tăng padding ngang từ 1rem lên 1.25rem */
+        height: 100%; /* Chiếm toàn bộ chiều cao của navbar */
+        display: flex; /* Bật flex để căn giữa nội dung */
+        align-items: center; /* Căn giữa theo chiều dọc */
+        justify-content: center; /* Căn giữa theo chiều ngang */
     }
 
-    /* Hiện icon mũi tên và làm cho brand có thể bấm */
+    .navbar-brand .brand-text {
+        display: none;
+    }
+
     .navbar-brand {
-        cursor: pointer;
+        padding: 0; /* Xóa padding nội bộ của brand để padding của container làm việc */
+        gap: 0.5rem;
     }
-    .navbar-brand .nav-chevron-main {
-        display: inline-block;
-        font-size: 0.8rem;
-        margin-left: 5px;
-        color: #a0aec0;
-        transition: transform 0.2s;
+
+    .navbar-brand .fa-brain {
+        font-size: 1.1rem;
     }
-    .main-nav-wrapper.open + .navbar-brand-container .nav-chevron-main,
-    .navbar-brand-container .navbar-brand.open .nav-chevron-main {
-        transform: rotate(180deg);
+
+    /* BẮT ĐẦU SỬA LỖI: Chỉ áp dụng các quy tắc này cho navbar chính, không phải sidebar */
+    .main-navbar .navbar-nav { /* Thêm .main-navbar để tăng độ ưu tiên và giới hạn phạm vi */
+        flex-direction: row;
+        flex-grow: 1; /* Đảm bảo navbar-nav chiếm hết không gian còn lại */
+        gap: 0;
+        border-radius: 0;
+        overflow: hidden;
+        background-color: transparent;
+        margin: 0;
+        width: auto; /* Đặt width về auto để flex-grow hoạt động hiệu quả */
+        height: 100%; /* Đảm bảo navbar-nav chiếm toàn bộ chiều cao */
+    }
+
+    /* BẮT ĐẦU SỬA LỖI: Chỉ áp dụng các quy tắc này cho nav-link trong navbar chính */
+    .main-navbar .navbar-nav li { /* Thêm .main-navbar để tăng độ ưu tiên và giới hạn phạm vi */
+        flex-grow: 1;
+        flex-basis: 0; /* Cho phép các mục co lại nếu cần */
+        display: flex; /* Để căn giữa nội dung trong li */
+        justify-content: center; /* Căn giữa nội dung theo chiều ngang */
+        align-items: center; /* Căn giữa nội dung theo chiều dọc */
+    }
+
+    /* BẮT ĐẦU SỬA LỖI: Chỉ áp dụng các quy tắc này cho nav-link trong navbar chính */
+    .main-navbar .nav-link { /* Thêm .main-navbar để tăng độ ưu tiên và giới hạn phạm vi */
+        padding: 0.5rem 0.25rem; /* Giữ padding dọc, giảm padding ngang để có thêm không gian cho nội dung */
+        font-size: 0.75rem;
+        text-align: center;
+        border-radius: 0;
+        color: #4a5568;
+        background-color: transparent;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        justify-content: center;
+        align-items: center;
+        min-width: unset;
+        width: 100%; /* Đảm bảo nav-link lấp đầy li */
+        height: 100%; /* Đảm bảo nav-link lấp đầy li */
+    }
+
+    /* BẮT ĐẦU SỬA LỖI: Chỉ áp dụng các quy tắc này cho nav-link trong navbar chính */
+    .main-navbar .nav-link .fas { /* Thêm .main-navbar để tăng độ ưu tiên và giới hạn phạm vi */
+        font-size: 1em;
+    }
+
+    /* BẮT ĐẦU SỬA LỖI: Chỉ áp dụng các quy tắc này cho nav-link trong navbar chính */
+    .main-navbar .nav-link.active { /* Thêm .main-navbar để tăng độ ưu tiên và giới hạn phạm vi */
+        background-color: #ebf8ff;
+        color: #3182ce;
+        font-weight: 600;
+        border-bottom: 3px solid #3182ce;
+    }
+
+    /* BẮT ĐẦU SỬA LỖI: Chỉ áp dụng các quy tắc này cho nav-link trong navbar chính */
+    .main-navbar .nav-link:hover { /* Thêm .main-navbar để tăng độ ưu tiên và giới hạn phạm vi */
+        background-color: #e0f0ff;
+    }
+
+    /* BẮT ĐẦU SỬA LỖI: Chỉ áp dụng các quy tắc này cho nav-link trong navbar chính */
+    .main-navbar .nav-link .nav-link-text { /* Thêm .main-navbar để tăng độ ưu tiên và giới hạn phạm vi */
+        display: block;
+    }
+    /* KẾT THÚC SỬA LỖI */
+
+
+    .user-menu-trigger .username-text {
+        display: none;
+    }
+    .user-menu-trigger .user-icon {
+        display: block;
+        font-size: 1.1rem;
+    }
+    .user-menu-trigger {
+        padding: 0; /* Xóa padding nội bộ của trigger để padding của container làm việc */
+        gap: 0.15rem;
+    }
+    .user-menu-trigger .user-chevron {
+        font-size: 0.5rem;
+    }
+
+    .user-dropdown-menu {
+        top: calc(100% + 5px);
+        right: 0;
     }
 }
