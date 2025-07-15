@@ -3,6 +3,98 @@
  * Mô tả: Chứa các kiểu CSS dành riêng cho tính năng trắc nghiệm.
  */
 
+/* BẮT ĐẦU THÊM MỚI: Thanh trạng thái Quiz cố định (Quiz Status Bar) */
+.quiz-status-bar {
+    display: none; /* Mặc định ẩn trên desktop */
+    position: fixed;
+    top: 50px; /* Nằm ngay dưới navbar (chiều cao navbar mobile là 50px) */
+    left: 0;
+    width: 100%;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e7e9ed;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    z-index: 999; /* Nằm trên nội dung chính nhưng dưới navbar */
+    padding: 10px 15px;
+    box-sizing: border-box;
+    height: auto; /* Để chiều cao tự động theo nội dung */
+    /* THAY ĐỔI: Giảm padding-bottom để thu hẹp khoảng trống */
+    padding-bottom: 5px; /* Giảm padding-bottom để thu hẹp khoảng trống */
+}
+
+/* THAY ĐỔI: Loại bỏ các quy tắc height/max-height cho .expanded */
+/* .quiz-status-bar.expanded {
+    height: auto;
+    max-height: 200px;
+} */
+
+.quiz-status-bar .status-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #555;
+    height: 30px; /* Đảm bảo chiều cao cố định cho phần tóm tắt */
+}
+
+.quiz-status-bar .status-summary .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.quiz-status-bar .status-summary .summary-item .fas {
+    color: #3498db;
+    font-size: 1.1em;
+}
+
+.quiz-status-bar .status-summary .status-toggle-btn {
+    background: none;
+    border: none;
+    font-size: 1.1em;
+    color: #888;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    padding: 5px;
+}
+
+.quiz-status-bar.expanded .status-summary .status-toggle-btn {
+    transform: rotate(180deg);
+}
+
+.quiz-status-bar .status-details {
+    display: none; /* Mặc định ẩn */
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    /* THAY ĐỔI: Giảm margin-top của details để thu hẹp khoảng trống */
+    margin-top: 5px; /* Giảm margin-top để thu hẹp khoảng trống */
+}
+
+.quiz-status-bar.expanded .status-details {
+    display: block; /* Hiển thị khi mở rộng */
+}
+
+.quiz-status-bar .details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 cột */
+    gap: 10px;
+    font-size: 0.85em;
+}
+
+.quiz-status-bar .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    color: #444;
+}
+
+.quiz-status-bar .detail-item .detail-icon {
+    font-size: 1em;
+    color: #2ecc71; /* Màu xanh lá cho icon chi tiết */
+}
+/* KẾT THÚC THÊM MỚI: Thanh trạng thái Quiz cố định */
+
 /* --- Panel chính --- */
 .quiz-take-panel {
     background-color: #ffffff;
@@ -10,6 +102,8 @@
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     margin-top: 20px;
+    /* THÊM MỚI: Transition cho margin-top để có hiệu ứng đẩy xuống mượt mà */
+    transition: margin-top 0.3s ease-out;
 }
 
 /* --- Header Bar (Thanh tiến trình & Nút đổi chế độ) --- */
@@ -330,4 +424,24 @@
 /* --- SỬA LẠI NÚT TIẾP THEO --- */
 .quiz-controls .button {
     min-width: 120px; /* Đảm bảo nút có chiều rộng tối thiểu */
+}
+
+/* THÊM MỚI: Media query để hiển thị quiz-status-bar trên mobile và điều chỉnh main-container */
+@media (max-width: 1024px) { /* Sử dụng 1024px để khớp với breakpoint của layout.css */
+    .quiz-status-bar {
+        display: block; /* Hiển thị thanh trạng thái quiz trên mobile */
+    }
+
+    /* THAY ĐỔI: Điều chỉnh padding-top của main-container để chỉ đủ chỗ cho thanh trạng thái thu gọn */
+    .main-container {
+        /* Chiều cao navbar (50px) + Chiều cao status bar thu gọn (50px) + một ít khoảng trống */
+        padding-top: 110px; 
+    }
+}
+
+@media (max-width: 768px) {
+    /* Điều chỉnh thêm padding-top cho main-container trên mobile nhỏ hơn */
+    .main-container {
+        padding-top: 110px; /* Giữ nguyên hoặc điều chỉnh nếu cần */
+    }
 }

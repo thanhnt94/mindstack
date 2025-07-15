@@ -65,8 +65,9 @@ def take_set(set_id):
         'total': total_questions
     }
     
-    # BẮT ĐẦU THAY ĐỔI: Lấy nội dung đoạn văn từ quan hệ 'passage'
+    # BẮT ĐẦU THAY ĐỔI: Lấy nội dung đoạn văn từ quan hệ 'passage' và thống kê bộ quiz
     passage_content_to_display = question.passage.passage_content if question.passage else None
+    quiz_set_stats = quiz_service.get_quiz_set_stats_for_user(user_id, set_id)
     # KẾT THÚC THAY ĐỔI
 
     logger.info(f"{log_prefix} Hiển thị câu hỏi ID: {question.question_id} ở chế độ '{current_mode}'")
@@ -76,8 +77,10 @@ def take_set(set_id):
                            current_mode_display=QUIZ_MODE_DISPLAY_NAMES.get(current_mode, "Không rõ"),
                            can_edit=can_edit,
                            has_note=has_note,
-                           # BẮT ĐẦU THAY ĐỔI: Truyền dữ liệu đoạn văn đến template
-                           passage_content=passage_content_to_display
+                           # BẮT ĐẦU THAY ĐỔI: Truyền dữ liệu đoạn văn và thống kê bộ quiz đến template
+                           passage_content=passage_content_to_display,
+                           quiz_set_stats=quiz_set_stats,
+                           body_class='body-quiz-page' # THÊM MỚI: Thêm class vào body
                            # KẾT THÚC THAY ĐỔI
                            )
 
@@ -139,4 +142,3 @@ def set_quiz_mode(mode_code):
         return redirect(url_for('quiz.take_set', set_id=current_set_id))
     
     return redirect(url_for('quiz.index'))
-

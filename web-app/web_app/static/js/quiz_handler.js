@@ -70,6 +70,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (result.status === 'success') {
                 showResult(result.is_correct, result.correct_answer, selectedOption, result.guidance);
+                // BẮT ĐẦU THÊM MỚI: Gửi sự kiện tùy chỉnh để cập nhật thanh trạng thái
+                // Gọi API để lấy lại số liệu thống kê bộ quiz mới nhất
+                const questionId = quizForm.dataset.questionId;
+                const quizSetId = document.getElementById('quizJsData').dataset.quizSetId; // Lấy set_id từ quizJsData
+                const statsResponse = await fetch(`/api/quiz_set_stats/${quizSetId}`);
+                if (statsResponse.ok) {
+                    const statsResult = await statsResponse.json();
+                    if (statsResult.status === 'success') {
+                        const quizAnsweredEvent = new CustomEvent('quizAnswered', {
+                            detail: {
+                                quizSetStats: statsResult.data // Truyền dữ liệu thống kê mới
+                            }
+                        });
+                        window.dispatchEvent(quizAnsweredEvent);
+                    }
+                }
+                // KẾT THÚC THÊM MỚI
             } else {
                 alert(result.message || 'Có lỗi xảy ra.');
             }
@@ -119,4 +136,3 @@ document.addEventListener('DOMContentLoaded', function() {
         nextQuestionBtn.style.display = 'inline-flex';
     }
 });
-

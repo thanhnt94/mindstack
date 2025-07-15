@@ -683,3 +683,48 @@ class QuizService:
             logger.error(f"{log_prefix} Lỗi khi xuất bộ câu hỏi ra Excel: {e}", exc_info=True)
             return None
 
+    # BẮT ĐẦU THÊM MỚI: Hàm lấy thống kê chi tiết bộ Quiz cho người dùng
+    def get_quiz_set_stats_for_user(self, user_id, set_id):
+        """
+        Mô tả: Lấy các số liệu thống kê chi tiết của một bộ câu hỏi quiz cụ thể cho người dùng.
+        Args:
+            user_id (int): ID của người dùng.
+            set_id (int): ID của bộ câu hỏi quiz.
+        Returns:
+            dict: Một dictionary chứa các số liệu thống kê như tổng số câu hỏi,
+                  số câu đã trả lời, số câu đúng, số câu sai, số câu đã thành thạo, v.v.
+        """
+        log_prefix = f"[QUIZ_SERVICE|GetSetStats|User:{user_id}|Set:{set_id}]"
+        logger.info(f"{log_prefix} Đang lấy thống kê bộ quiz.")
+
+        stats = {
+            'total_questions': 0,
+            'answered_questions': 0,
+            'correct_answers': 0,
+            'incorrect_answers': 0,
+            'mastered_questions': 0,
+            'unanswered_questions': 0,
+            'set_title': 'N/A'
+        }
+
+        question_set = QuestionSet.query.get(set_id)
+        if not question_set:
+            logger.warning(f"{log_prefix} Không tìm thấy bộ câu hỏi ID: {set_id}.")
+            return stats
+
+        stats['set_title'] = question_set.title
+        stats['total_questions'] = QuizQuestion.query.filter_by(set_id=set_id).count()
+
+        # Lấy tất cả tiến trình của người dùng trong bộ này
+        progress_in_quiz_set = UserQuizProgress.query.join(QuizQuestion)\
+            .filter(QuizQuestion.set_id == set_id, UserQuizProgress.user_id == user_id)
+        
+        stats['answered_questions'] = progress_in_quiz_set.count()
+        stats['correct_answers'] = progress_in_quiz_set.filter(UserQuizProgress.times_correct > 0).count()
+        stats['incorrect_answers'] = progress_in_quiz_set.filter(UserQuizProgress.times_incorrect > 0).count()
+        stats['mastered_questions'] = progress_in_quiz_set.filter(UserQuizProgress.is_mastered == True).count()
+        stats['unanswered_questions'] = stats['total_questions'] - stats['answered_questions']
+
+        logger.info(f"{log_prefix} Đã lấy thống kê bộ quiz thành công.")
+        return stats
+    # KẾT THÚC THÊM MỚI

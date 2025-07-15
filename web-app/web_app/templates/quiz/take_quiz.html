@@ -3,6 +3,49 @@
 {% block title %}Làm trắc nghiệm - {{ question.question_set.title }}{% endblock %}
 
 {% block content %}
+{# BẮT ĐẦU THÊM MỚI: Thanh trạng thái Quiz cố định (chỉ hiển thị trên mobile) #}
+<div id="quiz-status-bar" class="quiz-status-bar">
+    <div class="status-summary">
+        <span class="summary-item">
+            <i class="fas fa-question-circle"></i> Câu: {{ progress.current }} / {{ progress.total }}
+        </span>
+        <span class="summary-item">
+            <i class="fas fa-check"></i> Đúng: <span id="quiz-correct-count">{{ quiz_set_stats.correct_answers }}</span>
+        </span>
+        <span class="summary-item">
+            <i class="fas fa-times"></i> Sai: <span id="quiz-incorrect-count">{{ quiz_set_stats.incorrect_answers }}</span>
+        </span>
+        <button id="quiz-status-toggle-btn" class="status-toggle-btn">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="status-details">
+        <div class="details-grid">
+            <div class="detail-item">
+                <i class="fas fa-book-open detail-icon"></i>
+                <span class="detail-label">Tổng câu:</span>
+                <span class="detail-value">{{ quiz_set_stats.total_questions }}</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-clipboard-check detail-icon"></i>
+                <span class="detail-label">Đã trả lời:</span>
+                <span class="detail-value">{{ quiz_set_stats.answered_questions }}</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-star detail-icon"></i>
+                <span class="detail-label">Thành thạo:</span>
+                <span class="detail-value">{{ quiz_set_stats.mastered_questions }}</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-hourglass-half detail-icon"></i>
+                <span class="detail-label">Chưa trả lời:</span>
+                <span class="detail-value">{{ quiz_set_stats.unanswered_questions }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{# KẾT THÚC THÊM MỚI #}
+
 <div class="main-container" style="max-width: 800px;">
     <div class="quiz-take-panel">
         
@@ -202,8 +245,16 @@
      data-question-audio-file="{{ question.question_audio_file or '' }}"
      {# BẮT ĐẦU THAY ĐỔI: Truyền passage_id và passage_order #}
      data-passage-id="{{ question.passage_id or '' }}"
-     data-passage-order="{{ question.passage_order or '' }}">
-     {# KẾT THÚC THAY ĐỔI #}
+     data-passage-order="{{ question.passage_order or '' }}"
+     {# BẮT ĐẦU THÊM MỚI: Truyền dữ liệu thống kê bộ quiz cho JS #}
+     data-quiz-set-id="{{ question.question_set.set_id }}" {# THÊM MỚI: Truyền set_id #}
+     data-quiz-total-questions="{{ quiz_set_stats.total_questions }}"
+     data-quiz-answered-questions="{{ quiz_set_stats.answered_questions }}"
+     data-quiz-correct-answers="{{ quiz_set_stats.correct_answers }}"
+     data-quiz-incorrect-answers="{{ quiz_set_stats.incorrect_answers }}"
+     data-quiz-mastered-questions="{{ quiz_set_stats.mastered_questions }}"
+     data-quiz-unanswered-questions="{{ quiz_set_stats.unanswered_questions }}">
+     {# KẾT THÚC THÊM MỚI #}
 </div>
 
 {% endblock %}
@@ -215,4 +266,7 @@
     <script src="{{ url_for('static', filename='js/quiz_edit_handler.js') }}"></script>
     {% endif %}
     <script src="{{ url_for('static', filename='js/quiz_audio_image_handler.js') }}"></script>
+    {# BẮT ĐẦU THÊM MỚI: Script cho thanh trạng thái Quiz #}
+    <script src="{{ url_for('static', filename='js/quiz_status_bar_handler.js') }}"></script>
+    {# KẾT THÚC THÊM MỚI #}
 {% endblock %}
