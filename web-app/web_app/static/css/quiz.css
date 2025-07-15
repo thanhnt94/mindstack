@@ -3,7 +3,7 @@
  * Mô tả: Chứa các kiểu CSS dành riêng cho tính năng trắc nghiệm.
  */
 
-/* BẮT ĐẦU THÊM MỚI: Thanh trạng thái Quiz cố định (Quiz Status Bar) */
+/* BẮT ĐẦU THAY ĐỔI: Thanh trạng thái Quiz cố định (Quiz Status Bar) */
 .quiz-status-bar {
     display: none; /* Mặc định ẩn trên desktop */
     position: fixed;
@@ -12,88 +12,130 @@
     width: 100%;
     background-color: #ffffff;
     border-bottom: 1px solid #e7e9ed;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     z-index: 999; /* Nằm trên nội dung chính nhưng dưới navbar */
-    padding: 10px 15px;
+    padding: 0 15px; /* Giữ padding ngang */
     box-sizing: border-box;
-    height: auto; /* Để chiều cao tự động theo nội dung */
-    /* THAY ĐỔI: Giảm padding-bottom để thu hẹp khoảng trống */
-    padding-bottom: 5px; /* Giảm padding-bottom để thu hẹp khoảng trống */
+    height: auto; /* Chiều cao tự động theo nội dung */
+    padding-bottom: 0px; /* Đảm bảo padding-bottom là 0 */
 }
 
-/* THAY ĐỔI: Loại bỏ các quy tắc height/max-height cho .expanded */
-/* .quiz-status-bar.expanded {
-    height: auto;
-    max-height: 200px;
-} */
-
-.quiz-status-bar .status-summary {
+.quiz-status-bar .status-content {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-size: 0.9em;
+    justify-content: space-between; /* Căn đều các mục */
+    width: 100%;
+    /* THAY ĐỔI: Tăng padding dọc để làm thanh status to ra */
+    padding: 8px 0; /* Tăng padding dọc lên 8px */
+    /* THAY ĐỔI: Giảm gap xuống 5px */
+    gap: 5px; /* Khoảng cách giữa các mục */
+    flex-wrap: nowrap; /* Ngăn không cho các mục xuống dòng */
+    overflow-x: hidden; /* KHÔNG CHO CUỘN NGANG */
+}
+
+.quiz-status-bar .status-progress-item {
+    flex-grow: 1; /* Giữ flex-grow là 1 để chia đều */
+    flex-basis: 0; /* Co lại nếu cần */
+    min-width: 80px; /* Giữ chiều rộng tối thiểu */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Căn giữa nội dung */
+    gap: 2px; /* Giảm gap */
+    height: 20px; /* THAY ĐỔI: Tăng chiều cao cố định cho item */
+    position: relative; /* Để định vị text số */
+}
+
+.quiz-status-bar .progress-bar-container {
+    width: 95%; /* Chiếm 95% chiều rộng của item */
+    height: 18px; /* THAY ĐỔI: Tăng chiều cao của thanh bar */
+    background-color: #e9ecef;
+    border-radius: 9px; /* Cập nhật bo góc */
+    position: relative;
+    overflow: hidden;
+}
+
+.quiz-status-bar .progress-bar-fill-quiz {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    border-radius: 9px; /* Cập nhật bo góc */
+    transition: width 0.4s ease-out;
+    min-width: 1%;
+}
+
+.quiz-status-bar .progress-bar-text-quiz {
+    /* THAY ĐỔI: Định vị tuyệt đối để nằm giữa thanh bar */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8em; /* THAY ĐỔI: Điều chỉnh cỡ chữ */
+    font-weight: bold;
+    color: #000; /* Màu đen */
+    text-shadow: 0 0 2px rgba(255,255,255,0.7); /* Đổ bóng trắng để dễ đọc trên nền màu */
+    white-space: nowrap; /* Ngăn xuống dòng */
+    z-index: 1; /* Đảm bảo text nằm trên fill */
+}
+
+.quiz-status-bar .status-stats-group { /* Group cho Đúng/Sai */
+    flex-grow: 1; /* Giữ flex-grow là 1 để chia đều */
+    flex-basis: 0; /* Co lại nếu cần */
+    display: flex;
+    justify-content: space-around; /* Chia đều không gian cho Đúng/Sai */
+    align-items: center;
+    min-width: 70px; /* Giữ chiều rộng tối thiểu cho nhóm Đúng/Sai */
+}
+
+.quiz-status-bar .status-item {
+    flex-shrink: 0; /* Không co lại */
+    flex-grow: 0; /* Không giãn nở */
+    min-width: 30px; /* Giữ chiều rộng tối thiểu cho các ô thống kê */
+    text-align: center;
+    font-size: 0.8em; /* Giữ cỡ chữ */
     font-weight: 500;
     color: #555;
-    height: 30px; /* Đảm bảo chiều cao cố định cho phần tóm tắt */
-}
-
-.quiz-status-bar .status-summary .summary-item {
     display: flex;
+    flex-direction: column; /* Xếp icon và số dọc */
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    gap: 1px; /* Giữ khoảng cách giữa icon và số */
+    height: 45px; /* THAY ĐỔI: Tăng chiều cao cố định cho item */
 }
 
-.quiz-status-bar .status-summary .summary-item .fas {
-    color: #3498db;
-    font-size: 1.1em;
+.quiz-status-bar .status-item .fas {
+    /* Đặt màu cụ thể cho icon đúng/sai */
+    font-size: 1.1em; /* Tăng kích thước icon */
+}
+.quiz-status-bar .status-icon-correct {
+    color: #28a745; /* Màu xanh lá cây cho icon đúng */
+}
+.quiz-status-bar .status-icon-incorrect {
+    color: #dc3545; /* Màu đỏ cho icon sai */
 }
 
-.quiz-status-bar .status-summary .status-toggle-btn {
-    background: none;
-    border: none;
-    font-size: 1.1em;
-    color: #888;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-    padding: 5px;
-}
 
-.quiz-status-bar.expanded .status-summary .status-toggle-btn {
-    transform: rotate(180deg);
-}
-
-.quiz-status-bar .status-details {
-    display: none; /* Mặc định ẩn */
-    padding-top: 10px;
-    border-top: 1px solid #eee;
-    /* THAY ĐỔI: Giảm margin-top của details để thu hẹp khoảng trống */
-    margin-top: 5px; /* Giảm margin-top để thu hẹp khoảng trống */
-}
-
-.quiz-status-bar.expanded .status-details {
-    display: block; /* Hiển thị khi mở rộng */
-}
-
-.quiz-status-bar .details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 cột */
-    gap: 10px;
-    font-size: 0.85em;
-}
-
-.quiz-status-bar .detail-item {
-    display: flex;
+.quiz-status-bar .change-mode-button-quiz {
+    flex-shrink: 0; /* Không co lại */
+    flex-grow: 1; /* Giữ flex-grow là 1 để chia đều */
+    flex-basis: 0; /* Co lại nếu cần */
+    padding: 5px 5px !important; /* THAY ĐỔI: Tăng padding */
+    font-size: 0.75em !important; /* Tăng cỡ chữ */
+    white-space: nowrap;
+    height: 35px; /* THAY ĐỔI: Tăng chiều cao cố định cho nút */
+    display: flex; /* Đảm bảo nội dung căn giữa */
+    flex-direction: column; /* Xếp icon và text dọc */
     align-items: center;
-    gap: 8px;
-    padding: 5px 0;
-    color: #444;
+    justify-content: center;
+    gap: 1px; /* Giữ gap */
+    min-width: 60px; /* Giữ chiều rộng tối thiểu cho nút chế độ */
+}
+.quiz-status-bar .change-mode-button-quiz .fas {
+    margin-right: 0; /* Xóa margin-right của icon */
 }
 
-.quiz-status-bar .detail-item .detail-icon {
-    font-size: 1em;
-    color: #2ecc71; /* Màu xanh lá cho icon chi tiết */
-}
-/* KẾT THÚC THÊM MỚI: Thanh trạng thái Quiz cố định */
+
+/* KẾT THÚC THAY ĐỔI: Thanh trạng thái Quiz cố định */
+
 
 /* --- Panel chính --- */
 .quiz-take-panel {
@@ -101,8 +143,8 @@
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-    /* THÊM MỚI: Transition cho margin-top để có hiệu ứng đẩy xuống mượt mà */
+    /* BẮT ĐẦU SỬA: Loại bỏ margin-top cố định để JS kiểm soát hoàn toàn */
+    margin-top: 0; /* Đặt margin-top về 0 */
     transition: margin-top 0.3s ease-out;
 }
 
@@ -111,7 +153,7 @@
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-bottom: 25px;
+    margin-bottom: 15px; /* ĐÃ SỬA: Giảm từ 25px xuống 15px */
 }
 
 .quiz-progress-bar {
@@ -153,16 +195,15 @@
 
 /* --- Phần câu hỏi --- */
 .question-section {
-    margin-bottom: 25px;
+    margin-bottom: 15px; /* ĐÃ SỬA: Giảm từ 25px xuống 15px */
     text-align: left;
 }
 
-/* BẮT ĐẦU THÊM MỚI: Kiểu cho đoạn văn */
 .passage-container {
     background-color: #f8f9fa;
     border-left: 4px solid #4CAF50; /* Màu xanh lá cây cho đoạn văn */
     padding: 15px;
-    margin-bottom: 25px;
+    margin-bottom: 15px; /* ĐÃ SỬA: Giảm từ 25px xuống 15px */
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
@@ -171,7 +212,7 @@
     font-size: 1.1em;
     color: #388E3C; /* Màu xanh đậm hơn */
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 8px; /* ĐÃ SỬA: Giảm từ 10px xuống 8px */
     font-weight: bold;
 }
 
@@ -181,14 +222,13 @@
     line-height: 1.6;
     white-space: pre-wrap; /* Giữ định dạng xuống dòng và khoảng trắng */
 }
-/* KẾT THÚC THÊM MỚI */
 
 
 .pre-question-text {
     background-color: #f8f9fa;
     border-left: 4px solid #3498db;
     padding: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 10px; /* ĐÃ SỬA: Giảm từ 15px xuống 10px */
     font-style: italic;
     color: #555;
     line-height: 1.6;
@@ -198,11 +238,12 @@
     font-size: 1.5em;
     color: #2c3e50;
     line-height: 1.4;
+    margin-bottom: 10px; /* ĐÃ SỬA: Thêm margin-bottom để tạo khoảng cách với ảnh/audio */
 }
 
 /* Kiểu cho hình ảnh và audio của câu hỏi */
 .question-image-container {
-    margin: 20px 0;
+    margin: 15px 0; /* ĐÃ SỬA: Giảm từ 20px xuống 15px */
     text-align: center;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -219,7 +260,7 @@
 }
 
 .question-audio-controls {
-    margin: 20px 0;
+    margin: 15px 0; /* ĐÃ SỬA: Giảm từ 20px xuống 15px */
     text-align: center;
 }
 
@@ -231,16 +272,12 @@
 .quiz-audio-controls-custom {
     display: flex;
     align-items: center;
-    /* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh gap để thanh tua dài hơn */
-    gap: 15px; /* Tăng khoảng cách giữa nút play và thanh tua */
-    /* KẾT THÚC SỬA ĐỔI */
+    gap: 10px; /* ĐÃ SỬA: Giảm từ 15px xuống 10px */
     background-color: #f0f2f5;
-    padding: 10px 15px;
+    padding: 8px 12px; /* ĐÃ SỬA: Giảm padding */
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    /* BẮT ĐẦU SỬA ĐỔI: Tăng max-width để thanh tua dài hơn */
     max-width: 600px; /* Tăng giới hạn chiều rộng để thanh tua dài hơn */
-    /* KẾT THÚC SỬA ĐỔI */
     margin: 0 auto; /* Căn giữa */
 }
 
@@ -248,9 +285,9 @@
     background: none;
     border: none;
     color: #34495e;
-    font-size: 1.2em;
+    font-size: 1.1em; /* ĐÃ SỬA: Giảm kích thước icon */
     cursor: pointer;
-    padding: 5px;
+    padding: 4px; /* ĐÃ SỬA: Giảm padding */
     transition: color 0.2s;
 }
 
@@ -262,16 +299,14 @@
     flex-grow: 1; /* Cho thanh tiến trình chiếm hết không gian còn lại */
     display: flex;
     align-items: center;
-    /* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh gap trong progress-container */
-    gap: 8px; /* Giữ khoảng cách nhỏ giữa thanh tua và thời gian */
-    /* KẾT THÚC SỬA ĐỔI */
+    gap: 5px; /* ĐÃ SỬA: Giảm từ 8px xuống 5px */
 }
 
 .quiz-audio-controls-custom .progress-bar {
     width: 100%; /* Đảm bảo thanh tua chiếm 100% của progress-container */
-    height: 8px;
+    height: 6px; /* ĐÃ SỬA: Giảm chiều cao */
     background-color: #e0e0e0;
-    border-radius: 4px;
+    border-radius: 3px; /* ĐÃ SỬA: Giảm bo góc */
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -281,25 +316,23 @@
     height: 100%;
     width: 0%;
     background-color: #007bff;
-    border-radius: 4px;
+    border-radius: 3px; /* ĐÃ SỬA: Giảm bo góc */
     transition: width 0.1s linear; /* Chuyển động mượt mà hơn */
 }
 
-/* BẮT ĐẦU THÊM MỚI: Style cho hiển thị thời gian */
 .quiz-audio-controls-custom .time-display {
-    font-size: 0.8em;
+    font-size: 0.7em; /* ĐÃ SỬA: Giảm font size */
     color: #555;
-    min-width: 35px; /* Đảm bảo đủ chỗ cho thời gian */
+    min-width: 30px; /* ĐÃ SỬA: Giảm min-width */
     text-align: right;
 }
-/* KẾT THÚC THÊM MỚI */
 
 
 /* --- Phần lựa chọn đáp án --- */
 .options-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 15px;
+    gap: 10px; /* ĐÃ SỬA: Giảm từ 15px xuống 10px */
 }
 
 .option-card {
@@ -308,7 +341,7 @@
     background-color: #fff;
     border: 2px solid #e9ecef;
     border-radius: 8px;
-    padding: 15px;
+    padding: 12px 15px; /* ĐÃ SỬA: Giảm padding */
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
@@ -354,14 +387,14 @@
 .option-content {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px; /* ĐÃ SỬA: Giảm từ 15px xuống 10px */
     text-align: left;
 }
 
 .option-letter {
     flex-shrink: 0;
-    width: 30px;
-    height: 30px;
+    width: 28px; /* ĐÃ SỬA: Giảm kích thước */
+    height: 28px; /* ĐÃ SỬA: Giảm kích thước */
     border: 2px solid #ced4da;
     border-radius: 50%;
     display: flex;
@@ -370,42 +403,46 @@
     font-weight: bold;
     color: #495057;
     transition: all 0.2s;
+    font-size: 0.9em; /* ĐÃ SỬA: Giảm font size */
 }
 
 .option-content p {
     margin: 0;
     color: #343a40;
     line-height: 1.5;
+    font-size: 0.95em; /* ĐÃ SỬA: Giảm font size */
 }
 
 /* --- Khu vực kết quả và hành động --- */
 .result-section {
-    margin-top: 25px;
+    margin-top: 15px; /* ĐÃ SỬA: Giảm từ 25px xuống 15px */
 }
 
 .guidance-panel {
-    padding: 20px;
+    padding: 15px; /* ĐÃ SỬA: Giảm padding */
     background-color: #fffaf0;
     border: 1px solid #ffe5b3;
     border-left: 5px solid #ffc107;
     border-radius: 8px;
-    margin-bottom: 15px;
+    margin-bottom: 10px; /* ĐÃ SỬA: Giảm từ 15px xuống 10px */
 }
 
 .guidance-panel h4 {
     margin-top: 0;
     color: #d69e2e;
+    font-size: 1.1em; /* ĐÃ SỬA: Giảm font size */
 }
 
 .guidance-panel p {
     margin-bottom: 0;
-    line-height: 1.6;
+    line-height: 1.5; /* ĐÃ SỬA: Giảm line-height */
     color: #5c4a1e;
+    font-size: 0.95em; /* ĐÃ SỬA: Giảm font size */
 }
 
 .result-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px; /* ĐÃ SỬA: Giảm từ 10px xuống 8px */
 }
 
 .result-actions .button.has-note {
@@ -416,14 +453,16 @@
 
 /* --- Nút điều khiển --- */
 .quiz-controls {
-    margin-top: 30px;
+    margin-top: 20px; /* ĐÃ SỬA: Giảm từ 30px xuống 20px */
     display: flex;
     justify-content: flex-end;
 }
 
 /* --- SỬA LẠI NÚT TIẾP THEO --- */
 .quiz-controls .button {
-    min-width: 120px; /* Đảm bảo nút có chiều rộng tối thiểu */
+    min-width: 100px; /* ĐÃ SỬA: Giảm min-width */
+    padding: 10px 20px; /* ĐÃ SỬA: Giảm padding */
+    font-size: 0.9em; /* ĐÃ SỬA: Giảm font size */
 }
 
 /* THÊM MỚI: Media query để hiển thị quiz-status-bar trên mobile và điều chỉnh main-container */
@@ -432,16 +471,34 @@
         display: block; /* Hiển thị thanh trạng thái quiz trên mobile */
     }
 
-    /* THAY ĐỔI: Điều chỉnh padding-top của main-container để chỉ đủ chỗ cho thanh trạng thái thu gọn */
+    /* Ẩn thanh header bar mặc định trên mobile vì đã có status bar mới */
+    .quiz-header-bar {
+        display: none;
+    }
+
+    /* Điều chỉnh padding-top của main-container để chỉ đủ chỗ cho thanh trạng thái thu gọn */
     .main-container {
-        /* Chiều cao navbar (50px) + Chiều cao status bar thu gọn (50px) + một ít khoảng trống */
-        padding-top: 110px; 
+        padding-top: 0; /* JS sẽ kiểm soát padding-top của body */
     }
 }
 
 @media (max-width: 768px) {
-    /* Điều chỉnh thêm padding-top cho main-container trên mobile nhỏ hơn */
     .main-container {
-        padding-top: 110px; /* Giữ nguyên hoặc điều chỉnh nếu cần */
+        padding-top: 0; /* JS sẽ kiểm soát padding-top của body */
     }
+
+    /* THÊM MỚI: Điều chỉnh padding cho quiz-take-panel trên mobile */
+    .quiz-take-panel {
+        padding: 5px; /* Giảm padding tổng thể của panel trên mobile */
+    }
+    .pre-question-text {
+        padding: 5px;
+    }
+
+    .option-content {
+        gap: 5px; /* ĐÃ SỬA: Giảm từ 15px xuống 10px */
+        padding: 0px; /* Giảm padding của nội dung đáp án */
+        margin: 0px;
+    }
+
 }

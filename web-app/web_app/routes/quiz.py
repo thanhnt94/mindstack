@@ -68,6 +68,12 @@ def take_set(set_id):
     # BẮT ĐẦU THAY ĐỔI: Lấy nội dung đoạn văn từ quan hệ 'passage' và thống kê bộ quiz
     passage_content_to_display = question.passage.passage_content if question.passage else None
     quiz_set_stats = quiz_service.get_quiz_set_stats_for_user(user_id, set_id)
+    
+    # THÊM MỚI: Lấy tiến trình của câu hỏi hiện tại để hiển thị số lần đúng/sai của câu đó
+    question_progress = UserQuizProgress.query.filter_by(
+        user_id=user_id,
+        question_id=question.question_id
+    ).first()
     # KẾT THÚC THAY ĐỔI
 
     logger.info(f"{log_prefix} Hiển thị câu hỏi ID: {question.question_id} ở chế độ '{current_mode}'")
@@ -80,7 +86,8 @@ def take_set(set_id):
                            # BẮT ĐẦU THAY ĐỔI: Truyền dữ liệu đoạn văn và thống kê bộ quiz đến template
                            passage_content=passage_content_to_display,
                            quiz_set_stats=quiz_set_stats,
-                           body_class='body-quiz-page' # THÊM MỚI: Thêm class vào body
+                           body_class='body-quiz-page', # THÊM MỚI: Thêm class vào body
+                           question_progress=question_progress # THÊM MỚI: Truyền tiến trình câu hỏi hiện tại
                            # KẾT THÚC THAY ĐỔI
                            )
 

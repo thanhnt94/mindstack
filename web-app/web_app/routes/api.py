@@ -439,3 +439,52 @@ def get_quiz_questions_by_category(set_id, category):
         logger.error(f"Lỗi khi lấy câu hỏi quiz theo danh mục '{category}' cho bộ {set_id}: {e}", exc_info=True)
         return jsonify({'status': 'error', 'message': 'Lỗi server nội bộ.'}), 500
 
+# BẮT ĐẦU THÊM MỚI: API để lấy thống kê bộ quiz cho JavaScript
+@api_bp.route('/quiz_set_stats/<int:set_id>', methods=['GET'])
+@login_required
+def get_quiz_set_stats(set_id):
+    """
+    Mô tả: Lấy các số liệu thống kê của một bộ câu hỏi quiz cụ thể cho người dùng hiện tại.
+    Args:
+        set_id (int): ID của bộ câu hỏi quiz.
+    Returns:
+        JSON: Các số liệu thống kê hoặc JSON báo lỗi.
+    """
+    user_id = session.get('user_id')
+    stats = quiz_service.get_quiz_set_stats_for_user(user_id, set_id)
+    if not stats:
+        return jsonify({'status': 'error', 'message': 'Không tìm thấy thống kê bộ quiz.'}), 404
+    return jsonify({'status': 'success', 'data': stats})
+# KẾT THÚC THÊM MỚI
+
+# BẮT ĐẦU THÊM MỚI: API để lấy tiến trình của một câu hỏi quiz cụ thể
+@api_bp.route('/quiz_question_progress/<int:question_id>', methods=['GET'])
+@login_required
+def get_quiz_question_progress(question_id):
+    """
+    Mô tả: Lấy tiến trình của người dùng cho một câu hỏi quiz cụ thể.
+    Args:
+        question_id (int): ID của câu hỏi quiz.
+    Returns:
+        JSON: Tiến trình câu hỏi hoặc JSON báo lỗi.
+    """
+    user_id = session.get('user_id')
+    progress = UserQuizProgress.query.filter_by(
+        user_id=user_id,
+        question_id=question_id
+    ).first()
+
+    if not progress:
+        return jsonify({
+            'status': 'success',
+            'data': {'times_correct': 0, 'times_incorrect': 0} # Trả về 0 nếu chưa có tiến trình
+        })
+    
+    return jsonify({
+        'status': 'success',
+        'data': {
+            'times_correct': progress.times_correct,
+            'times_incorrect': progress.times_incorrect
+        }
+    })
+# KẾT THÚC THÊM MỚI

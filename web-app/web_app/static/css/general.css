@@ -54,7 +54,7 @@ body {
 
 /* SỬA: Chỉ áp dụng padding-top cho các trang không phải trang học */
 body:not(.learn-page) .page-wrapper {
-    padding-top: 64px; /* Khoảng trống cho navbar cố định */
+    padding-top: 64px; /* Khoảng trống cho navbar cố định trên desktop */
 }
 
 body.no-scroll {
@@ -67,6 +67,20 @@ body.learn-page .page-wrapper {
     display: flex; /* Đảm bảo là flex container để quản lý chiều cao con */
     flex-direction: column;
 }
+
+/* BẮT ĐẦU THÊM MỚI: Quy tắc cho trang quiz */
+body.body-quiz-page {
+    /* Đảm bảo body không có padding-top cố định ở đây, sẽ được JS kiểm soát */
+    padding-top: 0 !important; /* Quan trọng: Ghi đè padding mặc định của body */
+}
+
+/* Điều chỉnh main-container trên trang quiz để nó bắt đầu từ đỉnh viewport */
+body.body-quiz-page .main-container {
+    padding-top: 0 !important; /* Xóa padding-top mặc định của main-container */
+    margin-top: 0 !important; /* Xóa margin-top mặc định của main-container */
+}
+/* KẾT THÚC THÊM MỚI */
+
 
 * {
     box-sizing: border-box;
@@ -88,20 +102,11 @@ body.body-centered-content .page-wrapper {
     flex-direction: column;
     justify-content: center; /* Căn giữa nội dung chính bên trong page-wrapper */
     align-items: center;
-    /* BẮT ĐẦU SỬA ĐỔI: Thêm padding-top và padding-bottom để tạo khoảng cách với navbar/footer */
-    padding-top: 64px; /* Khoảng cách cho navbar */
+    /* BẮT ĐẦU SỬA ĐỔI: Điều chỉnh padding-top cho các trang không phải trang học */
+    padding-top: 64px; /* Khoảng cách cho navbar trên desktop */
     padding-bottom: 50px; /* Khoảng cách cho footer (giả định chiều cao footer khoảng 50px) */
     /* KẾT THÚC SỬA ĐỔI */
 }
-
-/* BẮT ĐẦU SỬA ĐỔI: Loại bỏ khối rỗng và các quy tắc không cần thiết */
-/* Các quy tắc mặc định của navbar/footer sẽ được áp dụng */
-/* @media (max-width: 768px) {
-    body.body-centered-content .main-navbar,
-    body.body-centered-content .main-footer {
-    }
-} */
-/* KẾT THÚC SỬA ĐỔI */
 
 /* Đảm bảo page-wrapper chiếm toàn bộ chiều cao còn lại trên mobile */
 /* Di chuyển quy tắc này ra ngoài media query nếu nó áp dụng cho mọi kích thước */
@@ -109,5 +114,10 @@ body.body-centered-content .page-wrapper {
 @media (max-width: 768px) {
     body.body-centered-content .page-wrapper {
         height: auto; /* Để nó tự co giãn theo nội dung */
+    }
+
+    /* THÊM MỚI: Điều chỉnh padding-top cho các trang không phải trang học trên mobile */
+    body:not(.learn-page):not(.body-quiz-page) .page-wrapper { /* THÊM :not(.body-quiz-page) */
+        padding-top: 50px; /* Chiều cao mới của navbar trên mobile */
     }
 }

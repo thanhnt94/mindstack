@@ -3,53 +3,42 @@
 {% block title %}Làm trắc nghiệm - {{ question.question_set.title }}{% endblock %}
 
 {% block content %}
-{# BẮT ĐẦU THÊM MỚI: Thanh trạng thái Quiz cố định (chỉ hiển thị trên mobile) #}
+{# BẮT ĐẦU THAY ĐỔI: Thanh trạng thái Quiz cố định (chỉ hiển thị trên mobile) #}
 <div id="quiz-status-bar" class="quiz-status-bar">
-    <div class="status-summary">
-        <span class="summary-item">
-            <i class="fas fa-question-circle"></i> Câu: {{ progress.current }} / {{ progress.total }}
-        </span>
-        <span class="summary-item">
-            <i class="fas fa-check"></i> Đúng: <span id="quiz-correct-count">{{ quiz_set_stats.correct_answers }}</span>
-        </span>
-        <span class="summary-item">
-            <i class="fas fa-times"></i> Sai: <span id="quiz-incorrect-count">{{ quiz_set_stats.incorrect_answers }}</span>
-        </span>
-        <button id="quiz-status-toggle-btn" class="status-toggle-btn">
-            <i class="fas fa-chevron-down"></i>
-        </button>
-    </div>
-    <div class="status-details">
-        <div class="details-grid">
-            <div class="detail-item">
-                <i class="fas fa-book-open detail-icon"></i>
-                <span class="detail-label">Tổng câu:</span>
-                <span class="detail-value">{{ quiz_set_stats.total_questions }}</span>
-            </div>
-            <div class="detail-item">
-                <i class="fas fa-clipboard-check detail-icon"></i>
-                <span class="detail-label">Đã trả lời:</span>
-                <span class="detail-value">{{ quiz_set_stats.answered_questions }}</span>
-            </div>
-            <div class="detail-item">
-                <i class="fas fa-star detail-icon"></i>
-                <span class="detail-label">Thành thạo:</span>
-                <span class="detail-value">{{ quiz_set_stats.mastered_questions }}</span>
-            </div>
-            <div class="detail-item">
-                <i class="fas fa-hourglass-half detail-icon"></i>
-                <span class="detail-label">Chưa trả lời:</span>
-                <span class="detail-value">{{ quiz_set_stats.unanswered_questions }}</span>
+    <div class="status-content">
+        {# Phần 1: Thanh tiến trình (Số câu đã làm / Tổng số câu) #}
+        <div class="status-progress-item">
+            {% set answered_percentage = (quiz_set_stats.answered_questions * 100 / quiz_set_stats.total_questions) | int if quiz_set_stats.total_questions > 0 else 0 %}
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill-quiz" style="width: var(--progress-width, 0%);" data-progress-width="{{ answered_percentage }}"></div>
+                <span class="progress-bar-text-quiz">
+                    {{ quiz_set_stats.answered_questions }} / {{ quiz_set_stats.total_questions }}
+                </span>
             </div>
         </div>
+
+        {# Phần 2: Thống kê Đúng / Sai (chỉ icon + số) #}
+        <div class="status-stats-group">
+            <div class="status-item">
+                <i class="fas fa-check status-icon-correct"></i> <span id="quiz-correct-count"></span> {# Sẽ được JS cập nhật #}
+            </div>
+            <div class="status-item">
+                <i class="fas fa-times status-icon-incorrect"></i> <span id="quiz-incorrect-count"></span> {# Sẽ được JS cập nhật #}
+            </div>
+        </div>
+
+        {# Phần 3: Nút Đổi Chế Độ (chỉ icon + tên chế độ) #}
+        <a href="{{ url_for('quiz.select_mode') }}" class="button secondary small-button change-mode-button-quiz">
+            <i class="fas fa-random"></i> <span id="quiz-mode-display">{{ current_mode_display }}</span>
+        </a>
     </div>
 </div>
-{# KẾT THÚC THÊM MỚI #}
+{# KẾT THÚC THAY ĐỔI #}
 
 <div class="main-container" style="max-width: 800px;">
     <div class="quiz-take-panel">
         
-        <!-- Thanh tiến trình và Chế độ -->
+        <!-- Thanh tiến trình và Chế độ (NÀY LÀ CỦA DESKTOP HOẶC HIỂN THỊ CHUNG) -->
         <div class="quiz-header-bar">
             <div class="quiz-progress-bar">
                 {# Tính toán giá trị phần trăm và lưu vào data attribute để JS đọc #}
@@ -57,6 +46,7 @@
                 <div class="progress-bar-fill" data-percentage="{{ percentage_value }}"></div>
                 <span class="progress-bar-text">Câu {{ progress.current }} / {{ progress.total }}</span>
             </div>
+            {# Nút đổi chế độ này sẽ bị ẩn trên mobile vì đã có nút ở status bar #}
             <a href="{{ url_for('quiz.select_mode') }}" class="button secondary small-button change-mode-button">
                 <i class="fas fa-random"></i>
                 <span>{{ current_mode_display }}</span>
@@ -253,7 +243,10 @@
      data-quiz-correct-answers="{{ quiz_set_stats.correct_answers }}"
      data-quiz-incorrect-answers="{{ quiz_set_stats.incorrect_answers }}"
      data-quiz-mastered-questions="{{ quiz_set_stats.mastered_questions }}"
-     data-quiz-unanswered-questions="{{ quiz_set_stats.unanswered_questions }}">
+     data-quiz-unanswered-questions="{{ quiz_set_stats.unanswered_questions }}"
+     data-current-quiz-mode-display="{{ current_mode_display }}"
+     data-question-times-correct="{{ question_progress.times_correct if question_progress else 0 }}" {# THÊM MỚI: Số lần đúng của câu hỏi #}
+     data-question-times-incorrect="{{ question_progress.times_incorrect if question_progress else 0 }}"> {# THÊM MỚI: Số lần sai của câu hỏi #}
      {# KẾT THÚC THÊM MỚI #}
 </div>
 

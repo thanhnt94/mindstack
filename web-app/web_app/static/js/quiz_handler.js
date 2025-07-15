@@ -71,20 +71,30 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.status === 'success') {
                 showResult(result.is_correct, result.correct_answer, selectedOption, result.guidance);
                 // BẮT ĐẦU THÊM MỚI: Gửi sự kiện tùy chỉnh để cập nhật thanh trạng thái
-                // Gọi API để lấy lại số liệu thống kê bộ quiz mới nhất
-                const questionId = quizForm.dataset.questionId;
-                const quizSetId = document.getElementById('quizJsData').dataset.quizSetId; // Lấy set_id từ quizJsData
-                const statsResponse = await fetch(`/api/quiz_set_stats/${quizSetId}`);
-                if (statsResponse.ok) {
+                const quizSetId = document.getElementById('quizJsData').dataset.quizSetId; 
+                const questionId = quizForm.dataset.questionId; // Lấy questionId
+                
+                // Lấy thống kê bộ đề và thống kê câu hỏi hiện tại
+                const [statsResponse, questionProgressResponse] = await Promise.all([
+                    fetch(`/api/quiz_set_stats/${quizSetId}`),
+                    fetch(`/api/quiz_question_progress/${questionId}`) // THÊM MỚI: API để lấy tiến trình câu hỏi
+                ]);
+
+                if (statsResponse.ok && questionProgressResponse.ok) {
                     const statsResult = await statsResponse.json();
-                    if (statsResult.status === 'success') {
+                    const questionProgressResult = await questionProgressResponse.json(); // Kết quả tiến trình câu hỏi
+
+                    if (statsResult.status === 'success' && questionProgressResult.status === 'success') {
                         const quizAnsweredEvent = new CustomEvent('quizAnswered', {
                             detail: {
-                                quizSetStats: statsResult.data // Truyền dữ liệu thống kê mới
+                                quizSetStats: statsResult.data, // Dữ liệu thống kê bộ đề
+                                questionProgress: questionProgressResult.data // Dữ liệu tiến trình câu hỏi
                             }
                         });
                         window.dispatchEvent(quizAnsweredEvent);
                     }
+                } else {
+                    console.error("Lỗi khi tải thống kê bộ đề hoặc tiến trình câu hỏi.");
                 }
                 // KẾT THÚC THÊM MỚI
             } else {

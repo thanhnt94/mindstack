@@ -139,4 +139,10 @@ body.body-centered-content .main-container {
         display: flex; /* Đảm bảo là flex container */
         flex-direction: column; /* Xếp các phần tử con theo chiều dọc */
     }
+
+    /* THÊM MỚI: Điều chỉnh padding cho main-container trên trang quiz mobile */
+    body.body-quiz-page .main-container {
+        padding-top: 0 !important; /* Xóa padding-top để JS kiểm soát */
+        margin-top: 0 !important; /* Xóa margin-top để JS kiểm soát */
+    }
 }
