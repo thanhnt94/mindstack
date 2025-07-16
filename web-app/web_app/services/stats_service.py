@@ -330,9 +330,11 @@ class StatsService:
                 stats['set_total_cards'] = db.session.query(Flashcard).filter(Flashcard.set_id == set_id).count()
                 
                 # BẮT ĐẦU SỬA ĐỔI: Tính toán learned_cards và mastered_cards
+                # Thay vì chỉ đếm thẻ có learned_date, đếm tất cả thẻ có progress (đã được giới thiệu)
                 progress_in_set_query = UserFlashcardProgress.query.filter_by(user_id=user_id).join(Flashcard).filter(Flashcard.set_id == set_id)
                 
-                stats['set_learned_cards'] = progress_in_set_query.filter(UserFlashcardProgress.learned_date.isnot(None)).count()
+                # SỬA LỖI: Đếm tất cả các thẻ mà người dùng đã có tiến trình (đã được giới thiệu)
+                stats['set_learned_cards'] = progress_in_set_query.count() 
                 stats['set_due_cards'] = progress_in_set_query.filter(UserFlashcardProgress.due_time.isnot(None), UserFlashcardProgress.due_time <= current_ts).count()
                 stats['set_mastered_cards'] = progress_in_set_query.filter(UserFlashcardProgress.correct_streak > 5).count()
                 # KẾT THÚC SỬA ĐỔI
@@ -469,4 +471,5 @@ class StatsService:
         
         logger.info(f"{log_prefix} Đã lấy thành công {len(leaderboard_data)} người dùng cho bảng xếp hạng.")
         return leaderboard_data
+
 

@@ -283,7 +283,7 @@
     display: block; 
 }
 
-/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho các phần và tiêu đề trong Dynamic Island mở rộng --- */
+/* --- BẮT ĐẦM THÊM MỚI: Kiểu cho các phần và tiêu đề trong Dynamic Island mở rộng --- */
 .details-section {
     margin-bottom: 18px; /* Khoảng cách giữa các phần */
     background-color: #fefefe; /* Nền trắng tinh cho các phần */
@@ -395,7 +395,22 @@
     transition: opacity 0.3s ease-out;
     /* Mặc định ẩn, sẽ được JS điều khiển */
     display: none;
+    /* THÊM MỚI: Các thuộc tính cho đường viền chuyển động */
+    border: 2px solid transparent; /* Viền mặc định trong suốt */
 }
+
+.dynamic-island-progress-bar.animated-border {
+    animation: moving-border-animation 2s linear infinite alternate; /* Kích hoạt animation */
+}
+
+@keyframes moving-border-animation {
+    0% { border-color: #3498db; } /* Xanh dương */
+    25% { border-color: #FFB6C1; } /* Tím */
+    50% { border-color: #2ecc71; } /* Xanh lá */
+    75% { border-color: #f1c40f; } /* Vàng */
+    100% { border-color: #e74c3c; } /* Đỏ */
+}
+
 
 .dynamic-island-progress-bar .progress-fill {
     height: 100%;
@@ -422,6 +437,10 @@
 /* THÊM MỚI: Lớp màu xanh nước biển */
 .dynamic-island-progress-bar .progress-fill.set-progress-blue {
     background-color: #3498db; /* Xanh nước biển */
+}
+/* THÊM MỚI: Lớp màu cho "Đã ôn tập" */
+.dynamic-island-progress-bar .progress-fill.reviewed-progress-color {
+    background-color: #FFB6C1; /* Màu tím */
 }
 /* KẾT THÚC THÊM MỚI */
 
@@ -496,3 +515,4 @@
 .side-nav-footer { margin-top: auto; padding-top: 15px; border-top: 1px solid #eee; }
 .side-nav-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0s 0.3s; z-index: 1001; }
 .side-nav-overlay.open { opacity: 1; visibility: visible; transition: opacity 0.3s ease-in-out; }
+
