@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống đang bảo trì</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/maintenance.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+</head>
+<body>
+    <header class="maintenance-header">
+        <a href="{{ url_for('main.home') }}" class="header-logo">
+            <i class="fas fa-brain"></i> MindStack
+        </a>
+    </header>
+
+    <main class="maintenance-main">
+        <div class="container">
+            <div class="icon">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <h1>Hệ thống đang bảo trì</h1>
+            <p class="message">{{ config.message }}</p>
+            <p>Chúng tôi sẽ sớm quay trở lại. Thời gian dự kiến:</p>
+            <div id="countdown" data-end-time="{{ config.end_timestamp }}">
+                <div class="countdown-item">
+                    <span id="days">00</span>
+                    <span>Ngày</span>
+                </div>
+                <div class="countdown-item">
+                    <span id="hours">00</span>
+                    <span>Giờ</span>
+                </div>
+                <div class="countdown-item">
+                    <span id="minutes">00</span>
+                    <span>Phút</span>
+                </div>
+                <div class="countdown-item">
+                    <span id="seconds">00</span>
+                    <span>Giây</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="maintenance-footer">
+        {% include 'includes/footer.html' %}
+    </footer>
+
+    <!-- BẮT ĐẦU THÊM MỚI: Script khắc phục lỗi vh trên mobile -->
+    <script src="{{ url_for('static', filename='js/viewport_height_fix.js') }}"></script>
+    <!-- KẾT THÚC THÊM MỚI -->
+    <script src="{{ url_for('static', filename='js/countdown.js') }}"></script>
+</body>
+</html>

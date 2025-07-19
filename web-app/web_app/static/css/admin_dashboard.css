@@ -153,7 +153,6 @@
     text-align: center;
 }
 
-/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho panel Hoạt động gần đây --- */
 .recent-activity-panel {
     background-color: #ffffff;
     padding: 25px;
@@ -239,5 +238,56 @@
     color: #95a5a6;
     white-space: nowrap;
     flex-shrink: 0;
+}
+
+/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho trang Tools --- */
+.tool-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e7e9ed;
+    margin-top: 20px;
+}
+
+.tool-card-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    color: #34495e;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tool-card-description {
+    margin-bottom: 20px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.tool-card .form-group {
+    margin-bottom: 20px;
+}
+
+.tool-card .form-group label {
+    font-weight: 600;
+    color: #333;
+}
+
+.tool-card .radio-group {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.tool-card .radio-group label {
+    font-weight: normal;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
 }
 /* --- KẾT THÚC THÊM MỚI --- */

@@ -1,0 +1,168 @@
+/*
+ * maintenance.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho trang bảo trì.
+ */
+html {
+    height: 100%;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    /* SỬA LỖI: Sử dụng biến --vh để có chiều cao chính xác trên mobile */
+    height: calc(var(--vh, 1vh) * 100);
+    margin: 0;
+    overflow: hidden; /* Ngăn chặn mọi thanh cuộn */
+}
+
+/* --- Header và Footer --- */
+.maintenance-header {
+    width: 100%;
+    padding: 20px 30px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+    text-align: left;
+    z-index: 1;
+    box-sizing: border-box;
+}
+
+.header-logo {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #3498db;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.maintenance-footer {
+    width: 100%;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+/* --- Bố cục chính và container --- */
+.maintenance-main {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    width: 100%;
+    overflow-y: auto; /* Cho phép cuộn nếu nội dung quá dài (dự phòng) */
+}
+
+.container {
+    max-width: 600px;
+    width: 100%;
+    padding: 40px;
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center; 
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.icon {
+    font-size: 4rem;
+    color: #3498db;
+    margin-bottom: 20px;
+    animation: spin 8s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.message {
+    font-size: 1.1rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+p {
+    color: #7f8c8d;
+}
+
+#countdown {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Giảm khoảng cách một chút */
+    margin-top: 20px;
+    flex-wrap: nowrap;
+}
+
+.countdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 15px; /* Giảm padding */
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0; /* Cho phép co lại hoàn toàn */
+}
+
+.countdown-item span:first-child {
+    font-size: 2.2rem; /* Giảm kích thước số một chút */
+    font-weight: 700;
+    color: #3498db;
+}
+
+.countdown-item span:last-child {
+    font-size: 0.8rem; /* Giảm kích thước chữ */
+    color: #6c757d;
+    text-transform: uppercase;
+}
+
+/* --- Responsive cho màn hình nhỏ --- */
+@media (max-width: 768px) {
+    .maintenance-main {
+        padding: 15px;
+    }
+    
+    .maintenance-header, .maintenance-footer {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .message {
+        font-size: 1rem;
+    }
+
+    #countdown {
+        gap: 8px;
+    }
+
+    .countdown-item {
+        padding: 8px 4px;
+    }
+
+    .countdown-item span:first-child {
+        font-size: 1.6rem;
+    }
+
+    .countdown-item span:last-child {
+        font-size: 0.65rem;
+    }
+}

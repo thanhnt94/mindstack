@@ -5,6 +5,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATABASE_PATH = os.path.join(BASE_DIR, "..", "..", "database", "flashcard.db")
 
+# --- BẮT ĐẦU THÊM MỚI: Đường dẫn file cấu hình bảo trì ---
+MAINTENANCE_CONFIG_PATH = os.path.join(BASE_DIR, "..", "..", "instance", "maintenance_config.json")
+# --- KẾT THÚC THÊM MỚI ---
+
 # BẮT ĐẦU THAY ĐỔI: Định nghĩa các thư mục media riêng biệt
 APP_MEDIA_BASE_DIR = os.path.join(BASE_DIR, "..", "..", "media")
 
@@ -88,10 +92,11 @@ DEFAULT_TIMEZONE_OFFSET = 7
 
 # --- Tạo các thư mục cần thiết ---
 DIRECTORIES_TO_CREATE = [
+    os.path.join(BASE_DIR, "..", "..", "instance"), # Thư mục cho file config
     FLASHCARD_AUDIO_CACHE_DIR,
     FLASHCARD_IMAGES_DIR,
-    QUIZ_AUDIO_CACHE_DIR, # THÊM MỚI
-    QUIZ_IMAGES_DIR # THÊM MỚI
+    QUIZ_AUDIO_CACHE_DIR,
+    QUIZ_IMAGES_DIR
 ]
 
 for dir_path in DIRECTORIES_TO_CREATE:
@@ -105,4 +110,3 @@ for dir_path in DIRECTORIES_TO_CREATE:
         print(f"Lỗi: Không thể tạo thư mục {dir_path}: {e}")
     except Exception as e_create:
         print(f"Lỗi không mong muốn khi tạo thư mục {dir_path}: {e_create}")
-

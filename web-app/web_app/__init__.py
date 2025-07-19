@@ -1,7 +1,10 @@
 # flashcard-web/web_app/__init__.py
-from flask import Flask, request 
+from flask import Flask, request, session, redirect, url_for, render_template
 from .db_instance import db
 import logging
+import json
+import os
+import time
 from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
@@ -9,15 +12,12 @@ logger = logging.getLogger(__name__)
 def create_app():
     app = Flask(__name__)
     
-    # Tải cấu hình từ file config.py
-    app.config.from_pyfile('config.py')
+    app.config.from_object('web_app.config')
 
-    # Khởi tạo DB
     db.init_app(app)
 
     app.jinja_env.add_extension('jinja2.ext.do')
 
-    # Đăng ký Jinja2 filter
     @app.template_filter('format_unix_timestamp')
     def format_unix_timestamp_filter(timestamp):
         if timestamp is None:
@@ -31,14 +31,40 @@ def create_app():
             logger.error(f"Lỗi khi định dạng timestamp {timestamp}: {e}", exc_info=True)
             return "Invalid Date"
 
-    # BẮT ĐẦU THÊM MỚI: Debugging request endpoint
+    @app.before_request
+    def check_maintenance_mode():
+        # --- BẮT ĐẦU SỬA LỖI: Thêm 'auth.login' vào danh sách ngoại lệ ---
+        if request.endpoint and (
+            request.endpoint.startswith('static') or
+            request.endpoint.startswith('admin.') or
+            request.endpoint == 'main.maintenance_page' or
+            request.endpoint == 'auth.login'  # Cho phép truy cập trang login
+        ):
+            return
+        # --- KẾT THÚC SỬA LỖI ---
+
+        if session.get('user_role') == 'admin':
+            return
+            
+        from .config import MAINTENANCE_CONFIG_PATH
+        maintenance_config = {}
+        if os.path.exists(MAINTENANCE_CONFIG_PATH):
+            try:
+                with open(MAINTENANCE_CONFIG_PATH, 'r') as f:
+                    maintenance_config = json.load(f)
+            except (IOError, json.JSONDecodeError) as e:
+                logger.error(f"Lỗi khi đọc file cấu hình bảo trì: {e}")
+        
+        is_active = maintenance_config.get('is_active', False)
+        end_timestamp = maintenance_config.get('end_timestamp', 0)
+
+        if is_active and time.time() < end_timestamp:
+            return redirect(url_for('main.maintenance_page'))
+
     @app.before_request
     def log_request_info():
-        # Ghi log endpoint và đường dẫn của mỗi request
         logger.debug(f"REQUEST_DEBUG: Path: {request.path}, Endpoint: {request.endpoint}")
-    # KẾT THÚC THÊM MỚI
 
-    # Đăng ký các Blueprint
     from .routes.auth import auth_bp
     from .routes.flashcard import flashcard_bp
     from .routes.admin import admin_bp
@@ -47,12 +73,10 @@ def create_app():
     from .routes.main import main_bp
 
     app.register_blueprint(auth_bp)
-    # BẮT ĐẦU THAY ĐỔI: Đăng ký flashcard_bp với url_prefix
     app.register_blueprint(flashcard_bp, url_prefix='/flashcard')
-    # KẾT THÚC THAY ĐỔI
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
-    app.register_blueprint(quiz_bp) # url_prefix đã được định nghĩa trong file quiz.py
+    app.register_blueprint(quiz_bp)
     app.register_blueprint(main_bp)
 
     logger.info("Ứng dụng Flask đã được khởi tạo và cấu hình với các route đã tách.")

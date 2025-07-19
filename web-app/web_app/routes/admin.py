@@ -4,30 +4,24 @@ import logging
 import io
 import asyncio
 import threading
+import json
+import os
+import time
 from datetime import datetime
 from ..services import user_service, set_service, stats_service, quiz_service, audio_service
 from ..models import db, User, UserFlashcardProgress
 from .decorators import admin_required
-from ..config import DATABASE_PATH
+from ..config import DATABASE_PATH, MAINTENANCE_CONFIG_PATH
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 logger = logging.getLogger(__name__)
 
 # --- Biến toàn cục để theo dõi tác vụ chạy nền ---
 audio_generation_task = {
-    "status": "idle",  # idle, running, finished, error
-    "progress": 0,
-    "total": 0,
-    "message": ""
+    "status": "idle", "progress": 0, "total": 0, "message": ""
 }
 
 def audio_generation_worker(app, status_dict):
-    """
-    Mô tả: Hàm chạy trong một thread riêng để tạo audio cache mà không block server.
-    Args:
-        app (Flask): Đối tượng application của Flask.
-        status_dict (dict): Dictionary để chia sẻ trạng thái tiến trình.
-    """
     with app.app_context():
         log_prefix = "[AUDIO_WORKER]"
         try:
@@ -36,9 +30,7 @@ def audio_generation_worker(app, status_dict):
             status_dict['progress'] = 0
             status_dict['total'] = 0
             status_dict['message'] = 'Đang khởi động...'
-            
             processed, total = asyncio.run(audio_service.generate_cache_for_all_cards(status_dict))
-            
             status_dict['status'] = 'finished'
             status_dict['message'] = f"Hoàn tất! Đã tạo thành công {processed}/{total} file audio mới."
             logger.info(f"{log_prefix} Tác vụ chạy nền đã hoàn tất.")
@@ -51,22 +43,18 @@ def audio_generation_worker(app, status_dict):
 @admin_bp.route('/dashboard')
 @admin_required
 def dashboard():
-    """
-    Mô tả: Hiển thị bảng điều khiển quản trị viên với các số liệu thống kê tổng quan.
-    """
     admin_stats = stats_service.get_admin_dashboard_stats()
     if not admin_stats:
         flash("Không thể tải dữ liệu cho Admin Dashboard.", "error")
         admin_stats = {}
-
     return render_template('admin/dashboard.html', stats=admin_stats)
 
+# ... (Các route user, set, question set không thay đổi) ...
 @admin_bp.route('/users')
 @admin_required
 def manage_users():
     users = User.query.all()
     return render_template('admin/manage_users.html', users=users)
-
 @admin_bp.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_user(user_id):
@@ -80,7 +68,6 @@ def edit_user(user_id):
         else:
             flash(f"Lỗi khi cập nhật: {status}", "error")
     return render_template('admin/edit_user.html', user=user_to_edit, roles=['user', 'admin'])
-
 @admin_bp.route('/users/delete/<int:user_id>', methods=['POST'])
 @admin_required
 def delete_user(user_id):
@@ -93,7 +80,6 @@ def delete_user(user_id):
     else:
         flash(f"Lỗi khi xóa người dùng: {status}", "error")
     return redirect(url_for('admin.manage_users'))
-
 @admin_bp.route('/users/add', methods=['GET', 'POST'])
 @admin_required
 def add_user():
@@ -108,13 +94,11 @@ def add_user():
             return render_template('admin/add_user.html', user_data=data, roles=['user', 'admin'])
     default_user_data = {'username': '', 'telegram_id': '', 'password': '', 'user_role': 'user', 'daily_new_limit': 10, 'timezone_offset': 7}
     return render_template('admin/add_user.html', user_data=default_user_data, roles=['user', 'admin'])
-
 @admin_bp.route('/sets')
 @admin_required
 def manage_sets():
     sets = set_service.get_all_sets_with_details()
     return render_template('admin/manage_sets.html', sets=sets)
-
 @admin_bp.route('/sets/add', methods=['GET', 'POST'])
 @admin_required
 def add_set():
@@ -137,7 +121,6 @@ def add_set():
             flash(f"Lỗi khi thêm bộ thẻ: {status}", "error")
             return render_template('admin/add_set.html', set_data=data)
     return render_template('admin/add_set.html', set_data={})
-
 @admin_bp.route('/sets/edit/<int:set_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_set(set_id):
@@ -162,7 +145,6 @@ def edit_set(set_id):
         else:
             flash(f"Lỗi khi cập nhật bộ thẻ: {status}", "error")
     return render_template('admin/edit_set.html', set_data=set_to_edit)
-
 @admin_bp.route('/sets/delete/<int:set_id>', methods=['POST'])
 @admin_required
 def delete_set(set_id):
@@ -172,7 +154,6 @@ def delete_set(set_id):
     else:
         flash(f"Lỗi khi xóa bộ thẻ: {status}", "error")
     return redirect(url_for('admin.manage_sets'))
-
 @admin_bp.route('/sets/export/<int:set_id>')
 @admin_required
 def export_set(set_id):
@@ -190,13 +171,11 @@ def export_set(set_id):
         excel_stream, as_attachment=True, download_name=filename,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-
 @admin_bp.route('/question-sets')
 @admin_required
 def manage_question_sets():
     question_sets = quiz_service.get_all_question_sets_with_details()
     return render_template('admin/manage_question_sets.html', question_sets=question_sets)
-
 @admin_bp.route('/question-sets/add', methods=['GET', 'POST'])
 @admin_required
 def add_question_set():
@@ -219,7 +198,6 @@ def add_question_set():
             flash(f"Lỗi khi thêm bộ câu hỏi: {status}", "error")
             return render_template('admin/add_question_set.html', set_data=data)
     return render_template('admin/add_question_set.html', set_data={})
-
 @admin_bp.route('/question-sets/edit/<int:set_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_question_set(set_id):
@@ -244,7 +222,6 @@ def edit_question_set(set_id):
         else:
             flash(f"Lỗi khi cập nhật bộ câu hỏi: {status}", "error")
     return render_template('admin/edit_question_set.html', set_data=set_to_edit)
-
 @admin_bp.route('/question-sets/delete/<int:set_id>', methods=['POST'])
 @admin_required
 def delete_question_set(set_id):
@@ -254,7 +231,6 @@ def delete_question_set(set_id):
     else:
         flash(f"Lỗi khi xóa bộ câu hỏi: {status}", "error")
     return redirect(url_for('admin.manage_question_sets'))
-
 @admin_bp.route('/question-sets/export/<int:set_id>')
 @admin_required
 def export_question_set(set_id):
@@ -272,7 +248,6 @@ def export_question_set(set_id):
         excel_stream, as_attachment=True, download_name=filename,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-
 @admin_bp.route('/tools')
 @admin_required
 def tools_page():
@@ -282,7 +257,18 @@ def tools_page():
         audio_generation_task['progress'] = 0
         audio_generation_task['total'] = 0
         audio_generation_task['message'] = ''
-    return render_template('admin/tools.html', task_status=audio_generation_task)
+    
+    # --- BẮT ĐẦU THÊM MỚI: Đọc trạng thái bảo trì hiện tại ---
+    maintenance_config = {'is_active': False, 'duration_hours': 1, 'message': ''}
+    if os.path.exists(MAINTENANCE_CONFIG_PATH):
+        try:
+            with open(MAINTENANCE_CONFIG_PATH, 'r') as f:
+                maintenance_config = json.load(f)
+        except (IOError, json.JSONDecodeError):
+            pass # Sử dụng giá trị mặc định nếu có lỗi
+    # --- KẾT THÚC THÊM MỚI ---
+            
+    return render_template('admin/tools.html', task_status=audio_generation_task, maintenance_config=maintenance_config)
 
 @admin_bp.route('/backup-database')
 @admin_required
@@ -351,3 +337,40 @@ def export_question_set_zip(set_id):
     return send_file(
         zip_stream, as_attachment=True, download_name=filename, mimetype='application/zip'
     )
+
+# --- BẮT ĐẦU THÊM MỚI: Route xử lý chế độ bảo trì ---
+@admin_bp.route('/update-maintenance', methods=['POST'])
+@admin_required
+def update_maintenance():
+    """
+    Mô tả: Cập nhật trạng thái bảo trì của trang web.
+    """
+    try:
+        status = request.form.get('maintenance_status')
+        duration_hours = request.form.get('duration_hours', 0, type=float)
+        message = request.form.get('message', 'Hệ thống đang được bảo trì. Vui lòng quay lại sau.')
+
+        config = {
+            'is_active': status == 'on',
+            'duration_hours': duration_hours,
+            'message': message,
+            'end_timestamp': 0
+        }
+
+        if config['is_active']:
+            duration_seconds = duration_hours * 3600
+            config['end_timestamp'] = time.time() + duration_seconds
+            flash(f"Đã bật chế độ bảo trì trong {duration_hours} giờ.", "success")
+        else:
+            flash("Đã tắt chế độ bảo trì.", "info")
+
+        # Ghi vào file JSON
+        with open(MAINTENANCE_CONFIG_PATH, 'w') as f:
+            json.dump(config, f, indent=4)
+
+    except Exception as e:
+        logger.error(f"Lỗi khi cập nhật chế độ bảo trì: {e}", exc_info=True)
+        flash("Đã xảy ra lỗi khi cập nhật chế độ bảo trì.", "error")
+
+    return redirect(url_for('admin.tools_page'))
+# --- KẾT THÚC THÊM MỚI ---
