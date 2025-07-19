@@ -11,6 +11,7 @@ import tempfile
 import hashlib
 import shutil
 import asyncio
+import random # Thêm import random
 
 from gtts import gTTS
 from pydub import AudioSegment
@@ -105,8 +106,12 @@ class AudioService:
                         logger.warning(f"{log_prefix} Bỏ qua dòng không có nội dung text: '{line}'")
                         continue
 
-                    if CACHE_GENERATION_DELAY > 0:
-                        await asyncio.sleep(CACHE_GENERATION_DELAY)
+                    # --- BẮT ĐẦU THAY ĐỔI: Thêm độ trễ ngẫu nhiên ---
+                    # Thay vì dùng hằng số CACHE_GENERATION_DELAY
+                    delay = random.uniform(0.5, 2.0)
+                    await asyncio.sleep(delay)
+                    logger.debug(f"{log_prefix} Chờ {delay:.2f} giây trước khi gọi TTS.")
+                    # --- KẾT THÚC THAY ĐỔI ---
                     
                     tasks.append(loop.run_in_executor(None, self._generate_tts_sync, text_to_read, lang_code))
                 except Exception as e_prep:
@@ -213,3 +218,62 @@ class AudioService:
             logger.critical(f"{log_prefix} Lỗi nghiêm trọng trong quá trình lấy/tạo/cache audio: {e}", exc_info=True)
             return None
 
+    # --- BẮT ĐẦU THAY ĐỔI: Cập nhật hàm để nhận và cập nhật status_dict ---
+    async def generate_cache_for_all_cards(self, status_dict):
+        """
+        Mô tả: Quét toàn bộ database và tạo file audio cache cho tất cả các thẻ
+               có nội dung audio. Cập nhật tiến trình vào status_dict.
+        Args:
+            status_dict (dict): Dictionary để chia sẻ trạng thái tiến trình.
+        Returns:
+            tuple: (số file đã tạo thành công, tổng số file cần tạo)
+        """
+        log_prefix = "[AUDIO_SERVICE|GenerateAllCache]"
+        logger.info(f"{log_prefix} Bắt đầu quá trình tạo cache cho toàn bộ audio.")
+        
+        all_audio_contents = set()
+        cards_with_audio = Flashcard.query.filter(
+            (Flashcard.front_audio_content != None) & (Flashcard.front_audio_content != '') |
+            (Flashcard.back_audio_content != None) & (Flashcard.back_audio_content != '')
+        ).all()
+
+        for card in cards_with_audio:
+            if card.front_audio_content:
+                all_audio_contents.add(card.front_audio_content.strip())
+            if card.back_audio_content:
+                all_audio_contents.add(card.back_audio_content.strip())
+        
+        # Lọc ra những nội dung chưa có trong cache
+        contents_to_generate = []
+        for content in all_audio_contents:
+            content_hash = hashlib.sha1(content.encode('utf-8')).hexdigest()
+            cached_file_path = os.path.join(FLASHCARD_AUDIO_CACHE_DIR, f"{content_hash}.mp3")
+            if not os.path.exists(cached_file_path):
+                contents_to_generate.append(content)
+
+        # Cập nhật tổng số file cần tạo
+        total_to_process = len(contents_to_generate)
+        status_dict['total'] = total_to_process
+        status_dict['progress'] = 0
+        
+        logger.info(f"{log_prefix} Tìm thấy {total_to_process} nội dung audio mới cần tạo cache.")
+
+        if total_to_process == 0:
+            return 0, 0
+
+        created_count = 0
+        for content in contents_to_generate:
+            try:
+                # Hàm này sẽ tạo file vì chúng ta đã lọc những file tồn tại
+                result_path = await self.get_cached_or_generate_audio(content)
+                if result_path:
+                    created_count += 1
+            except Exception as e:
+                logger.error(f"{log_prefix} Lỗi khi xử lý nội dung: '{content[:50]}...': {e}", exc_info=True)
+            finally:
+                # Cập nhật tiến trình sau mỗi lần thử, dù thành công hay thất bại
+                status_dict['progress'] += 1
+
+        logger.info(f"{log_prefix} Hoàn tất. Đã tạo thành công {created_count}/{total_to_process} file audio mới.")
+        return created_count, total_to_process
+    # --- KẾT THÚC THAY ĐỔI ---

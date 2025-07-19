@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Công cụ & Bảo trì - Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h1><i class="fas fa-tools"></i> Công cụ & Bảo trì</h1>
+        </div>
+
+        <!-- Phần Sao lưu Dữ liệu -->
+        <div class="actions-panel" style="margin-top: 20px;">
+            <h2 class="actions-title"><i class="fas fa-database"></i> Sao lưu Dữ liệu</h2>
+            <p style="margin-bottom: 20px; color: #555;">
+                Nhấp vào nút bên dưới để tải xuống một bản sao đầy đủ của cơ sở dữ liệu ứng dụng (file <code>flashcard.db</code>).
+                Bạn nên thực hiện việc này thường xuyên để đảm bảo an toàn dữ liệu.
+            </p>
+            <div class="action-buttons" style="justify-content: flex-start;">
+                <a href="{{ url_for('admin.backup_database') }}" class="button primary">
+                    <i class="fas fa-download"></i> Tải xuống Sao lưu Database
+                </a>
+            </div>
+        </div>
+
+        <!-- BẮT ĐẦU THAY ĐỔI: Cập nhật khu vực Audio Cache để hiển thị tiến trình tĩnh -->
+        <div class="actions-panel" style="margin-top: 20px;">
+            <h2 class="actions-title"><i class="fas fa-volume-up"></i> Tạo Bộ đệm Audio</h2>
+            <p style="margin-bottom: 20px; color: #555;">
+                Quét toàn bộ flashcard và tạo các file audio (.mp3) cho những thẻ chưa có. Quá trình này sử dụng API Text-to-Speech và có thể mất nhiều thời gian nếu có nhiều thẻ mới.
+            </p>
+
+            {% if task_status.status == 'running' %}
+                <div id="audio-cache-status" style="margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #eaf3f9; color: #31708f; border: 1px solid #bee5eb;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span id="audio-cache-message">
+                        <b>Đang xử lý...</b> (Đã quét {{ task_status.progress }} / {{ task_status.total }} file cần tạo). Vui lòng tải lại trang để cập nhật.
+                    </span>
+                    <!-- Thanh tiến trình -->
+                    <div style="width: 100%; background-color: #e9ecef; border-radius: 5px; margin-top: 10px; height: 24px; position: relative; overflow: hidden;">
+                        {% set percentage = (task_status.progress * 100 / task_status.total) | int if task_status.total > 0 else 0 %}
+                        <div style="width: {{ percentage }}%; height: 100%; background-color: #28a745; transition: width 0.5s ease;"></div>
+                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ percentage }}%</span>
+                    </div>
+                </div>
+                <div class="action-buttons" style="justify-content: flex-start;">
+                    <button type="button" class="button success" disabled>
+                        <i class="fas fa-spinner fa-spin"></i> Đang Tạo Audio Cache...
+                    </button>
+                </div>
+            {% else %}
+                <div id="audio-cache-status" style="display: none; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #e9f7ef; color: #155724; border: 1px solid #c3e6cb;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span id="audio-cache-message">Đang xử lý, vui lòng chờ... Quá trình này có thể mất vài phút. Không đóng hoặc tải lại trang này.</span>
+                </div>
+                <div class="action-buttons" style="justify-content: flex-start;">
+                    <form id="generate-audio-form" method="POST" action="{{ url_for('admin.generate_audio_cache') }}">
+                        <button type="submit" class="button success">
+                            <i class="fas fa-cogs"></i> Bắt đầu Tạo Audio Cache
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+        <!-- KẾT THÚC THAY ĐỔI -->
+
+        <div class="button-group" style="margin-top: 30px; justify-content: flex-start;">
+            <a href="{{ url_for('admin.dashboard') }}" class="button secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const audioForm = document.getElementById('generate-audio-form');
+        if (audioForm) {
+            audioForm.addEventListener('submit', function() {
+                const button = audioForm.querySelector('button[type="submit"]');
+                const statusDiv = document.getElementById('audio-cache-status');
+                
+                // Vô hiệu hóa nút và hiển thị thông báo
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+                
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
