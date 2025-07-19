@@ -2,7 +2,8 @@
     <div class="navbar-container">
         <!-- BẮT ĐẦU SỬA ĐỔI: Bọc logo/brand vào một container để định vị dropdown -->
         <div class="navbar-brand-container">
-            <a href="{{ url_for('main.index') }}" class="navbar-brand" id="brand-logo-link"> {# Đổi ID để rõ ràng hơn #}
+            {# THAY ĐỔI: Đánh dấu 'active' cho brand khi ở trang chủ giới thiệu (/home) #}
+            <a href="{{ url_for('main.home') }}" class="navbar-brand {% if request.endpoint == 'main.home' %}active{% endif %}" id="brand-logo-link"> {# Đổi ID để rõ ràng hơn #}
                 <i class="fas fa-brain"></i>
                 <span class="brand-text">MindStack</span> {# THÊM class để ẩn/hiện #}
                 {# XÓA mũi tên này vì không còn là dropdown #}
@@ -10,10 +11,11 @@
         </div>
         <!-- KẾT THÚC SỬA ĐỔI -->
 
-        <!-- BẮT ĐẦU SỬA ĐỔI: Bỏ wrapper và làm cho các link luôn hiển thị dạng tab -->
-        {# XÓA <div class="main-nav-wrapper" id="main-nav-wrapper"> #}
+        {# BẮT ĐẦU THAY ĐỔI: Hiển thị các tab điều hướng chỉ khi người dùng đã đăng nhập #}
+        {% if session.get('username') %}
             <ul class="navbar-nav">
                 <li>
+                    {# THAY ĐỔI: Chỉ active khi endpoint thực sự thuộc flashcard, không phải main.home #}
                     <a href="{{ url_for('flashcard.index') }}" class="nav-link {% if request.endpoint.startswith('flashcard.') %}active{% endif %}">
                         <i class="fas fa-layer-group"></i> <span class="nav-link-text">Flashcard</span> {# THÊM class để ẩn/hiện #}
                     </a>
@@ -28,11 +30,10 @@
                     <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
                         <i class="fas fa-chart-line"></i> <span class="nav-link-text">Thống kê</span> {# THÊM class để ẩn/hiện #}
                     </a>
-                    {# KẾT THÚC THAY ĐỔI #}
                 </li>
             </ul>
-        {# XÓA </div> #}
-        <!-- KẾT THÚC SỬA ĐỔI -->
+        {% endif %}
+        {# KẾT THÚC THAY ĐỔI #}
 
         <!-- Phần bên phải: Menu người dùng (giữ nguyên) -->
         <div class="navbar-user-menu">
@@ -57,7 +58,11 @@
                     </a>
                 </div>
             {% else %}
+                {# BẮT ĐẦU THAY ĐỔI: Chỉ hiển thị nút đăng nhập nếu không phải trang đăng nhập #}
+                {% if request.endpoint != 'auth.login' %}
                 <a href="{{ url_for('auth.login') }}" class="nav-link">Đăng nhập</a>
+                {% endif %}
+                {# KẾT THÚC THAY ĐỔI #}
             {% endif %}
         </div>
     </div>

@@ -22,6 +22,11 @@
     white-space: nowrap; /* Ngăn văn bản xuống dòng */
 }
 
+.control-button .fas, .control-button .far, .control-button .fab { /* BẮT ĐẦU THÊM MỚI: Khoảng cách cho icon trong control-button */
+    margin-right: 5px;
+}
+/* KẾT THÚC THÊM MỚI */
+
 .control-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -73,6 +78,11 @@
     width: auto; /* Đảm bảo chiều rộng tự động */
     max-width: 200px; /* Giới hạn chiều rộng tối đa cho nút */
 }
+
+.button .fas, .button .far, .button .fab { /* BẮT ĐẦU THÊM MỚI: Khoảng cách cho icon trong button */
+    margin-right: 8px; /* Khoảng cách giữa icon và text */
+}
+/* KẾT THÚC THÊM MỚI */
 
 .button:hover {
     transform: translateY(-1px);

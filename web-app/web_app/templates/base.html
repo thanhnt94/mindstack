@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Flashcard App{% endblock %}</title>
+    {# BẮT ĐẦU THÊM MỚI: Tải font Inter từ Google Fonts #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    {# KẾT THÚC THÊM MỚI #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -11,7 +16,9 @@
     {% block head_extra %}{% endblock %}
     <script src="{{ url_for('static', filename='js/viewport_height_fix.js') }}"></script>
 </head>
-<body class="{% block body_class %}{% endblock %}">
+{# BẮT ĐẦU THAY ĐỔI: Thêm lớp 'logged-in' vào body nếu người dùng đã đăng nhập #}
+<body class="{% block body_class %}{% endblock %} {% if session.get('username') %}logged-in{% endif %}">
+{# KẾT THÚC THAY ĐỔI #}
     
     {% block navbar %}
         {# Navbar sẽ được include từ file riêng #}
@@ -30,5 +37,22 @@
 
     <script src="{{ url_for('static', filename='js/navbar_handler.js') }}"></script>
     {% block scripts_extra %}{% endblock %}
+
+    {# BẮT ĐẦU THÊM MỚI: JavaScript để chuyển hướng nếu ở URL gốc nhưng không phải trang chủ giới thiệu #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lấy đường dẫn của main.home
+            const homePath = "{{ url_for('main.home') }}"; 
+
+            // Kiểm tra nếu đang ở URL gốc ('/') và không phải là trang /home
+            // (tránh vòng lặp chuyển hướng nếu Flask đã redirect đến /home)
+            // và đảm bảo chỉ chuyển hướng nếu người dùng CHƯA đăng nhập
+            // hoặc nếu đường dẫn hiện tại là '/' (endpoint main.index)
+            if (window.location.pathname === '/' && homePath !== '/') {
+                window.location.href = homePath;
+            }
+        });
+    </script>
+    {# KẾT THÚC THÊM MỚI #}
 </body>
 </html>

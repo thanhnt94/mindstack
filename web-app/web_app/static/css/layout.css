@@ -146,3 +146,15 @@ body.body-centered-content .main-container {
         margin-top: 0 !important; /* Xóa margin-top để JS kiểm soát */
     }
 }
+
+/* BẮT ĐẦU THAY ĐỔI: Xóa khoảng trống cho footer cố định */
+/* body:not(.learn-page) .page-wrapper {
+    padding-bottom: 160px;
+}
+
+@media (max-width: 768px) {
+    body:not(.learn-page) .page-wrapper {
+        padding-bottom: 200px;
+    }
+} */
+/* KẾT THÚC THAY ĐỔI */

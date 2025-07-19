@@ -5,17 +5,146 @@
 
 .main-footer {
     width: 100%;
-    padding: 15px 30px;
-    font-size: 0.85em;
-    color: #888;
+    background-color: #eef2f7; /* Màu nền rất nhạt, gần với màu nền trang */
+    color: #6c757d; /* Màu chữ xám đậm */
+    padding: 20px 30px; /* Điều chỉnh padding */
+    font-size: 0.9em;
     text-align: center;
-    background-color: #ffffff;
-    border-top: 1px solid #e7e9ed;
+    border-top: 1px solid #e0e0e0; /* Viền trên nhạt hơn */
     box-sizing: border-box;
-    flex-shrink: 0; /* Quan trọng: Ngăn footer bị co lại */
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05); /* Bóng đổ rất nhẹ */
+    flex-shrink: 0; /* Ngăn footer bị co lại */
+    height: auto; /* Chiều cao tự động */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Căn giữa nội dung theo chiều dọc */
 }
 
 .footer-container {
     max-width: 1200px;
     margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap; /* Cho phép các phần tử xuống dòng */
+    justify-content: space-between; /* Căn trái/phải */
+    align-items: center; /* Căn giữa các mục theo chiều dọc */
+    width: 100%;
+    padding-bottom: 0;
+}
+
+/* Kiểu cho footer-left và footer-right */
+.footer-left {
+    display: flex;
+    flex-direction: column; /* THAY ĐỔI: Xếp chồng logo và copyright */
+    align-items: flex-start; /* THAY ĐỔI: Căn trái các mục khi xếp chồng */
+    gap: 0px; /* THAY ĐỔI: Giảm khoảng cách khi xếp chồng */
+    flex-grow: 1; /* Cho phép co giãn */
+    justify-content: flex-start; /* Căn trái */
+}
+
+.footer-right {
+    display: flex;
+    align-items: center; /* Căn giữa theo chiều dọc */
+    flex-grow: 1; /* Cho phép co giãn */
+    justify-content: flex-end; /* Căn phải */
+}
+
+/* Kiểu cho logo */
+.footer-logo {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Căn trái logo */
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #3498db; /* Màu xanh nổi bật */
+    text-decoration: none;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+}
+
+.footer-logo .fas {
+    margin-right: 10px;
+    font-size: 1.1em;
+}
+
+/* Kiểu cho copyright */
+.footer-copyright {
+    font-size: 0.75em;
+    color: #7f8c8d;
+    margin-top: 0;
+    flex-shrink: 0;
+    opacity: 0.8;
+    padding-left: 30px; /* THAY ĐỔI: Thêm padding để căn chỉnh với logo */
+}
+
+/* Ẩn các phần không dùng đến */
+.footer-section {
+    display: none;
+}
+
+.footer-section h3,
+.footer-section h3::after,
+.footer-links ul {
+    display: none;
+}
+
+/* Kiểu cho social icons */
+.social-icons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.social-icons a {
+    color: #6c757d;
+    font-size: 1.5em;
+    transition: color 0.2s ease;
+}
+
+.social-icons a:hover {
+    color: #3498db;
+}
+
+/* Responsive cho Footer */
+@media (max-width: 768px) {
+    .main-footer {
+        padding: 15px 10px;
+    }
+
+    .footer-container {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 0;
+    }
+
+    .footer-left {
+        gap: 0px; /* THAY ĐỔI: Giảm khoảng cách khi xếp chồng trên mobile */
+    }
+
+    .footer-logo {
+        font-size: 1.2em;
+    }
+
+    .footer-logo .fas {
+        font-size: 0.9em;
+        margin-right: 6px;
+    }
+
+    .footer-copyright {
+        font-size: 0.65em;
+        padding-left: 20px; /* THAY ĐỔI: Thêm padding để căn chỉnh với logo trên mobile */
+    }
+
+    .footer-right {
+        justify-content: flex-end;
+    }
+
+    .social-icons {
+        gap: 10px;
+    }
+
+    .social-icons a {
+        font-size: 1.3em;
+    }
 }

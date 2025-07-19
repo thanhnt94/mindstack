@@ -1,5 +1,5 @@
 # flashcard-web/web_app/__init__.py
-from flask import Flask
+from flask import Flask, request 
 from .db_instance import db
 import logging
 from datetime import datetime, timedelta, timezone
@@ -31,24 +31,29 @@ def create_app():
             logger.error(f"Lỗi khi định dạng timestamp {timestamp}: {e}", exc_info=True)
             return "Invalid Date"
 
+    # BẮT ĐẦU THÊM MỚI: Debugging request endpoint
+    @app.before_request
+    def log_request_info():
+        # Ghi log endpoint và đường dẫn của mỗi request
+        logger.debug(f"REQUEST_DEBUG: Path: {request.path}, Endpoint: {request.endpoint}")
+    # KẾT THÚC THÊM MỚI
+
     # Đăng ký các Blueprint
     from .routes.auth import auth_bp
     from .routes.flashcard import flashcard_bp
     from .routes.admin import admin_bp
     from .routes.api import api_bp
     from .routes.quiz import quiz_bp
-    # --- BẮT ĐẦU THÊM MỚI ---
     from .routes.main import main_bp
-    # --- KẾT THÚC THÊM MỚI ---
 
     app.register_blueprint(auth_bp)
-    app.register_blueprint(flashcard_bp)
+    # BẮT ĐẦU THAY ĐỔI: Đăng ký flashcard_bp với url_prefix
+    app.register_blueprint(flashcard_bp, url_prefix='/flashcard')
+    # KẾT THÚC THAY ĐỔI
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(quiz_bp) # url_prefix đã được định nghĩa trong file quiz.py
-    # --- BẮT ĐẦU THÊM MỚI ---
     app.register_blueprint(main_bp)
-    # --- KẾT THÚC THÊM MỚI ---
 
     logger.info("Ứng dụng Flask đã được khởi tạo và cấu hình với các route đã tách.")
     return app

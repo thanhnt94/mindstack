@@ -1,5 +1,21 @@
 <footer class="main-footer">
     <div class="footer-container">
-        <p>&copy; 2025 MindStack by Nguyen Tien Thanh</p>
+        {# BẮT ĐẦU THAY ĐỔI: Cấu trúc lại footer #}
+        <div class="footer-left">
+            <a href="{{ url_for('main.home') }}" class="footer-logo">
+                <i class="fas fa-brain"></i> MindStack
+            </a>
+            <p class="footer-copyright">by Nguyễn Tiến Thành</p>
+        </div>
+
+        <div class="footer-right">
+            <div class="social-icons">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+        {# KẾT THÚC THAY ĐỔI #}
     </div>
 </footer>

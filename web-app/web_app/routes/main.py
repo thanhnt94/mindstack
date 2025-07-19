@@ -11,15 +11,23 @@ main_bp = Blueprint('main', __name__)
 logger = logging.getLogger(__name__) # Khởi tạo logger
 
 @main_bp.route('/')
-@login_required
+# BẮT ĐẦU THAY ĐỔI: Xóa decorator @login_required để route gốc có thể truy cập công khai
+# @login_required
+# KẾT THÚC THAY ĐỔI
 def index():
     """
-    Mô tả: Hiển thị trang chủ của ứng dụng, nơi người dùng có thể chọn
-    giữa việc học Flashcard hoặc làm Trắc nghiệm.
+    Mô tả: Route gốc của ứng dụng. Chuyển hướng đến trang chủ giới thiệu (/home).
+    """
+    return redirect(url_for('main.home'))
+
+@main_bp.route('/home')
+def home():
+    """
+    Mô tả: Hiển thị trang chủ giới thiệu của ứng dụng (trang portfolio).
+           Trang này có thể truy cập bởi cả người dùng đã đăng nhập và chưa đăng nhập.
     """
     return render_template('home.html')
 
-# BẮT ĐẦU THÊM MỚI: Route Dashboard chung
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -31,8 +39,8 @@ def dashboard():
     dashboard_data = stats_service.get_dashboard_stats(user_id)
     if not dashboard_data:
         flash("Không thể tải dữ liệu thống kê.", "error")
-        # THAY ĐỔI: Chuyển hướng về trang chủ chính thay vì flashcard.index
-        return redirect(url_for('main.index'))
+        # THAY ĐỔI: Chuyển hướng về trang chủ giới thiệu (/home)
+        return redirect(url_for('main.home'))
     dashboard_data_json = json.dumps(dashboard_data)
     
     # Lấy current_question_set_id từ user
@@ -59,4 +67,3 @@ def dashboard():
         current_sort_by=sort_by,
         current_timeframe=timeframe
     )
-# KẾT THÚC THÊM MỚI: Route Dashboard chung

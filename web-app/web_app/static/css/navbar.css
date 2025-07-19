@@ -248,7 +248,7 @@
         flex-basis: 0; /* Cho phép các mục co lại nếu cần */
         display: flex; /* Để căn giữa nội dung trong li */
         justify-content: center; /* Căn giữa nội dung theo chiều ngang */
-        align-items: center; /* Căn giữa nội dung theo chiều dọc */
+        align-items: center; /* Căn giữa theo chiều dọc */
     }
 
     /* BẮT ĐẦU SỬA LỖI: Chỉ áp dụng các quy tắc này cho nav-link trong navbar chính */
@@ -314,4 +314,39 @@
         top: calc(100% + 5px);
         right: 0;
     }
+
+    /* BẮT ĐẦU THÊM MỚI: Các quy tắc cho trang đăng nhập */
+    body.body-login-page .main-navbar {
+        height: 64px; /* Đảm bảo chiều cao đầy đủ cho navbar trên trang login */
+    }
+
+    body.body-login-page .navbar-brand .brand-text {
+        display: block; /* Luôn hiển thị tên MindStack trên trang login */
+    }
+
+    body.body-login-page .navbar-nav {
+        display: none; /* Ẩn toàn bộ các liên kết điều hướng (Flashcard, Trắc nghiệm, Thống kê) */
+    }
+
+    body.body-login-page .navbar-user-menu {
+        display: none; /* Ẩn phần menu người dùng (bao gồm nút Đăng nhập nếu có) */
+    }
+    /* KẾT THÚC THÊM MỚI */
+
+    /* BẮT ĐẦU THÊM MỚI: Quy tắc cho người dùng CHƯA đăng nhập trên trang chủ */
+    body:not(.body-login-page) .navbar-user-menu .nav-link { /* Nút đăng nhập */
+        padding: 0.75rem 1rem; /* Padding mặc định */
+        font-size: 1rem; /* Kích thước font mặc định */
+        font-weight: 500;
+    }
+
+    body:not(.logged-in) .main-navbar .navbar-nav { /* Ẩn các tab điều hướng khi chưa đăng nhập */
+        display: none;
+    }
+
+    body:not(.logged-in) .main-navbar .navbar-brand .brand-text { /* Luôn hiển thị tên brand trên mobile khi chưa đăng nhập */
+        display: block;
+    }
+    /* KẾT THÚC THÊM MỚI */
 }
+

@@ -27,9 +27,16 @@ def login():
             flash(f"Chào mừng, {user.username or user.telegram_id}! Bạn đã đăng nhập thành công.", "success")
             logger.info(f"Người dùng {user.username or user.telegram_id} (ID: {user.user_id}) đã đăng nhập thành công.")
             
-            # --- BẮT ĐẦU SỬA ĐỔI: Chuyển hướng về trang chủ mới ---
-            return redirect(url_for('main.index'))
-            # --- KẾT THÚC SỬA ĐỔI ---
+            # BẮT ĐẦU THAY ĐỔI: Chuyển hướng về URL gốc nếu có tham số 'next'
+            # Nếu người dùng cố gắng truy cập một trang được bảo vệ, Flask sẽ lưu URL đó vào 'next'
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            else:
+                # Nếu không có 'next' (ví dụ: đăng nhập trực tiếp từ trang /login),
+                # chuyển hướng về trang chủ giới thiệu (/home)
+                return redirect(url_for('main.home'))
+            # KẾT THÚC THAY ĐỔI
         else:
             flash("Tên đăng nhập hoặc mật khẩu không đúng.", "error")
             logger.warning(f"Đăng nhập thất bại cho username '{username}'.")

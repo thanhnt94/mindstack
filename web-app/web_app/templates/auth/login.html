@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}Đăng nhập - Flashcard App{% endblock %}
+{% block title %}Đăng nhập - MindStack{% endblock %}
 
-{% block body_class %}body-centered-content hide-nav-footer-on-mobile{% endblock %}
+{% block body_class %}body-centered-content hide-nav-footer-on-mobile body-login-page{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h1>Đăng nhập</h1>
+    {# BẮT ĐẦU THAY ĐỔI: Bọc nội dung đăng nhập vào một container mới #}
+    <div class="login-container">
+        <div class="login-header">
+            <!-- <i class="fas fa-brain login-icon"></i> {# THAY ĐỔI: Icon đăng nhập từ fa-user-circle sang fa-brain #} -->
+            <h1>Đăng nhập</h1>
+            <p>Chào mừng bạn đến với MindStack!</p> {# THÊM: Subtitle #}
+        </div>
         <form method="POST" action="{{ url_for('auth.login') }}">
             <div class="form-group">
                 <label for="username">Tên đăng nhập:</label>
@@ -15,11 +20,15 @@
                 <label for="password">Mật khẩu:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            {# BẮT ĐẦU SỬA ĐỔI: Bọc nút đăng nhập vào button-group để căn giữa #}
             <div class="button-group">
-                <button type="submit" class="button primary">Đăng nhập</button>
+                <button type="submit" class="button primary large-button">Đăng nhập</button> {# THAY ĐỔI: Thêm large-button #}
             </div>
-            {# KẾT THÚC SỬA ĐỔI #}
         </form>
+        {# BẮT ĐẦU THÊM MỚI: Liên kết đăng ký (nếu có) #}
+        <div class="login-footer">
+            <p>Chưa có tài khoản? <a href="#">Đăng ký ngay</a></p> {# Tạm thời không có route đăng ký #}
+        </div>
+        {# KẾT THÚC THÊM MỚI #}
     </div>
+    {# KẾT THÚC THAY ĐỔI #}
 {% endblock %}

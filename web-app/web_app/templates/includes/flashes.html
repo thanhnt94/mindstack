@@ -1,9 +1,85 @@
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <ul class="flashes">
-        {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
+{#
+    flashes.html
+    Mô tả: Hiển thị các thông báo flash từ Flask.
+    Đã được cập nhật để hiển thị toast/snackbar trên mobile.
+#}
+<div class="flash-messages-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            {# BẮT ĐẦU THAY ĐỔI: Thêm class để điều khiển hiển thị trên mobile #}
+            <div class="alert alert-{{ category }} old-flash-message">
+                {{ message }}
+            </div>
+            {# KẾT THÚC THAY ĐỔI #}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+{# BẮT ĐẦU THÊM MỚI: Container cho Toast/Snackbar #}
+<div id="toast-container" class="toast-container"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toastContainer = document.getElementById('toast-container');
+        const flashMessages = JSON.parse('{{ get_flashed_messages(with_categories=true) | tojson | safe }}');
+
+        /**
+         * Mô tả: Tạo và hiển thị một toast message.
+         * @param {string} message - Nội dung của toast.
+         * @param {string} category - Loại toast (success, error, warning, info).
+         */
+        function showToast(message, category) {
+            const toast = document.createElement('div');
+            toast.classList.add('toast-message', `toast-${category}`);
+            toast.textContent = message;
+            
+            // Thêm toast vào container
+            toastContainer.appendChild(toast);
+
+            // Hiển thị toast (thêm class 'show' để kích hoạt animation)
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10); // Độ trễ nhỏ để đảm bảo animation hoạt động
+
+            // Tự động ẩn toast sau 3 giây (3000ms)
+            setTimeout(() => {
+                toast.classList.remove('show'); // Xóa class 'show' để kích hoạt fade-out
+                // Xóa toast khỏi DOM sau khi animation fade-out hoàn tất
+                toast.addEventListener('transitionend', () => {
+                    toast.remove();
+                }, { once: true }); // Chỉ lắng nghe sự kiện một lần
+            }, 3000);
+        }
+
+        // Kiểm tra nếu đang ở chế độ mobile (dựa trên media query trong CSS)
+        // và nếu đang ở trang Flashcard (kiểm tra body class 'learn-page')
+        // hoặc trang chọn bộ flashcard (body class 'select-set-page')
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+        const isFlashcardPage = document.body.classList.contains('learn-page') || document.body.classList.contains('select-set-page');
+
+        if (isMobile && isFlashcardPage) {
+            // Ẩn các thông báo flash cũ trên mobile ở trang Flashcard
+            const oldFlashMessages = document.querySelectorAll('.old-flash-message');
+            oldFlashMessages.forEach(msg => msg.style.display = 'none');
+
+            // Hiển thị các thông báo dưới dạng toast
+            flashMessages.forEach(([category, message]) => {
+                showToast(message, category);
+            });
+        }
+        // Giữ nguyên hiển thị thông báo flash cũ trên desktop hoặc các trang khác
+        // Hoặc nếu không phải trang flashcard, hiển thị toast cho tất cả các thông báo flash
+        else {
+            flashMessages.forEach(([category, message]) => {
+                // Nếu không phải trang Flashcard, chúng ta có thể hiển thị toast cho tất cả các thông báo
+                // hoặc giữ nguyên hành vi mặc định của Flask (hiển thị banner)
+                // Hiện tại, tôi sẽ giữ nguyên banner trên desktop và các trang khác.
+                // Nếu bạn muốn toast trên tất cả các trang/thiết bị, hãy bỏ comment dòng dưới
+                // showToast(message, category);
+            });
+        }
+    });
+</script>
+{# KẾT THÚC THÊM MỚI #}

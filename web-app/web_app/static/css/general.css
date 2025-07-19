@@ -33,7 +33,9 @@ html, body {
 }
 
 body {
+    /* BẮT ĐẦU THAY ĐỔI: Áp dụng font Inter toàn cục */
     font-family: 'Inter', sans-serif;
+    /* KẾT THÚC THAY ĐỔI */
     background-color: #f4f7f6;
     color: #333;
     display: flex; /* Bật Flexbox cho body */

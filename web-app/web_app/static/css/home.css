@@ -4,76 +4,323 @@
  */
 
 .home-container {
-    text-align: center;
+    text-align: center; /* Đảm bảo căn giữa cho các phần tử con */
     padding-top: 40px;
     padding-bottom: 40px;
+    max-width: 1200px; /* Giới hạn chiều rộng để nội dung không quá dàn trải */
+    margin: 0 auto; /* Căn giữa container */
 }
 
-.home-header h1 {
-    font-size: 2.5em;
+/* Hero Section */
+.home-hero-section {
+    background: linear-gradient(135deg, #e0f2f7 0%, #cce9f5 100%); /* Nền gradient nhẹ nhàng */
+    padding: 80px 20px; /* Tăng padding */
+    border-radius: 20px; /* Bo góc nhiều hơn */
+    margin-bottom: 60px; /* Tăng khoảng cách dưới */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); /* Bóng đổ mềm mại hơn */
+    position: relative;
+    overflow: hidden;
+    text-align: center; /* Đảm bảo nội dung trong hero section được căn giữa */
+}
+
+/* Thêm hiệu ứng gợn sóng hoặc họa tiết nhẹ */
+.home-hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 50% 0, rgba(255,255,255,0.1) 0%, transparent 70%);
+    opacity: 0.3;
+    animation: hero-pattern 15s infinite linear;
+    z-index: 0;
+}
+
+@keyframes hero-pattern {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+.home-title {
+    font-size: 3.8em; /* Kích thước lớn hơn cho tiêu đề chính */
     color: #2c3e50;
-    margin-bottom: 10px;
+    margin-bottom: 20px; /* Tăng khoảng cách */
+    line-height: 1.1; /* Giảm line-height */
+    font-weight: 800; /* In đậm hơn */
+    z-index: 1;
+    position: relative;
+    text-align: center; /* Đảm bảo tiêu đề được căn giữa */
 }
 
-.home-header p {
-    font-size: 1.2em;
-    color: #7f8c8d;
-    margin-bottom: 40px;
+.home-title .highlight-text {
+    color: #3498db; /* Màu xanh nổi bật cho tên ứng dụng */
+    /* font-weight: 900; */ /* Giữ nguyên font-weight từ .home-title */
 }
 
-.activity-selector {
+.home-subtitle {
+    font-size: 1.6em; /* Kích thước phụ đề lớn hơn */
+    color: #555;
+    margin-bottom: 50px; /* Tăng khoảng cách */
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+    z-index: 1;
+    position: relative;
+    text-align: center; /* Đảm bảo phụ đề được căn giữa */
+}
+
+.home-cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 25px; /* Tăng khoảng cách giữa các nút CTA */
+    flex-wrap: wrap; /* Cho phép các nút xuống dòng trên màn hình nhỏ */
+    z-index: 1;
+    position: relative;
+}
+
+.home-cta-buttons .button {
+    min-width: 280px; /* Đảm bảo các nút đủ lớn */
+    font-size: 1.2em; /* Tăng kích thước font cho nút */
+    padding: 18px 35px; /* Tăng padding */
+    border-radius: 12px; /* Bo góc nhiều hơn */
+    transition: all 0.3s ease;
+}
+
+.home-cta-buttons .button.primary {
+    background-color: #3498db;
+    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+}
+.home-cta-buttons .button.primary:hover {
+    background-color: #2980b9;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+}
+
+.home-cta-buttons .button.secondary {
+    background-color: #f7f9fc;
+    color: #3498db;
+    border: 2px solid #3498db;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+.home-cta-buttons .button.secondary:hover {
+    background-color: #eaf3f9;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+
+/* Features Section */
+.home-features-section {
+    margin-bottom: 80px; /* Tăng khoảng cách dưới */
+    padding: 30px 0;
+    text-align: center; /* Đảm bảo nội dung trong features section được căn giữa */
+}
+
+.section-header {
+    font-size: 2.8em; /* Kích thước lớn hơn */
+    color: #34495e;
+    margin-bottom: 50px; /* Tăng khoảng cách dưới */
+    position: relative;
+    padding-bottom: 15px;
+    font-weight: 700;
+    text-align: center; /* Đảm bảo tiêu đề section được căn giữa */
+}
+
+.section-header::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 100px; /* Chiều rộng lớn hơn */
+    height: 5px; /* Chiều cao lớn hơn */
+    background-color: #3498db;
+    border-radius: 3px;
+}
+
+.features-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 30px;
-    max-width: 900px;
-    margin: 0 auto;
+    gap: 40px; /* Tăng khoảng cách giữa các mục */
+    padding: 0 20px;
 }
 
 @media (min-width: 768px) {
-    .activity-selector {
+    .features-grid {
         grid-template-columns: 1fr 1fr;
     }
 }
 
-.activity-card {
-    display: block;
+@media (min-width: 1024px) {
+    .features-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.feature-item {
     background-color: #ffffff;
-    border-radius: 12px;
-    padding: 40px 30px;
-    text-decoration: none;
-    color: inherit;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 18px; /* Bo góc nhiều hơn */
+    padding: 40px; /* Tăng padding */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* Bóng đổ mềm mại hơn */
     border: 1px solid #e7e9ed;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center; /* Đảm bảo nội dung trong feature item được căn giữa */
 }
 
-.activity-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+.feature-item:hover {
+    transform: translateY(-10px); /* Dịch chuyển lên nhiều hơn */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15); /* Bóng đổ rõ hơn khi hover */
 }
 
-.activity-icon {
-    font-size: 3em;
-    margin-bottom: 20px;
+.feature-icon {
+    font-size: 4.5em; /* Kích thước icon lớn hơn */
+    color: #4299e1; /* Màu xanh sáng hơn */
+    margin-bottom: 25px; /* Tăng khoảng cách */
 }
 
-.flashcard-card .activity-icon {
-    color: #3498db;
-}
-
-.quiz-card .activity-icon {
-    color: #9b59b6;
-}
-
-.activity-card h2 {
-    font-size: 1.8em;
-    margin-top: 0;
-    margin-bottom: 15px;
+.feature-item h3 {
+    font-size: 1.8em; /* Kích thước font tiêu đề lớn hơn */
     color: #34495e;
+    margin-top: 0;
+    margin-bottom: 18px; /* Tăng khoảng cách */
+    font-weight: 600;
 }
 
-.activity-card p {
-    font-size: 1em;
+.feature-item p {
+    font-size: 1.1em; /* Kích thước font nội dung lớn hơn */
     color: #555;
+    line-height: 1.7;
+}
+
+/* Call to Action Section */
+.home-call-to-action {
+    background-color: #f0f8ff; /* Nền xanh nhạt */
+    padding: 60px 20px; /* Tăng padding */
+    border-radius: 20px; /* Bo góc nhiều hơn */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Bóng đổ rõ hơn */
+    text-align: center; /* Đảm bảo nội dung trong CTA được căn giữa */
+}
+
+.home-call-to-action .section-header {
+    color: #2c3e50;
+    margin-bottom: 30px; /* Tăng khoảng cách */
+}
+
+.home-call-to-action .section-header::after {
+    background-color: #2980b9; /* Màu xanh đậm hơn */
+}
+
+.home-call-to-action p {
+    font-size: 1.3em; /* Kích thước font lớn hơn */
+    color: #555;
+    margin-bottom: 40px; /* Tăng khoảng cách */
     line-height: 1.6;
+}
+
+.home-call-to-action .button {
+    min-width: 300px; /* Nút lớn hơn */
+    font-size: 1.3em; /* Font lớn hơn */
+    padding: 20px 40px; /* Padding lớn hơn */
+    border-radius: 12px; /* Bo góc nhiều hơn */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .home-title {
+        font-size: 3em;
+    }
+    .home-subtitle {
+        font-size: 1.4em;
+    }
+    .section-header {
+        font-size: 2.4em;
+    }
+    .feature-icon {
+        font-size: 4em;
+    }
+    .feature-item h3 {
+        font-size: 1.6em;
+    }
+    .feature-item p {
+        font-size: 1em;
+    }
+    .home-cta-buttons .button {
+        min-width: 240px;
+        font-size: 1.1em;
+        padding: 15px 30px;
+    }
+    .home-call-to-action .button {
+        min-width: 260px;
+        font-size: 1.1em;
+        padding: 18px 35px;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-hero-section {
+        padding: 60px 15px;
+        margin-bottom: 40px;
+        border-radius: 15px;
+    }
+    .home-title {
+        font-size: 2.5em;
+        margin-bottom: 15px;
+    }
+    .home-subtitle {
+        font-size: 1.2em;
+        margin-bottom: 30px;
+    }
+    .home-cta-buttons {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .home-cta-buttons .button {
+        min-width: unset;
+        width: 100%;
+        max-width: 320px; /* Giới hạn chiều rộng trên mobile */
+        margin: 0 auto; /* BẮT ĐẦU THÊM MỚI: Căn giữa nút trên mobile */
+    }
+    .home-features-section {
+        margin-bottom: 60px;
+    }
+    .section-header {
+        font-size: 2em;
+        margin-bottom: 40px;
+    }
+    .section-header::after {
+        width: 80px;
+        height: 4px;
+    }
+    .features-grid {
+        gap: 30px;
+        padding: 0 15px;
+    }
+    .feature-item {
+        padding: 30px;
+        border-radius: 15px;
+    }
+    .feature-icon {
+        font-size: 3.5em;
+        margin-bottom: 20px;
+    }
+    .feature-item h3 {
+        font-size: 1.4em;
+        margin-bottom: 12px;
+    }
+    .home-call-to-action {
+        padding: 40px 15px;
+        border-radius: 15px;
+    }
+    .home-call-to-action p {
+        font-size: 1.1em;
+        margin-bottom: 30px;
+    }
+    .home-call-to-action .button {
+        min-width: unset;
+        width: 100%;
+        max-width: 320px;
+    }
 }

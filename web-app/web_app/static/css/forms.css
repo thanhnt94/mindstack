@@ -83,3 +83,96 @@
     background: #5a6268;
 }
 /* --- KẾT THÚC THÊM MỚI --- */
+
+/* BẮT ĐẦU THÊM MỚI: Kiểu dáng cho trang Login */
+.login-container {
+    background-color: #ffffff;
+    padding: 40px; /* Tăng padding */
+    border-radius: 15px; /* Bo góc nhiều hơn */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Bóng đổ mềm mại hơn */
+    max-width: 450px; /* Giới hạn chiều rộng */
+    width: 90%; /* Đảm bảo responsive */
+    text-align: center; /* Căn giữa nội dung */
+    border: 1px solid #e7e9ed; /* Viền nhẹ */
+    box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước */
+}
+
+.login-header {
+    margin-bottom: 30px; /* Khoảng cách dưới header */
+}
+
+.login-icon {
+    font-size: 3.5em; /* Kích thước icon lớn */
+    color: #3498db; /* Màu xanh nổi bật */
+    margin-bottom: 15px;
+}
+
+.login-container h1 {
+    font-size: 2em; /* Kích thước tiêu đề */
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.login-container p {
+    font-size: 1.1em;
+    color: #7f8c8d;
+    margin-bottom: 0;
+}
+
+.login-container form {
+    margin-top: 20px;
+}
+
+.login-container .form-group {
+    margin-bottom: 20px; /* Khoảng cách giữa các form-group */
+}
+
+.login-container .button-group {
+    margin-top: 30px; /* Khoảng cách trên nút đăng nhập */
+}
+
+.login-container .large-button {
+    width: 100%; /* Nút chiếm toàn bộ chiều rộng */
+    padding: 15px 25px; /* Tăng padding nút */
+    font-size: 1.1em; /* Tăng font size nút */
+}
+
+.login-footer {
+    margin-top: 30px; /* Khoảng cách trên footer */
+    font-size: 0.95em;
+    color: #555;
+}
+
+.login-footer a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive cho trang Login */
+@media (max-width: 768px) {
+    .login-container {
+        padding: 25px; /* Giảm padding trên mobile */
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+    .login-icon {
+        font-size: 3em;
+    }
+    .login-container h1 {
+        font-size: 1.8em;
+    }
+    .login-container p {
+        font-size: 1em;
+    }
+    .login-container .large-button {
+        padding: 12px 20px;
+        font-size: 1em;
+    }
+}
+/* KẾT THÚC THÊM MỚI */

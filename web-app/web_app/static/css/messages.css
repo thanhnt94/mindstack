@@ -1,26 +1,108 @@
 /*
  * messages.css
- * Mô tả: Chứa các kiểu CSS dành riêng cho việc hiển thị các thông báo flash (flash messages)
- * trong ứng dụng, bao gồm các kiểu cho thông báo thành công và lỗi.
+ * Mô tả: Chứa các kiểu CSS cho các thông báo flash (flash messages) trong ứng dụng.
  */
 
-.flashes {
-    list-style: none;
-    padding: 0;
-    margin: 20px 0;
+/* Kiểu chung cho các thông báo flash */
+.flash-messages-container {
+    position: fixed;
+    top: 64px; /* Dưới navbar */
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    text-align: center;
 }
 
-.flashes li {
-    background-color: #d4edda; /* Màu nền cho thông báo thành công */
-    color: #155724; /* Màu chữ cho thông báo thành công */
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    border: 1px solid #c3e6cb;
+.alert {
+    padding: 12px 20px;
+    margin-bottom: 15px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 500;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
 }
 
-.flashes li.error {
-    background-color: #f8d7da; /* Màu nền cho thông báo lỗi */
-    color: #721c24; /* Màu chữ cho thông báo lỗi */
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-error {
+    color: #721c24;
+    background-color: #f8d7da;
     border-color: #f5c6cb;
 }
+
+.alert-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.alert-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+/* BẮT ĐẦU THÊM MỚI: Kiểu cho Toast/Snackbar */
+.toast-container {
+    position: fixed;
+    bottom: 20px; /* Cách đáy màn hình */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050; /* Đảm bảo nằm trên mọi thứ */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none; /* Cho phép click xuyên qua container */
+    width: 100%; /* Chiếm toàn bộ chiều rộng để căn giữa */
+    max-width: 350px; /* Giới hạn chiều rộng tối đa */
+    padding: 0 15px; /* Padding ngang để không dính sát mép */
+    box-sizing: border-box;
+}
+
+.toast-message {
+    background-color: rgba(52, 152, 219, 0.95); /* Màu xanh mặc định */
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 50px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateY(20px); /* Bắt đầu từ dưới lên */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    text-align: center;
+    font-size: 0.9em;
+    width: 100%; /* Chiếm toàn bộ chiều rộng của toast-container */
+    pointer-events: auto; /* Cho phép tương tác với từng toast */
+}
+
+.toast-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Các màu sắc cụ thể cho toast */
+.toast-success { background-color: rgba(40, 167, 69, 0.95); } /* Xanh lá */
+.toast-error { background-color: rgba(220, 53, 69, 0.95); } /* Đỏ */
+.toast-warning { background-color: rgba(255, 193, 7, 0.95); color: #333; } /* Vàng */
+.toast-info { background-color: rgba(23, 162, 184, 0.95); } /* Xanh lam */
+
+/* Ẩn thông báo flash cũ trên mobile ở trang Flashcard */
+@media (max-width: 768px) {
+    /* Điều này sẽ được xử lý bằng JS trong flashes.html để đảm bảo tính linh hoạt
+       khi chúng ta chỉ muốn ẩn trên trang Flashcard.
+       Tuy nhiên, để đảm bảo CSS ưu tiên, chúng ta có thể thêm một quy tắc ẩn mặc định ở đây.
+    */
+    body.learn-page .old-flash-message,
+    body.select-set-page .old-flash-message {
+        display: none !important; /* Buộc ẩn */
+    }
+}
+/* KẾT THÚC THÊM MỚI */
