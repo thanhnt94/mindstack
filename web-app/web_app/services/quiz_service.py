@@ -4,12 +4,16 @@ import openpyxl
 import io
 import random
 import time
-import hashlib # Import hashlib để tạo hash cho đoạn văn
+import hashlib
+import os
+import zipfile
+import requests # Thư viện để tải file từ URL, cần được cài đặt (pip install requests)
 from sqlalchemy import func
-from ..models import db, QuestionSet, User, QuizQuestion, UserQuizProgress, ScoreLog, QuizPassage # Thêm QuizPassage
+from ..models import db, QuestionSet, User, QuizQuestion, UserQuizProgress, ScoreLog, QuizPassage
 from ..config import (
     SCORE_QUIZ_CORRECT_FIRST_TIME, SCORE_QUIZ_CORRECT_REPEAT,
-    QUIZ_MODE_NEW_SEQUENTIAL, QUIZ_MODE_NEW_RANDOM, QUIZ_MODE_REVIEW
+    QUIZ_MODE_NEW_SEQUENTIAL, QUIZ_MODE_NEW_RANDOM, QUIZ_MODE_REVIEW,
+    QUIZ_IMAGES_DIR, QUIZ_AUDIO_CACHE_DIR # Thêm import thư mục media
 )
 
 logger = logging.getLogger(__name__)
@@ -630,46 +634,38 @@ class QuizService:
         try:
             workbook = openpyxl.Workbook()
             sheet = workbook.active
-            sheet.title = set_to_export.title[:30]
+            
+            # --- BẮT ĐẦU SỬA LỖI: Làm sạch tên sheet ---
+            invalid_chars = r'\/?*[]:'
+            sanitized_title = "".join(c for c in set_to_export.title if c not in invalid_chars)
+            sheet.title = sanitized_title[:30]
+            # --- KẾT THÚC SỬA LỖI ---
 
-            # Thêm các cột mới cho export (question_id, passage_text, passage_order)
-            # BẮT ĐẦU SỬA: option_c và option_d là tùy chọn trong Excel
             headers = ['question_id', 'pre_question_text', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 
                        'correct_answer_text', 'guidance', 'question_image_file', 'question_audio_file',
                        'passage_text', 'passage_order']
-            # KẾT THÚC SỬA
             sheet.append(headers)
 
-            # Sắp xếp câu hỏi để các câu trong cùng đoạn văn xuất hiện liền kề và theo thứ tự
-            # Ưu tiên sắp xếp theo passage_id, sau đó là passage_order, cuối cùng là question_id
             sorted_questions = sorted(set_to_export.questions, 
                                       key=lambda q: (q.passage_id if q.passage_id is not None else float('inf'), 
                                                      q.passage_order if q.passage_order is not None else float('inf'), 
                                                      q.question_id))
 
-            for q in sorted_questions: # Sử dụng danh sách đã sắp xếp
+            for q in sorted_questions:
                 correct_answer_text = ""
-                if q.correct_answer == 'A':
-                    correct_answer_text = q.option_a
-                elif q.correct_answer == 'B':
-                    correct_answer_text = q.option_b
-                elif q.correct_answer == 'C':
-                    correct_answer_text = q.option_c
-                elif q.correct_answer == 'D':
-                    correct_answer_text = q.option_d
+                if q.correct_answer == 'A': correct_answer_text = q.option_a
+                elif q.correct_answer == 'B': correct_answer_text = q.option_b
+                elif q.correct_answer == 'C': correct_answer_text = q.option_c
+                elif q.correct_answer == 'D': correct_answer_text = q.option_d
 
-                # Lấy passage_content từ QuizPassage
                 passage_content_to_export = q.passage.passage_content if q.passage else None
 
                 row_data = [
-                    q.question_id, # Thêm question_id vào hàng xuất
-                    q.pre_question_text, q.question,
-                    q.option_a, q.option_b, q.option_c, q.option_d, # THÊM: option_c, option_d
-                    correct_answer_text,
-                    q.guidance,
+                    q.question_id, q.pre_question_text, q.question,
+                    q.option_a, q.option_b, q.option_c, q.option_d,
+                    correct_answer_text, q.guidance,
                     q.question_image_file, q.question_audio_file,
-                    passage_content_to_export, # Sử dụng passage_content từ QuizPassage
-                    q.passage_order # Thêm passage_order vào hàng xuất
+                    passage_content_to_export, q.passage_order
                 ]
                 sheet.append(row_data)
             
@@ -683,27 +679,16 @@ class QuizService:
             logger.error(f"{log_prefix} Lỗi khi xuất bộ câu hỏi ra Excel: {e}", exc_info=True)
             return None
 
-    # BẮT ĐẦU THÊM MỚI: Hàm lấy thống kê chi tiết bộ Quiz cho người dùng
     def get_quiz_set_stats_for_user(self, user_id, set_id):
         """
         Mô tả: Lấy các số liệu thống kê chi tiết của một bộ câu hỏi quiz cụ thể cho người dùng.
-        Args:
-            user_id (int): ID của người dùng.
-            set_id (int): ID của bộ câu hỏi quiz.
-        Returns:
-            dict: Một dictionary chứa các số liệu thống kê như tổng số câu hỏi,
-                  số câu đã trả lời, số câu đúng, số câu sai, số câu đã thành thạo, v.v.
         """
         log_prefix = f"[QUIZ_SERVICE|GetSetStats|User:{user_id}|Set:{set_id}]"
         logger.info(f"{log_prefix} Đang lấy thống kê bộ quiz.")
 
         stats = {
-            'total_questions': 0,
-            'answered_questions': 0,
-            'correct_answers': 0,
-            'incorrect_answers': 0,
-            'mastered_questions': 0,
-            'unanswered_questions': 0,
+            'total_questions': 0, 'answered_questions': 0, 'correct_answers': 0,
+            'incorrect_answers': 0, 'mastered_questions': 0, 'unanswered_questions': 0,
             'set_title': 'N/A'
         }
 
@@ -715,7 +700,6 @@ class QuizService:
         stats['set_title'] = question_set.title
         stats['total_questions'] = QuizQuestion.query.filter_by(set_id=set_id).count()
 
-        # Lấy tất cả tiến trình của người dùng trong bộ này
         progress_in_quiz_set = UserQuizProgress.query.join(QuizQuestion)\
             .filter(QuizQuestion.set_id == set_id, UserQuizProgress.user_id == user_id)
         
@@ -727,4 +711,72 @@ class QuizService:
 
         logger.info(f"{log_prefix} Đã lấy thống kê bộ quiz thành công.")
         return stats
-    # KẾT THÚC THÊM MỚI
+
+    def export_question_set_as_zip(self, set_id):
+        """
+        Mô tả: Xuất một bộ câu hỏi đầy đủ, bao gồm file Excel và các file media (ảnh, audio) vào một file ZIP.
+        """
+        log_prefix = f"[QUIZ_SERVICE|ExportZip|Set:{set_id}]"
+        logger.info(f"{log_prefix} Bắt đầu xuất gói ZIP đầy đủ.")
+
+        set_to_export = self.get_question_set_by_id(set_id)
+        if not set_to_export:
+            logger.warning(f"{log_prefix} Không tìm thấy bộ câu hỏi.")
+            return None
+
+        try:
+            excel_stream = self.export_set_to_excel(set_id)
+            if not excel_stream:
+                logger.error(f"{log_prefix} Không thể tạo file Excel, hủy xuất ZIP.")
+                return None
+
+            zip_stream = io.BytesIO()
+            with zipfile.ZipFile(zip_stream, 'w', zipfile.ZIP_DEFLATED) as zf:
+                zf.writestr('data.xlsx', excel_stream.getvalue())
+                logger.info(f"{log_prefix} Đã thêm data.xlsx vào file ZIP.")
+
+                added_media_files = set()
+                for question in set_to_export.questions:
+                    # Xử lý hình ảnh
+                    img_filename = question.question_image_file
+                    if img_filename and img_filename not in added_media_files:
+                        if img_filename.startswith('http://') or img_filename.startswith('https://'):
+                            try:
+                                response = requests.get(img_filename, stream=True, timeout=10)
+                                if response.status_code == 200:
+                                    safe_filename = hashlib.sha1(img_filename.encode()).hexdigest() + os.path.splitext(img_filename)[1]
+                                    zf.writestr(os.path.join('images', safe_filename), response.content)
+                                    added_media_files.add(img_filename)
+                                    logger.debug(f"{log_prefix} Đã tải và thêm ảnh từ URL: images/{safe_filename}")
+                                else:
+                                    logger.warning(f"{log_prefix} Lỗi tải ảnh từ URL (status {response.status_code}): {img_filename}")
+                            except requests.exceptions.RequestException as e:
+                                logger.error(f"{log_prefix} Lỗi khi tải ảnh từ URL {img_filename}: {e}")
+                        else:
+                            img_path = os.path.join(QUIZ_IMAGES_DIR, img_filename)
+                            if os.path.exists(img_path):
+                                zf.write(img_path, os.path.join('images', img_filename))
+                                added_media_files.add(img_filename)
+                                logger.debug(f"{log_prefix} Đã thêm ảnh cục bộ: images/{img_filename}")
+                            else:
+                                logger.warning(f"{log_prefix} Không tìm thấy file ảnh cục bộ: {img_path}")
+
+                    # Xử lý audio
+                    audio_filename = question.question_audio_file
+                    if audio_filename and audio_filename not in added_media_files:
+                        if not (audio_filename.startswith('http://') or audio_filename.startswith('https://')):
+                            audio_path = os.path.join(QUIZ_AUDIO_CACHE_DIR, audio_filename)
+                            if os.path.exists(audio_path):
+                                zf.write(audio_path, os.path.join('audio', audio_filename))
+                                added_media_files.add(audio_filename)
+                                logger.debug(f"{log_prefix} Đã thêm audio cục bộ: audio/{audio_filename}")
+                            else:
+                                logger.warning(f"{log_prefix} Không tìm thấy file audio cục bộ: {audio_path}")
+            
+            zip_stream.seek(0)
+            logger.info(f"{log_prefix} Xuất gói ZIP thành công với {len(added_media_files)} file media.")
+            return zip_stream
+
+        except Exception as e:
+            logger.error(f"{log_prefix} Lỗi nghiêm trọng khi tạo file ZIP: {e}", exc_info=True)
+            return None

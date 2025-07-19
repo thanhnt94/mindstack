@@ -25,7 +25,6 @@
                     </select>
                 </div>
                 
-                {# --- BẮT ĐẦU THÊM MỚI: Chức năng Excel --- #}
                 <hr style="margin: 20px 0; border: 1px solid #eee;">
                 <div class="form-group">
                     <label for="excel_file">Đồng bộ hóa từ file Excel (.xlsx):</label>
@@ -34,14 +33,15 @@
                     <small>File phải có các cột bắt buộc: 'question' (hoặc 'question_image_file'/'question_audio_file'), 'option_a', 'option_b', 'correct_answer_text'. Các cột 'option_c', 'option_d', 'pre_question_text', 'guidance', 'question_id', 'passage_text', 'passage_order' là tùy chọn. Dòng đầu tiên sẽ được bỏ qua (coi như tiêu đề).</small>
                 </div>
                 
+                <!-- BẮT ĐẦU THAY ĐỔI: Cập nhật nhóm nút bấm -->
                 <div class="button-group">
                     <button type="submit" class="button primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
-                    <a href="{{ url_for('admin.export_question_set', set_id=set_data.set_id) }}" class="button success"><i class="fas fa-file-excel"></i> Xuất ra Excel</a>
+                    <a href="{{ url_for('admin.export_question_set', set_id=set_data.set_id) }}" class="button success"><i class="fas fa-file-excel"></i> Xuất Excel</a>
+                    <a href="{{ url_for('admin.export_question_set_zip', set_id=set_data.set_id) }}" class="button ai-button"><i class="fas fa-file-archive"></i> Xuất Gói ZIP</a>
                     <a href="{{ url_for('admin.manage_question_sets') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>
                 </div>
-                {# --- KẾT THÚC THÊM MỚI --- #}
+                <!-- KẾT THÚC THAY ĐỔI -->
             </form>
         </div>
     </div>
 {% endblock %}
-

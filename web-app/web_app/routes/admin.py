@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, session,
 import logging
 import io
 import asyncio
-import threading # Thêm import threading
+import threading
 from datetime import datetime
 from ..services import user_service, set_service, stats_service, quiz_service, audio_service
 from ..models import db, User, UserFlashcardProgress
@@ -13,7 +13,7 @@ from ..config import DATABASE_PATH
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 logger = logging.getLogger(__name__)
 
-# --- BẮT ĐẦU THÊM MỚI: Biến toàn cục để theo dõi tác vụ chạy nền ---
+# --- Biến toàn cục để theo dõi tác vụ chạy nền ---
 audio_generation_task = {
     "status": "idle",  # idle, running, finished, error
     "progress": 0,
@@ -46,22 +46,29 @@ def audio_generation_worker(app, status_dict):
             logger.error(f"{log_prefix} Lỗi trong thread tạo audio: {e}", exc_info=True)
             status_dict['status'] = 'error'
             status_dict['message'] = f"Đã xảy ra lỗi: {e}"
-# --- KẾT THÚC THÊM MỚI ---
-
 
 @admin_bp.route('/')
 @admin_bp.route('/dashboard')
 @admin_required
 def dashboard():
+    """
+    Mô tả: Hiển thị bảng điều khiển quản trị viên với các số liệu thống kê tổng quan.
+    """
     admin_stats = stats_service.get_admin_dashboard_stats()
     if not admin_stats:
         flash("Không thể tải dữ liệu cho Admin Dashboard.", "error")
         admin_stats = {}
+
+    # Lấy dữ liệu bảng xếp hạng
     sort_by = request.args.get('sort_by', 'total_score')
     timeframe = request.args.get('timeframe', 'all_time')
+    
     leaderboard_data = stats_service.get_user_leaderboard_data(
-        sort_by=sort_by, timeframe=timeframe, limit=10
+        sort_by=sort_by,
+        timeframe=timeframe,
+        limit=10 # Giới hạn 10 người dùng hàng đầu
     )
+
     return render_template(
         'admin/dashboard.html', 
         stats=admin_stats, 
@@ -70,7 +77,6 @@ def dashboard():
         current_timeframe=timeframe
     )
 
-# ... (Các route user, set, question set không thay đổi) ...
 @admin_bp.route('/users')
 @admin_required
 def manage_users():
@@ -286,27 +292,17 @@ def export_question_set(set_id):
 @admin_bp.route('/tools')
 @admin_required
 def tools_page():
-    """
-    Mô tả: Hiển thị trang công cụ và bảo trì cho admin.
-    """
-    # --- BẮT ĐẦU THAY ĐỔI: Truyền trạng thái tác vụ vào template ---
-    # Nếu tác vụ đã hoàn thành hoặc lỗi, reset về 'idle' sau khi hiển thị 1 lần
     if audio_generation_task['status'] in ['finished', 'error']:
         flash(audio_generation_task['message'], 'success' if audio_generation_task['status'] == 'finished' else 'error')
         audio_generation_task['status'] = 'idle'
         audio_generation_task['progress'] = 0
         audio_generation_task['total'] = 0
         audio_generation_task['message'] = ''
-
     return render_template('admin/tools.html', task_status=audio_generation_task)
-    # --- KẾT THÚC THAY ĐỔI ---
 
 @admin_bp.route('/backup-database')
 @admin_required
 def backup_database():
-    """
-    Mô tả: Xử lý việc tải xuống file sao lưu của cơ sở dữ liệu.
-    """
     log_prefix = "[ADMIN_TOOLS|BackupDB]"
     try:
         logger.info(f"{log_prefix} Yêu cầu sao lưu database từ admin ID: {session.get('user_id')}")
@@ -323,28 +319,69 @@ def backup_database():
         flash("Đã xảy ra lỗi khi sao lưu database.", "error")
         return redirect(url_for('admin.tools_page'))
 
-# --- BẮT ĐẦU THAY ĐỔI: Sửa lỗi TypeError và triển khai chạy nền ---
 @admin_bp.route('/generate-audio-cache', methods=['POST'])
 @admin_required
 def generate_audio_cache():
-    """
-    Mô tả: Kích hoạt quá trình tạo bộ đệm audio trong một thread nền.
-    """
     global audio_generation_task
     log_prefix = "[ADMIN_TOOLS|GenerateAudioCache]"
-
     if audio_generation_task['status'] == 'running':
         flash("Quá trình tạo audio cache đã đang chạy.", "warning")
         return redirect(url_for('admin.tools_page'))
-
     logger.info(f"{log_prefix} Yêu cầu tạo audio cache từ admin ID: {session.get('user_id')}")
-    
-    # Lấy đối tượng app hiện tại để truyền vào thread
     app = current_app._get_current_object()
-    # Tạo và bắt đầu thread mới
     thread = threading.Thread(target=audio_generation_worker, args=(app, audio_generation_task))
     thread.start()
-    
     flash("Đã bắt đầu quá trình tạo audio cache trong nền. Bạn có thể tải lại trang này để xem tiến trình.", "info")
     return redirect(url_for('admin.tools_page'))
-# --- KẾT THÚC THAY ĐỔI ---
+
+@admin_bp.route('/sets/export-zip/<int:set_id>')
+@admin_required
+def export_set_zip(set_id):
+    """
+    Mô tả: Xử lý yêu cầu xuất một bộ thẻ flashcard ra file ZIP đầy đủ.
+    """
+    set_to_export = set_service.get_set_by_id(set_id)
+    if not set_to_export:
+        flash("Không tìm thấy bộ thẻ để xuất.", "error")
+        return redirect(url_for('admin.manage_sets'))
+        
+    zip_stream = set_service.export_set_as_zip(set_id)
+    if not zip_stream:
+        flash("Lỗi khi tạo file ZIP.", "error")
+        return redirect(url_for('admin.edit_set', set_id=set_id))
+
+    safe_title = "".join(c for c in set_to_export.title if c.isalnum() or c in (' ', '_')).rstrip()
+    filename = f"BoThe_{safe_title}_Full.zip"
+
+    return send_file(
+        zip_stream,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/zip'
+    )
+
+@admin_bp.route('/question-sets/export-zip/<int:set_id>')
+@admin_required
+def export_question_set_zip(set_id):
+    """
+    Mô tả: Xử lý yêu cầu xuất một bộ câu hỏi ra file ZIP đầy đủ.
+    """
+    set_to_export = quiz_service.get_question_set_by_id(set_id)
+    if not set_to_export:
+        flash("Không tìm thấy bộ câu hỏi để xuất.", "error")
+        return redirect(url_for('admin.manage_question_sets'))
+        
+    zip_stream = quiz_service.export_question_set_as_zip(set_id)
+    if not zip_stream:
+        flash("Lỗi khi tạo file ZIP.", "error")
+        return redirect(url_for('admin.edit_question_set', set_id=set_id))
+
+    safe_title = "".join(c for c in set_to_export.title if c.isalnum() or c in (' ', '_')).rstrip()
+    filename = f"BoCauHoi_{safe_title}_Full.zip"
+
+    return send_file(
+        zip_stream,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/zip'
+    )

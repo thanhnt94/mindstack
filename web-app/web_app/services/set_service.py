@@ -2,7 +2,11 @@
 import logging
 import openpyxl
 import io
+import os
+import zipfile
+import hashlib
 from ..models import db, VocabularySet, User, Flashcard, UserFlashcardProgress # Thêm UserFlashcardProgress để xóa liên quan
+from ..config import FLASHCARD_IMAGES_DIR, FLASHCARD_AUDIO_CACHE_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -333,3 +337,74 @@ class SetService:
             logger.error(f"{log_prefix} Lỗi khi xuất bộ thẻ ra Excel: {e}", exc_info=True)
             return None
 
+    # --- BẮT ĐẦU THÊM MỚI ---
+    def export_set_as_zip(self, set_id):
+        """
+        Mô tả: Xuất một bộ thẻ đầy đủ, bao gồm file Excel và các file media (ảnh, audio) vào một file ZIP.
+        Args:
+            set_id (int): ID của bộ thẻ cần xuất.
+        Returns:
+            io.BytesIO: Một đối tượng stream chứa dữ liệu file ZIP, hoặc None nếu lỗi.
+        """
+        log_prefix = f"[SET_SERVICE|ExportZip|Set:{set_id}]"
+        logger.info(f"{log_prefix} Bắt đầu xuất gói ZIP đầy đủ.")
+
+        set_to_export = self.get_set_by_id(set_id)
+        if not set_to_export:
+            logger.warning(f"{log_prefix} Không tìm thấy bộ thẻ.")
+            return None
+
+        try:
+            # 1. Tạo file Excel trong bộ nhớ
+            excel_stream = self.export_set_to_excel(set_id)
+            if not excel_stream:
+                logger.error(f"{log_prefix} Không thể tạo file Excel, hủy xuất ZIP.")
+                return None
+
+            # 2. Tạo file ZIP trong bộ nhớ
+            zip_stream = io.BytesIO()
+            with zipfile.ZipFile(zip_stream, 'w', zipfile.ZIP_DEFLATED) as zf:
+                # Thêm file Excel vào ZIP
+                zf.writestr('data.xlsx', excel_stream.getvalue())
+                logger.info(f"{log_prefix} Đã thêm data.xlsx vào file ZIP.")
+
+                # 3. Thu thập và thêm các file media
+                added_media_files = set() # Để tránh thêm trùng file
+                for card in set_to_export.flashcards:
+                    # Xử lý hình ảnh
+                    for img_attr in ['front_img', 'back_img']:
+                        img_filename = getattr(card, img_attr)
+                        if img_filename and img_filename not in added_media_files:
+                            # Bỏ qua các URL bên ngoài
+                            if not (img_filename.startswith('http://') or img_filename.startswith('https://')):
+                                img_path = os.path.join(FLASHCARD_IMAGES_DIR, img_filename)
+                                if os.path.exists(img_path):
+                                    zf.write(img_path, os.path.join('images', img_filename))
+                                    added_media_files.add(img_filename)
+                                    logger.debug(f"{log_prefix} Đã thêm ảnh: images/{img_filename}")
+                                else:
+                                    logger.warning(f"{log_prefix} Không tìm thấy file ảnh cục bộ: {img_path}")
+                    
+                    # Xử lý audio (chỉ file đã có trong cache)
+                    for audio_attr in ['front_audio_content', 'back_audio_content']:
+                        audio_content = getattr(card, audio_attr)
+                        if audio_content:
+                            content_hash = hashlib.sha1(audio_content.encode('utf-8')).hexdigest()
+                            cache_filename = f"{content_hash}.mp3"
+                            if cache_filename not in added_media_files:
+                                cache_path = os.path.join(FLASHCARD_AUDIO_CACHE_DIR, cache_filename)
+                                if os.path.exists(cache_path):
+                                    zf.write(cache_path, os.path.join('audio', cache_filename))
+                                    added_media_files.add(cache_filename)
+                                    logger.debug(f"{log_prefix} Đã thêm audio cache: audio/{cache_filename}")
+                                else:
+                                    logger.warning(f"{log_prefix} Bỏ qua audio vì chưa có cache: {cache_filename}")
+
+            zip_stream.seek(0)
+            logger.info(f"{log_prefix} Xuất gói ZIP thành công với {len(added_media_files)} file media.")
+            return zip_stream
+
+        except Exception as e:
+            logger.error(f"{log_prefix} Lỗi nghiêm trọng khi tạo file ZIP: {e}", exc_info=True)
+            return None
+    # --- KẾT THÚC THÊM MỚI ---

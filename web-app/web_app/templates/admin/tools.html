@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Công cụ & Bảo trì - Admin{% endblock %}
 
+{% block head_extra %}
+    {# Link CSS của admin dashboard để sử dụng chung các kiểu #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="admin-panel">
@@ -22,7 +27,7 @@
             </div>
         </div>
 
-        <!-- BẮT ĐẦU THAY ĐỔI: Cập nhật khu vực Audio Cache để hiển thị tiến trình tĩnh -->
+        <!-- BẮT ĐẦU THAY ĐỔI: Cập nhật khu vực Audio Cache để sử dụng lớp CSS -->
         <div class="actions-panel" style="margin-top: 20px;">
             <h2 class="actions-title"><i class="fas fa-volume-up"></i> Tạo Bộ đệm Audio</h2>
             <p style="margin-bottom: 20px; color: #555;">
@@ -36,10 +41,10 @@
                         <b>Đang xử lý...</b> (Đã quét {{ task_status.progress }} / {{ task_status.total }} file cần tạo). Vui lòng tải lại trang để cập nhật.
                     </span>
                     <!-- Thanh tiến trình -->
-                    <div style="width: 100%; background-color: #e9ecef; border-radius: 5px; margin-top: 10px; height: 24px; position: relative; overflow: hidden;">
+                    <div class="progress-bar-container-tools">
                         {% set percentage = (task_status.progress * 100 / task_status.total) | int if task_status.total > 0 else 0 %}
-                        <div style="width: {{ percentage }}%; height: 100%; background-color: #28a745; transition: width 0.5s ease;"></div>
-                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{{ percentage }}%</span>
+                        <div class="progress-bar-fill-tools" style="--progress-percentage: {{ percentage }}%;"></div>
+                        <span class="progress-bar-text-tools">{{ percentage }}%</span>
                     </div>
                 </div>
                 <div class="action-buttons" style="justify-content: flex-start;">

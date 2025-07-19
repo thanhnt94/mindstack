@@ -4,6 +4,8 @@
 {% block head_extra %}
     {# Link đến file CSS riêng cho trang dashboard của admin #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+    {# Link đến CSS của dashboard người dùng để tái sử dụng kiểu bảng xếp hạng #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -12,87 +14,165 @@
     <h1 class="dashboard-header"><i class="fas fa-user-shield"></i> Bảng điều khiển Quản trị viên</h1>
     <p class="dashboard-subtitle">Tổng quan về hoạt động của toàn bộ hệ thống.</p>
 
-    {# Hàng chứa các thẻ thống kê chính #}
-    <div class="stat-cards-row">
-        <!-- Thẻ Tổng số thành viên -->
-        <div class="stat-card users">
-            <div class="stat-card-icon"><i class="fas fa-users"></i></div>
-            <div class="stat-card-info">
-                <span class="stat-card-value">{{ stats.total_users or 0 }}</span>
-                <span class="stat-card-label">Tổng thành viên</span>
+    <!-- BẮT ĐẦU THAY ĐỔI: Sử dụng Grid Layout -->
+    <div class="admin-dashboard-grid">
+        
+        <!-- Cột Trái: Hành động nhanh -->
+        <div class="dashboard-column-left">
+            <div class="actions-panel">
+                <h2 class="actions-title">Hành động nhanh</h2>
+                <div class="action-buttons">
+                    <a href="{{ url_for('admin.manage_users') }}" class="action-button">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Quản lý Thành viên</span>
+                    </a>
+                    <a href="{{ url_for('admin.manage_sets') }}" class="action-button">
+                        <i class="fas fa-book"></i>
+                        <span>Quản lý Bộ Flashcard</span>
+                    </a>
+                    <a href="{{ url_for('admin.manage_question_sets') }}" class="action-button">
+                        <i class="fas fa-tasks"></i>
+                        <span>Quản lý Bộ câu hỏi</span>
+                    </a>
+                    <a href="{{ url_for('admin.add_user') }}" class="action-button">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Thêm Thành viên</span>
+                    </a>
+                    <a href="{{ url_for('admin.add_set') }}" class="action-button">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Thêm Bộ Flashcard</span>
+                    </a>
+                    <a href="{{ url_for('admin.tools_page') }}" class="action-button">
+                        <i class="fas fa-tools"></i>
+                        <span>Công cụ & Bảo trì</span>
+                    </a>
+                </div>
             </div>
         </div>
 
-        <!-- Thẻ Thành viên hoạt động hôm nay -->
-        <div class="stat-card active-users">
-            <div class="stat-card-icon"><i class="fas fa-user-clock"></i></div>
-            <div class="stat-card-info">
-                <span class="stat-card-value">{{ stats.active_users_today or 0 }}</span>
-                <span class="stat-card-label">Hoạt động hôm nay</span>
+        <!-- Cột Phải: Thống kê và Bảng xếp hạng -->
+        <div class="dashboard-column-right">
+            <!-- Thẻ thống kê -->
+            <div class="stat-cards-row">
+                <div class="stat-card users">
+                    <div class="stat-card-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-value">{{ stats.total_users or 0 }}</span>
+                        <span class="stat-card-label">Tổng thành viên</span>
+                    </div>
+                </div>
+                <div class="stat-card active-users">
+                    <div class="stat-card-icon"><i class="fas fa-user-clock"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-value">{{ stats.active_users_today or 0 }}</span>
+                        <span class="stat-card-label">Hoạt động hôm nay</span>
+                    </div>
+                </div>
+                <div class="stat-card sets">
+                    <div class="stat-card-icon"><i class="fas fa-layer-group"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-value">{{ stats.total_sets or 0 }}</span>
+                        <span class="stat-card-label">Tổng số bộ thẻ</span>
+                    </div>
+                </div>
+                <div class="stat-card flashcards">
+                    <div class="stat-card-icon"><i class="fas fa-clone"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-value">{{ stats.total_flashcards or 0 }}</span>
+                        <span class="stat-card-label">Tổng số flashcard</span>
+                    </div>
+                </div>
+                <div class="stat-card reviews">
+                    <div class="stat-card-icon"><i class="fas fa-history"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-value">{{ stats.total_reviews or 0 }}</span>
+                        <span class="stat-card-label">Tổng lượt ôn tập</span>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Thẻ Tổng số bộ thẻ -->
-        <div class="stat-card sets">
-            <div class="stat-card-icon"><i class="fas fa-layer-group"></i></div>
-            <div class="stat-card-info">
-                <span class="stat-card-value">{{ stats.total_sets or 0 }}</span>
-                <span class="stat-card-label">Tổng số bộ thẻ</span>
-            </div>
-        </div>
+            <!-- Bảng xếp hạng -->
+            <div class="leaderboard-section">
+                <h2 class="section-title"><i class="fas fa-trophy"></i> Bảng xếp hạng Toàn hệ thống</h2>
+                <div class="leaderboard-controls">
+                    <form id="leaderboard-filter-form" method="GET" action="{{ url_for('admin.dashboard') }}">
+                        <div class="form-group sort-by-group">
+                            <label for="sort_by">Sắp xếp theo:</label>
+                            <select id="sort_by" name="sort_by" class="form-control" onchange="this.form.submit();">
+                                <option value="total_score" {% if current_sort_by == 'total_score' %}selected{% endif %}>Tổng điểm (trong kỳ)</option>
+                                <option value="total_reviews" {% if current_sort_by == 'total_reviews' %}selected{% endif %}>Số lượt ôn tập (Flashcard)</option>
+                                <option value="learned_cards" {% if current_sort_by == 'learned_cards' %}selected{% endif %}>Số thẻ đã học (Flashcard)</option>
+                                <option value="new_cards" {% if current_sort_by == 'new_cards' %}selected{% endif %}>Số thẻ học mới (Flashcard)</option>
+                                <option value="total_quiz_answers" {% if current_sort_by == 'total_quiz_answers' %}selected{% endif %}>Số câu trả lời (Trắc nghiệm)</option>
+                            </select>
+                        </div>
+                        <div class="form-group timeframe-group">
+                            <div class="timeframe-tabs">
+                                <button type="button" class="tab-button {% if current_timeframe == 'day' %}active{% endif %}" data-timeframe="day">Hôm nay</button>
+                                <button type="button" class="tab-button {% if current_timeframe == 'week' %}active{% endif %}" data-timeframe="week">Tuần này</button>
+                                <button type="button" class="tab-button {% if current_timeframe == 'month' %}active{% endif %}" data-timeframe="month">Tháng này</button>
+                                <button type="button" class="tab-button {% if current_timeframe == 'all_time' %}active{% endif %}" data-timeframe="all_time">Toàn bộ</button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="timeframe" id="hidden-timeframe-input" value="{{ current_timeframe }}">
+                    </form>
+                </div>
 
-        <!-- Thẻ Tổng số flashcard -->
-        <div class="stat-card flashcards">
-            <div class="stat-card-icon"><i class="fas fa-clone"></i></div>
-            <div class="stat-card-info">
-                <span class="stat-card-value">{{ stats.total_flashcards or 0 }}</span>
-                <span class="stat-card-label">Tổng số flashcard</span>
-            </div>
-        </div>
-
-        <!-- Thẻ Tổng số lần ôn tập -->
-        <div class="stat-card reviews">
-            <div class="stat-card-icon"><i class="fas fa-history"></i></div>
-            <div class="stat-card-info">
-                <span class="stat-card-value">{{ stats.total_reviews or 0 }}</span>
-                <span class="stat-card-label">Tổng lượt ôn tập</span>
+                {% if leaderboard_data %}
+                    <ul class="leaderboard-list">
+                        {% for entry in leaderboard_data %}
+                            {% set display_value = 0 %}
+                            {% if current_sort_by == 'total_score' %}{% set display_value = entry.current_period_score %}{% endif %}
+                            {% if current_sort_by == 'total_reviews' %}{% set display_value = entry.total_reviews %}{% endif %}
+                            {% if current_sort_by == 'learned_cards' %}{% set display_value = entry.learned_cards %}{% endif %}
+                            {% if current_sort_by == 'new_cards' %}{% set display_value = entry.new_cards_today %}{% endif %}
+                            {% if current_sort_by == 'total_quiz_answers' %}{% set display_value = entry.total_quiz_answers %}{% endif %}
+                            <li class="leaderboard-item">
+                                <span class="rank">
+                                    {% if loop.index == 1 %}<i class="fas fa-medal gold-medal"></i>
+                                    {% elif loop.index == 2 %}<i class="fas fa-medal silver-medal"></i>
+                                    {% elif loop.index == 3 %}<i class="fas fa-medal bronze-medal"></i>
+                                    {% else %}{{ loop.index }}{% endif %}
+                                </span>
+                                <span class="username">{{ entry.username or 'N/A' }}</span>
+                                <span class="score-value">
+                                    {% if 'score' in current_sort_by %}{{ display_value }} điểm
+                                    {% elif 'reviews' in current_sort_by or 'answers' in current_sort_by %}{{ display_value }} lượt
+                                    {% else %}{{ display_value }} thẻ{% endif %}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-message">Không có dữ liệu bảng xếp hạng để hiển thị.</p>
+                {% endif %}
             </div>
         </div>
     </div>
-
-    {# Panel chứa các nút hành động nhanh #}
-    <div class="actions-panel">
-        <h2 class="actions-title">Hành động nhanh</h2>
-        <div class="action-buttons">
-            <a href="{{ url_for('admin.manage_users') }}" class="action-button">
-                <i class="fas fa-users-cog"></i>
-                <span>Quản lý Thành viên</span>
-            </a>
-            <a href="{{ url_for('admin.manage_sets') }}" class="action-button">
-                <i class="fas fa-book"></i>
-                <span>Quản lý Bộ Flashcard</span>
-            </a>
-            {# --- BẮT ĐẦU THÊM MỚI --- #}
-            <a href="{{ url_for('admin.manage_question_sets') }}" class="action-button">
-                <i class="fas fa-tasks"></i>
-                <span>Quản lý Bộ câu hỏi</span>
-            </a>
-            {# --- KẾT THÚC THÊM MỚI --- #}
-            <a href="{{ url_for('admin.add_user') }}" class="action-button">
-                <i class="fas fa-user-plus"></i>
-                <span>Thêm Thành viên</span>
-            </a>
-            <a href="{{ url_for('admin.add_set') }}" class="action-button">
-                <i class="fas fa-plus-circle"></i>
-                <span>Thêm Bộ Flashcard</span>
-            </a>
-            {# --- BẮT ĐẦU THÊM MỚI: Nút dẫn đến trang công cụ --- #}
-            <a href="{{ url_for('admin.tools_page') }}" class="action-button">
-                <i class="fas fa-tools"></i>
-                <span>Công cụ & Bảo trì</span>
-            </a>
-            {# --- KẾT THÚC THÊM MỚI --- #}
-        </div>
-    </div>
+    <!-- KẾT THÚC THAY ĐỔI: Grid Layout -->
 </div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    // Script để xử lý logic cho button group timeframe (giống dashboard.html)
+    document.addEventListener('DOMContentLoaded', function() {
+        const timeframeTabsContainer = document.querySelector('.timeframe-tabs');
+        const hiddenTimeframeInput = document.getElementById('hidden-timeframe-input');
+        const leaderboardFilterForm = document.getElementById('leaderboard-filter-form');
+
+        if (timeframeTabsContainer && hiddenTimeframeInput && leaderboardFilterForm) {
+            timeframeTabsContainer.addEventListener('click', function(event) {
+                if (event.target.tagName === 'BUTTON') {
+                    timeframeTabsContainer.querySelectorAll('.tab-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    event.target.classList.add('active');
+                    hiddenTimeframeInput.value = event.target.dataset.timeframe;
+                    leaderboardFilterForm.submit();
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
