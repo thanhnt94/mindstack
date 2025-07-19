@@ -15,13 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    const hasImage = jsDataElement.dataset.hasImage === 'true';
-
-    // Nếu không có ảnh, ẩn popup ngay lập tức và không cần chạy logic này
-    if (!hasImage) {
-        imagePopup.classList.add('hidden');
-        return;
-    }
+    // Lấy trạng thái mặt thẻ hiện tại và kiểm tra xem có ảnh để hiển thị không
+    const isFront = jsDataElement.dataset.isFront === 'true';
+    // THAY ĐỔI: Lấy hasImage dựa trên mặt hiện tại của thẻ
+    const hasImage = isFront ? jsDataElement.dataset.hasFrontImage === 'true' : jsDataElement.dataset.hasBackImage === 'true';
 
     /**
      * Mô tả: Hàm để đóng popup hình ảnh.
@@ -42,12 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gắn sự kiện 'click' cho nút đóng
     closeButton.addEventListener('click', closeImagePopup);
 
-    // BẮT ĐẦU THÊM MỚI: Logic hiển thị popup ảnh khi lật thẻ (mặt sau)
-    // Kiểm tra xem đây có phải là mặt sau của thẻ và có ảnh hay không
-    const isFront = jsDataElement.dataset.isFront === 'true';
-
-    // Nếu là mặt sau và có ảnh, hiển thị popup ảnh
-    if (!isFront && hasImage) {
+    // LOGIC HIỂN THỊ POPUP ẢNH KHI TẢI TRANG HOẶC LẬT THẺ
+    // Nếu có ảnh cho mặt hiện tại, hiển thị popup ảnh
+    if (hasImage) {
         imagePopup.classList.remove('hidden');
         // Điều chỉnh font size ngay sau khi hiển thị ảnh để nội dung đẩy lên
         // Sử dụng setTimeout để đảm bảo DOM đã được render lại sau khi bỏ class 'hidden'
@@ -57,9 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 0); // Độ trễ 0ms để chạy ở cuối event loop
     } else {
-        // Nếu là mặt trước hoặc không có ảnh, đảm bảo popup ẩn
+        // Nếu không có ảnh cho mặt hiện tại, đảm bảo popup ẩn
         imagePopup.classList.add('hidden');
     }
-    // KẾT THÚC THÊM MỚI
 });
-

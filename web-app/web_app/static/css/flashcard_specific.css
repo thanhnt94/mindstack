@@ -41,8 +41,11 @@
 /* ========================== POPUP HÌNH ẢNH (MOBILE) ========================== */
 .image-popup-container {
     width: 100%;
-    max-height: 33.33vh; /* Giữ giới hạn chiều cao tối đa */
+    /* THAY ĐỔI: Sử dụng flex-grow để nó tự co giãn trong flex container cha (.flashcard-column) */
+    flex-grow: 1; /* Cho phép nó chiếm không gian còn lại */
     flex-shrink: 0; /* Đảm bảo nó không bị co lại */
+    /* THAY ĐỔI: Đặt max-height theo vh để giới hạn chiều cao tổng thể */
+    max-height: 50vh; /* Ví dụ: tối đa 50% chiều cao viewport */
     background-color: #f8f9fa;
     display: flex; /* Mặc định là flex để nó chiếm không gian */
     flex-direction: column;
@@ -53,6 +56,11 @@
     top: auto; /* Hủy bỏ giá trị top tuyệt đối nếu có */
     left: auto; /* Hủy bỏ giá trị left tuyệt đối nếu có */
     transform: none; /* Hủy bỏ transform tuyệt đối nếu có */
+    /* THÊM MỚI: Đảm bảo padding bên trong để ảnh không dính sát viền */
+    padding: 10px; /* Padding bên trong popup */
+    box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước tổng thể */
+    justify-content: center; /* Căn giữa ảnh theo chiều dọc */
+    align-items: center; /* Căn giữa ảnh theo chiều ngang */
 }
 
 .image-popup-container.hidden { 
@@ -76,11 +84,15 @@
     transition: background-color 0.2s;
 }
 .close-popup-btn:hover { background: rgba(0, 0, 0, 0.8); }
-.popup-image {
-    width: 100%;
-    height: 100%; /* Đảm bảo ảnh lấp đầy container popup */
-    object-fit: contain;
-    padding: 10px;
+
+/* THAY ĐỔI: Kiểu cho thẻ img bên trong popup */
+.image-popup-container img { /* Đổi từ .popup-image sang .image-popup-container img */
+    max-width: 100%; /* Ảnh không bao giờ rộng hơn container */
+    max-height: 100%; /* Ảnh không bao giờ cao hơn container */
+    object-fit: contain; /* Đảm bảo ảnh co giãn mà không bị cắt, giữ tỷ lệ */
+    display: block; /* Loại bỏ khoảng trắng dưới ảnh */
+    margin: auto; /* Căn giữa ảnh trong container */
+    border-radius: 5px; /* Giữ bo góc cho ảnh */
 }
 
 /* ========================== HEADER CỦA THẺ ========================== */
@@ -515,4 +527,3 @@
 .side-nav-footer { margin-top: auto; padding-top: 15px; border-top: 1px solid #eee; }
 .side-nav-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0s 0.3s; z-index: 1001; }
 .side-nav-overlay.open { opacity: 1; visibility: visible; transition: opacity 0.3s ease-in-out; }
-

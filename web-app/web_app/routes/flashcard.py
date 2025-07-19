@@ -120,9 +120,11 @@ def index():
         total_cards_map = dict(db.session.query(Flashcard.set_id, func.count(Flashcard.flashcard_id))\
             .filter(Flashcard.set_id.in_(set_ids)).group_by(Flashcard.set_id).all())
             
-        learned_cards_map = dict(db.session.query(UserFlashcardProgress.flashcard_id, func.count(UserFlashcardProgress.progress_id))\
-            .join(Flashcard).filter(UserFlashcardProgress.user_id == user_id, Flashcard.set_id.in_(set_ids))\
+        # BẮT ĐẦU SỬA LỖI: Đếm số thẻ duy nhất đã học (có learned_date)
+        learned_cards_map = dict(db.session.query(Flashcard.set_id, func.count(db.distinct(UserFlashcardProgress.flashcard_id)))\
+            .join(Flashcard).filter(UserFlashcardProgress.user_id == user_id, Flashcard.set_id.in_(set_ids), UserFlashcardProgress.learned_date.isnot(None))\
             .group_by(Flashcard.set_id).all())
+        # KẾT THÚC SỬA LỖI
 
         for set_item in started_sets_raw:
             set_item.total_cards = total_cards_map.get(set_item.set_id, 0)
@@ -399,4 +401,3 @@ def select_set_page():
     Mô tả: Một route tiện ích để chuyển hướng về trang chọn bộ thẻ.
     """
     return redirect(url_for('flashcard.index'))
-

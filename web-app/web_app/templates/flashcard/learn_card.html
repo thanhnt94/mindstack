@@ -159,7 +159,7 @@
                                 <a href="{{ url_for('flashcard.flip_card', progress_id=progress.progress_id) }}" class="button">🔄 Lật thẻ</a>
                             {% else %}
                                 {% if progress.last_reviewed is none %}
-                                    <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='continue') }}" class="button primary">▶️ Tiếp tục</a>
+                                    <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='continue') }}" class="button primary">▶️ Tiếp theo</a>
                                 {% else %}
                                     <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='forget') }}" class="button danger">❌ Quên</a>
                                     <a href="{{ url_for('flashcard.rate_card', progress_id=progress.progress_id, response_str='vague') }}" class="button warning">🤔 Mơ hồ</a>
@@ -323,7 +323,10 @@
          data-has-back-audio-content="{{ 'true' if has_back_audio_content else 'false' }}"
          data-audio-url="{{ audio_url or '' }}"
          data-can-edit="{{ 'true' if can_edit else 'false' }}"
-         data-has-image="{{ 'true' if image_to_show else 'false' }}"
+         {# BẮT ĐẦU THAY ĐỔI: Thay thế data-has-image bằng data-has-front-image và data-has-back-image #}
+         data-has-front-image="{{ 'true' if flashcard.front_img else 'false' }}"
+         data-has-back-image="{{ 'true' if flashcard.back_img else 'false' }}"
+         {# KẾT THÚC THAY ĐỔI #}
          {# BẮT ĐẦU THÊM MỚI: Dữ liệu cho Dynamic Island #}
          data-current-mode="{{ current_mode }}"
          data-progress-correct-streak="{{ progress.correct_streak }}"
