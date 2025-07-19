@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress, ScoreLog, QuizQuestion, UserQuizProgress, QuestionSet
 from ..config import DEFAULT_TIMEZONE_OFFSET, LEARNING_MODE_DISPLAY_NAMES, DAILY_HISTORY_MAX_DAYS
-from sqlalchemy import func, case, and_ # Thêm import case và and_
+from sqlalchemy import func, case, and_, or_ # Thêm import or_
 
 logger = logging.getLogger(__name__)
 
@@ -52,11 +52,9 @@ class StatsService:
 
     def get_admin_dashboard_stats(self):
         """
-        Mô tả: Lấy các số liệu thống kê tổng quan cho trang quản trị viên.
+        Mô tả: Lấy các số liệu thống kê tổng quan và hoạt động gần đây cho trang quản trị viên.
         Returns:
-            dict: Một dictionary chứa các số liệu thống kê như tổng số người dùng,
-                  tổng số bộ thẻ, tổng số flashcard, tổng số lượt ôn tập,
-                  và số người dùng hoạt động hôm nay.
+            dict: Một dictionary chứa các số liệu thống kê.
         """
         log_prefix = "[ADMIN_DASHBOARD_STATS]"
         logger.info(f"{log_prefix} Bắt đầu tổng hợp dữ liệu thống kê cho admin.")
@@ -66,17 +64,49 @@ class StatsService:
             current_ts = self._get_current_unix_timestamp(tz_offset)
             today_midnight_ts = self._get_midnight_timestamp(current_ts, tz_offset)
 
-            active_users_today = db.session.query(UserFlashcardProgress.user_id)\
+            # --- Thống kê tổng quan ---
+            total_users = User.query.count()
+            total_sets = VocabularySet.query.count()
+            total_flashcards = Flashcard.query.count()
+            total_reviews = UserFlashcardProgress.query.count()
+
+            # --- Hoạt động trong ngày ---
+            # Lấy ID của người dùng hoạt động từ cả Flashcard và Quiz
+            active_flashcard_user_ids = db.session.query(UserFlashcardProgress.user_id)\
                 .filter(UserFlashcardProgress.last_reviewed >= today_midnight_ts)\
-                .distinct()\
-                .count()
+                .distinct()
+            
+            active_quiz_user_ids = db.session.query(UserQuizProgress.user_id)\
+                .filter(UserQuizProgress.last_answered >= today_midnight_ts)\
+                .distinct()
+
+            # Hợp nhất các ID và loại bỏ trùng lặp
+            all_active_user_ids = {uid for (uid,) in active_flashcard_user_ids.union(active_quiz_user_ids)}
+            
+            active_users_today_count = len(all_active_user_ids)
+            
+            # Lấy thông tin chi tiết của các user hoạt động
+            active_users_today_list = []
+            if all_active_user_ids:
+                active_users_today_list = User.query.filter(User.user_id.in_(all_active_user_ids)).all()
+
+            # --- Hoạt động gần đây ---
+            recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+            recent_sets = VocabularySet.query.order_by(VocabularySet.creation_date.desc()).limit(5).all()
+            recent_question_sets = QuestionSet.query.order_by(QuestionSet.creation_date.desc()).limit(5).all()
 
             stats = {
-                'total_users': User.query.count(),
-                'total_sets': VocabularySet.query.count(),
-                'total_flashcards': Flashcard.query.count(),
-                'total_reviews': UserFlashcardProgress.query.count(),
-                'active_users_today': active_users_today
+                'total_users': total_users,
+                'total_sets': total_sets,
+                'total_flashcards': total_flashcards,
+                'total_reviews': total_reviews,
+                'active_users_today': active_users_today_count,
+                'recent_activities': {
+                    'users': recent_users,
+                    'sets': recent_sets,
+                    'question_sets': recent_question_sets,
+                    'active_users': active_users_today_list
+                }
             }
             logger.info(f"{log_prefix} Tổng hợp dữ liệu admin thành công.")
             return stats
@@ -471,5 +501,3 @@ class StatsService:
         
         logger.info(f"{log_prefix} Đã lấy thành công {len(leaderboard_data)} người dùng cho bảng xếp hạng.")
         return leaderboard_data
-
-

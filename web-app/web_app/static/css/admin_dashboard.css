@@ -5,7 +5,7 @@
 
 .admin-dashboard-container {
     width: 100%;
-    max-width: 1400px; /* Tăng max-width để phù hợp với layout mới */
+    max-width: 1400px;
     margin: 20px auto;
     padding: 20px;
 }
@@ -25,39 +25,28 @@
     font-size: 1.1em;
 }
 
-/* --- BẮT ĐẦU THAY ĐỔI: Bố cục 2 cột --- */
 .admin-dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr; /* Mặc định 1 cột trên mobile */
+    grid-template-columns: 1fr;
     gap: 30px;
 }
 
 @media (min-width: 1024px) {
     .admin-dashboard-grid {
-        /* Cột trái rộng 1 phần, cột phải rộng 2 phần */
         grid-template-columns: 1fr 2fr; 
     }
 }
 
-.dashboard-column-left {
+.dashboard-column-left, .dashboard-column-right {
     display: flex;
     flex-direction: column;
     gap: 30px;
 }
-
-.dashboard-column-right {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-}
-/* --- KẾT THÚC THAY ĐỔI --- */
-
 
 .stat-cards-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 25px;
-    /* margin-bottom: 40px; Xóa vì đã dùng gap */
 }
 
 .stat-card {
@@ -131,254 +120,124 @@
 
 .action-buttons {
     display: flex;
-    flex-direction: column; /* Xếp các nút theo cột */
+    flex-direction: column;
     gap: 15px;
 }
 
 .action-button {
     display: flex;
-    align-items: center; /* Căn icon và text theo chiều dọc */
-    gap: 15px; /* Khoảng cách giữa icon và text */
+    align-items: center;
+    gap: 15px;
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 8px;
-    padding: 15px; /* Tăng padding */
+    padding: 15px;
     text-decoration: none;
     color: #495057;
     font-weight: 600;
-    text-align: left; /* Căn trái text */
+    text-align: left;
     transition: all 0.2s;
 }
 
 .action-button:hover {
     border-color: #3498db;
     color: #3498db;
-    transform: translateX(5px); /* Hiệu ứng trượt sang phải */
+    transform: translateX(5px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .action-button i {
-    font-size: 1.5em; /* Giảm kích thước icon một chút */
-    margin-bottom: 0; /* Xóa margin-bottom */
-    width: 30px; /* Đặt chiều rộng cố định để căn chỉnh */
+    font-size: 1.5em;
+    margin-bottom: 0;
+    width: 30px;
     text-align: center;
 }
 
-/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho bảng xếp hạng (giống dashboard.css) --- */
-.leaderboard-section {
+/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho panel Hoạt động gần đây --- */
+.recent-activity-panel {
     background-color: #ffffff;
-    padding: 20px;
+    padding: 25px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e7e9ed;
 }
 
-.leaderboard-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 0;
-    align-items: flex-start;
+.activity-section-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    color: #34495e;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 10px;
 }
 
-.leaderboard-controls .sort-by-group { 
-    width: 100%; 
-    display: flex; 
-    align-items: center; 
-    gap: 15px; 
-    margin-bottom: 0; 
-}
-
-.leaderboard-controls .sort-by-group label { 
-    margin-bottom: 0; 
-    flex-shrink: 0; 
-    font-weight: bold;
-    color: #555;
-}
-
-.leaderboard-controls .sort-by-group select.form-control { 
-    flex-grow: 1; 
-    max-width: 250px; 
+.activity-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
 }
 
 @media (min-width: 768px) {
-    .leaderboard-controls {
-        flex-direction: row; 
-        justify-content: space-between; 
-        align-items: center; 
-        flex-wrap: wrap; 
-    }
-    .leaderboard-controls .sort-by-group { 
-        width: auto; 
+    .activity-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     }
 }
 
-.leaderboard-controls .form-control {
-    border: 1px solid #c0c0c0;
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 0.95em;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.leaderboard-controls .form-control:focus {
-    border-color: #3498db;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
-}
-
-.timeframe-group {
-    width: 100%;
-    margin-top: 15px;
-}
-
-.timeframe-tabs {
-    display: flex;
-    justify-content: flex-start;
-    border-bottom: 1px solid #e0e0e0;
-    margin-bottom: 0; 
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 0;
-}
-
-.timeframe-tabs .tab-button {
-    background-color: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    border-radius: 0;
-    padding: 10px 15px;
-    font-size: 0.95em;
+.activity-list-title {
+    font-size: 1.1em;
     font-weight: 600;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    text-align: center;
-    flex-grow: 1;
-    min-width: 20%;
-}
-
-.timeframe-tabs .tab-button:hover {
-    color: #007bff;
-    background-color: #f0f8ff;
-}
-
-.timeframe-tabs .tab-button.active {
-    color: #007bff;
-    border-bottom: 3px solid #007bff;
-    background-color: #ffffff;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.05); 
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    z-index: 2;
-    position: relative;
-}
-
-.leaderboard-list {
-    list-style: none;
-    padding: 0;
-    border-top: none; 
-    padding-top: 20px; 
+    color: #2c3e50;
     margin-top: 0;
+    margin-bottom: 15px;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 10px;
 }
 
-.leaderboard-item {
-    background-color: #ffffff;
-    border: 1px solid #e7e9ed;
-    border-radius: 10px;
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.leaderboard-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-.leaderboard-item .rank {
-    font-size: 1.3em;
-    font-weight: 700;
+.activity-list-title .fas {
     color: #3498db;
-    min-width: 40px;
-    height: 40px;
+}
+
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.activity-list-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background-color: #eaf6ff;
-    border: 1px solid #cce5ff;
-    flex-shrink: 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    gap: 12px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    font-size: 0.9em;
 }
 
-.leaderboard-item .rank .fas.fa-medal {
-    font-size: 2em;
-    width: auto;
-    height: auto;
-    color: inherit;
-    background: none;
-    border: none;
-}
-
-.leaderboard-item .rank .gold-medal { color: #FFD700; }
-.leaderboard-item .rank .silver-medal { color: #C0C0C0; }
-.leaderboard-item .rank .bronze-medal { color: #CD7F32; }
-
-.leaderboard-item .username {
+.activity-item-info {
     flex-grow: 1;
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 1.1em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    flex-direction: column;
 }
 
-.leaderboard-item .score-value {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #2ecc71;
+.activity-item-main {
+    font-weight: 500;
+    color: #333;
+}
+
+.activity-item-sub {
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
+
+.activity-item-timestamp {
+    font-size: 0.8em;
+    color: #95a5a6;
     white-space: nowrap;
     flex-shrink: 0;
-}
-/* --- KẾT THÚC THÊM MỚI --- */
-
-/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho thanh tiến trình trên trang Tools --- */
-.progress-bar-container-tools {
-    width: 100%;
-    background-color: #e9ecef;
-    border-radius: 5px;
-    margin-top: 10px;
-    height: 24px;
-    position: relative;
-    overflow: hidden;
-}
-
-.progress-bar-fill-tools {
-    width: var(--progress-percentage, 0%); /* Sử dụng biến CSS */
-    height: 100%;
-    background-color: #28a745;
-    transition: width 0.5s ease;
-}
-
-.progress-bar-text-tools {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 /* --- KẾT THÚC THÊM MỚI --- */
