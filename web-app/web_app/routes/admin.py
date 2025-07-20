@@ -16,9 +16,8 @@ from ..config import DATABASE_PATH, MAINTENANCE_CONFIG_PATH
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 logger = logging.getLogger(__name__)
 
-# --- Biến toàn cục để theo dõi tác vụ chạy nền ---
 audio_generation_task = {
-    "status": "idle", "progress": 0, "total": 0, "message": ""
+    "status": "idle", "progress": 0, "total": 0, "message": "", "stop_requested": False
 }
 
 def audio_generation_worker(app, status_dict):
@@ -30,14 +29,21 @@ def audio_generation_worker(app, status_dict):
             status_dict['progress'] = 0
             status_dict['total'] = 0
             status_dict['message'] = 'Đang khởi động...'
+            status_dict['stop_requested'] = False
             processed, total = asyncio.run(audio_service.generate_cache_for_all_cards(status_dict))
-            status_dict['status'] = 'finished'
-            status_dict['message'] = f"Hoàn tất! Đã tạo thành công {processed}/{total} file audio mới."
-            logger.info(f"{log_prefix} Tác vụ chạy nền đã hoàn tất.")
+            if status_dict.get('stop_requested'):
+                status_dict['status'] = 'stopped'
+                status_dict['message'] = f"Quá trình đã được dừng. Đã tạo {processed}/{total} file audio mới."
+            else:
+                status_dict['status'] = 'finished'
+                status_dict['message'] = f"Hoàn tất! Đã tạo thành công {processed}/{total} file audio mới."
+            logger.info(f"{log_prefix} Tác vụ chạy nền đã hoàn tất với trạng thái: {status_dict['status']}.")
         except Exception as e:
             logger.error(f"{log_prefix} Lỗi trong thread tạo audio: {e}", exc_info=True)
             status_dict['status'] = 'error'
             status_dict['message'] = f"Đã xảy ra lỗi: {e}"
+        finally:
+            status_dict['stop_requested'] = False
 
 @admin_bp.route('/')
 @admin_bp.route('/dashboard')
@@ -251,22 +257,20 @@ def export_question_set(set_id):
 @admin_bp.route('/tools')
 @admin_required
 def tools_page():
-    if audio_generation_task['status'] in ['finished', 'error']:
-        flash(audio_generation_task['message'], 'success' if audio_generation_task['status'] == 'finished' else 'error')
+    if audio_generation_task['status'] in ['finished', 'error', 'stopped']:
+        flash(audio_generation_task['message'], 'success' if audio_generation_task['status'] in ['finished', 'stopped'] else 'error')
         audio_generation_task['status'] = 'idle'
         audio_generation_task['progress'] = 0
         audio_generation_task['total'] = 0
         audio_generation_task['message'] = ''
     
-    # --- BẮT ĐẦU THÊM MỚI: Đọc trạng thái bảo trì hiện tại ---
     maintenance_config = {'is_active': False, 'duration_hours': 1, 'message': ''}
     if os.path.exists(MAINTENANCE_CONFIG_PATH):
         try:
             with open(MAINTENANCE_CONFIG_PATH, 'r') as f:
                 maintenance_config = json.load(f)
         except (IOError, json.JSONDecodeError):
-            pass # Sử dụng giá trị mặc định nếu có lỗi
-    # --- KẾT THÚC THÊM MỚI ---
+            pass
             
     return render_template('admin/tools.html', task_status=audio_generation_task, maintenance_config=maintenance_config)
 
@@ -338,39 +342,60 @@ def export_question_set_zip(set_id):
         zip_stream, as_attachment=True, download_name=filename, mimetype='application/zip'
     )
 
-# --- BẮT ĐẦU THÊM MỚI: Route xử lý chế độ bảo trì ---
 @admin_bp.route('/update-maintenance', methods=['POST'])
 @admin_required
 def update_maintenance():
-    """
-    Mô tả: Cập nhật trạng thái bảo trì của trang web.
-    """
     try:
         status = request.form.get('maintenance_status')
         duration_hours = request.form.get('duration_hours', 0, type=float)
         message = request.form.get('message', 'Hệ thống đang được bảo trì. Vui lòng quay lại sau.')
-
         config = {
             'is_active': status == 'on',
             'duration_hours': duration_hours,
             'message': message,
             'end_timestamp': 0
         }
-
         if config['is_active']:
             duration_seconds = duration_hours * 3600
             config['end_timestamp'] = time.time() + duration_seconds
             flash(f"Đã bật chế độ bảo trì trong {duration_hours} giờ.", "success")
         else:
             flash("Đã tắt chế độ bảo trì.", "info")
-
-        # Ghi vào file JSON
         with open(MAINTENANCE_CONFIG_PATH, 'w') as f:
             json.dump(config, f, indent=4)
-
     except Exception as e:
         logger.error(f"Lỗi khi cập nhật chế độ bảo trì: {e}", exc_info=True)
         flash("Đã xảy ra lỗi khi cập nhật chế độ bảo trì.", "error")
+    return redirect(url_for('admin.tools_page'))
 
+@admin_bp.route('/stop-audio-cache', methods=['POST'])
+@admin_required
+def stop_audio_cache():
+    global audio_generation_task
+    if audio_generation_task['status'] == 'running':
+        audio_generation_task['stop_requested'] = True
+        flash("Đã gửi yêu cầu dừng. Quá trình sẽ kết thúc sau khi hoàn tất file hiện tại.", "info")
+    else:
+        flash("Không có tác vụ nào đang chạy để dừng.", "warning")
+    return redirect(url_for('admin.tools_page'))
+
+# --- BẮT ĐẦU THÊM MỚI ---
+@admin_bp.route('/clean-audio-cache', methods=['POST'])
+@admin_required
+def clean_audio_cache():
+    """
+    Mô tả: Kích hoạt quá trình dọn dẹp cache audio thừa.
+    """
+    log_prefix = "[ADMIN_TOOLS|CleanAudioCache]"
+    logger.info(f"{log_prefix} Yêu cầu dọn dẹp cache từ admin ID: {session.get('user_id')}")
+    try:
+        deleted_count = audio_service.clean_orphan_audio_cache()
+        if deleted_count >= 0:
+            flash(f"Đã dọn dẹp thành công và xóa {deleted_count} file audio không còn sử dụng.", "success")
+        else:
+            flash("Đã xảy ra lỗi trong quá trình dọn dẹp cache.", "error")
+    except Exception as e:
+        logger.error(f"{log_prefix} Lỗi nghiêm trọng khi dọn dẹp cache: {e}", exc_info=True)
+        flash("Đã xảy ra lỗi nghiêm trọng. Vui lòng kiểm tra log.", "error")
     return redirect(url_for('admin.tools_page'))
 # --- KẾT THÚC THÊM MỚI ---

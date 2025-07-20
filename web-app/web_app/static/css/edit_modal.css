@@ -53,7 +53,6 @@
     padding-right: 15px; /* Thêm padding để thanh cuộn không che nội dung */
 }
 
-/* Tái sử dụng .form-group từ forms.css nhưng có thể ghi đè nếu cần */
 .edit-modal .form-group textarea,
 .edit-modal .form-group input[type="text"] {
     width: 100%;
@@ -81,3 +80,20 @@
     opacity: 0;
     transition: opacity 0.5s;
 }
+
+/* --- BẮT ĐẦU THÊM MỚI: Kiểu cho nhóm input audio --- */
+.audio-edit-group .input-with-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.audio-edit-group textarea {
+    flex-grow: 1; /* Cho textarea chiếm hết không gian còn lại */
+}
+
+.regenerate-audio-btn {
+    flex-shrink: 0; /* Ngăn nút bị co lại */
+    padding: 8px 10px !important; /* Ghi đè padding để nút nhỏ hơn */
+}
+/* --- KẾT THÚC THÊM MỚI --- */

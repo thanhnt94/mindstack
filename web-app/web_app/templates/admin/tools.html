@@ -12,7 +12,6 @@
             <h1><i class="fas fa-tools"></i> Công cụ & Bảo trì</h1>
         </div>
 
-        <!-- BẮT ĐẦU THAY ĐỔI: Giao diện mới cho các công cụ -->
         <div class="tool-card">
             <h2 class="tool-card-title"><i class="fas fa-database"></i> Sao lưu Dữ liệu</h2>
             <p class="tool-card-description">
@@ -25,25 +24,38 @@
         </div>
 
         <div class="tool-card">
-            <h2 class="tool-card-title"><i class="fas fa-volume-up"></i> Tạo Bộ đệm Audio</h2>
+            <h2 class="tool-card-title"><i class="fas fa-volume-up"></i> Quản lý Bộ đệm Audio</h2>
             <p class="tool-card-description">
-                Quét toàn bộ flashcard và tạo các file audio (.mp3) cho những thẻ chưa có. Quá trình này sử dụng API Text-to-Speech và có thể mất nhiều thời gian nếu có nhiều thẻ mới.
+                Quét và tạo các file audio (.mp3) cho những thẻ chưa có, hoặc dọn dẹp các file audio không còn được sử dụng để giải phóng dung lượng.
             </p>
 
             {% if task_status.status == 'running' %}
                 <div class="alert alert-info">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <b>Đang xử lý...</b> (Đã quét {{ task_status.progress }} / {{ task_status.total }} file cần tạo). Vui lòng tải lại trang để cập nhật.
+                    <b>Đang xử lý...</b> (Đã tạo {{ task_status.progress }} / {{ task_status.total }} file). Vui lòng tải lại trang để cập nhật.
                 </div>
-                <button type="button" class="button success" disabled>
-                    <i class="fas fa-spinner fa-spin"></i> Đang Tạo Audio Cache...
-                </button>
+                <div class="button-group" style="justify-content: flex-start; gap: 10px;">
+                    <form method="POST" action="{{ url_for('admin.stop_audio_cache') }}">
+                        <button type="submit" class="button danger">
+                            <i class="fas fa-stop-circle"></i> Dừng quá trình
+                        </button>
+                    </form>
+                </div>
             {% else %}
-                <form id="generate-audio-form" method="POST" action="{{ url_for('admin.generate_audio_cache') }}">
-                    <button type="submit" class="button success">
-                        <i class="fas fa-cogs"></i> Bắt đầu Tạo Audio Cache
-                    </button>
-                </form>
+                <div class="button-group" style="justify-content: flex-start; gap: 10px;">
+                    <form id="generate-audio-form" method="POST" action="{{ url_for('admin.generate_audio_cache') }}">
+                        <button type="submit" class="button success">
+                            <i class="fas fa-cogs"></i> Bắt đầu Tạo Cache
+                        </button>
+                    </form>
+                    <!-- BẮT ĐẦU THÊM MỚI: Nút dọn dẹp cache -->
+                    <form method="POST" action="{{ url_for('admin.clean_audio_cache') }}">
+                        <button type="submit" class="button secondary" onclick="return confirm('Bạn có chắc chắn muốn xóa tất cả các file audio không còn được sử dụng không?');">
+                            <i class="fas fa-trash-alt"></i> Dọn dẹp Cache thừa
+                        </button>
+                    </form>
+                    <!-- KẾT THÚC THÊM MỚI -->
+                </div>
             {% endif %}
         </div>
 
@@ -79,7 +91,6 @@
                 </div>
             </form>
         </div>
-        <!-- KẾT THÚC THAY ĐỔI -->
 
         <div class="button-group" style="margin-top: 30px; justify-content: flex-start;">
             <a href="{{ url_for('admin.dashboard') }}" class="button secondary">

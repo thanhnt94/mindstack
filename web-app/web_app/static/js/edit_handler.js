@@ -2,14 +2,12 @@
 
 /**
  * Mô tả: Xử lý logic cho chức năng sửa flashcard, bao gồm mở/đóng modal,
- * lấy dữ liệu, lưu thay đổi qua API và cập nhật giao diện.
+ * lấy dữ liệu, lưu thay đổi và tái tạo audio qua API.
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Lấy các phần tử DOM và dữ liệu cần thiết
     const jsData = document.getElementById('jsData');
     const canEdit = jsData.dataset.canEdit === 'true';
 
-    // Nếu người dùng không có quyền sửa, dừng script ngay lập tức
     if (!canEdit) {
         return;
     }
@@ -21,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const editSaveStatus = document.getElementById('edit-save-status');
     const flashcardId = jsData.dataset.flashcardId;
 
-    // Các trường input trong modal
     const editFront = document.getElementById('edit-front');
     const editBack = document.getElementById('edit-back');
     const editFrontAudio = document.getElementById('edit-front-audio');
@@ -29,19 +26,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const editFrontImg = document.getElementById('edit-front-img');
     const editBackImg = document.getElementById('edit-back-img');
 
-    // Phần tử hiển thị nội dung thẻ trên trang chính
     const mainCardText = document.querySelector('.flashcard-body .card-text');
 
-    /**
-     * Mô tả: Mở modal sửa thẻ và tải dữ liệu chi tiết của thẻ từ server.
-     */
     async function openEditModal() {
         if (!editModal) return;
 
-        // Hiển thị trạng thái đang tải
         editFront.value = "Đang tải...";
         editBack.value = "Đang tải...";
-        // ... có thể thêm cho các trường khác
         editModal.style.display = 'flex';
 
         try {
@@ -52,7 +43,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if (result.status === 'success') {
-                // Điền dữ liệu lấy được vào các ô input
                 const cardData = result.data;
                 editFront.value = cardData.front || '';
                 editBack.value = cardData.back || '';
@@ -70,24 +60,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /**
-     * Mô tả: Đóng modal sửa thẻ.
-     */
     function closeEditModal() {
         if (editModal) {
             editModal.style.display = 'none';
         }
     }
 
-    /**
-     * Mô tả: Thu thập dữ liệu từ form, gửi lên API để lưu và cập nhật giao diện.
-     */
     async function saveCardChanges() {
-        editSaveStatus.style.color = '#28a745'; // Màu thành công
+        editSaveStatus.style.color = '#28a745';
         editSaveStatus.textContent = 'Đang lưu...';
         editSaveStatus.style.opacity = 1;
 
-        // Thu thập dữ liệu từ các ô input
         const updatedData = {
             front: editFront.value,
             back: editBack.value,
@@ -100,9 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch(`/api/flashcard/edit/${flashcardId}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
             });
 
@@ -110,8 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (response.ok && result.status === 'success') {
                 editSaveStatus.textContent = 'Đã lưu!';
-
-                // Cập nhật nội dung thẻ trên trang chính một cách linh động
                 const isFront = jsData.dataset.isFront === 'true';
                 if (isFront) {
                     mainCardText.textContent = result.data.front;
@@ -119,30 +98,66 @@ document.addEventListener('DOMContentLoaded', function() {
                     mainCardText.textContent = result.data.back;
                 }
                 
-                // Cập nhật cả popup ảnh nếu có
-                // (Phần này có thể được cải tiến thêm để ẩn/hiện popup nếu ảnh được thêm/xóa)
-
                 setTimeout(() => {
                     editSaveStatus.style.opacity = 0;
                     closeEditModal();
-                    // Cân nhắc tải lại trang để cập nhật audio và các thông tin khác
-                    // window.location.reload(); 
-                }, 1500); // Đợi 1.5 giây rồi đóng modal
+                }, 1500);
             } else {
                 throw new Error(result.message || 'Lỗi không xác định khi lưu.');
             }
-
         } catch (error) {
             console.error('Lỗi khi lưu thay đổi thẻ:', error);
             editSaveStatus.textContent = `Lỗi: ${error.message}`;
-            editSaveStatus.style.color = '#dc3545'; // Màu đỏ cho lỗi
+            editSaveStatus.style.color = '#dc3545';
             setTimeout(() => {
                 editSaveStatus.style.opacity = 0;
-            }, 4000); // Giữ thông báo lỗi lâu hơn
+            }, 4000);
         }
     }
 
-    // Gắn các sự kiện
+    // --- BẮT ĐẦU THÊM MỚI: Logic tái tạo audio ---
+    async function regenerateAudio(side, button) {
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        button.disabled = true;
+
+        editSaveStatus.style.color = '#007bff';
+        editSaveStatus.textContent = `Đang tái tạo audio mặt ${side}...`;
+        editSaveStatus.style.opacity = 1;
+
+        try {
+            const response = await fetch(`/api/flashcard/regenerate_audio/${flashcardId}/${side}`, {
+                method: 'POST',
+            });
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                editSaveStatus.style.color = '#28a745';
+                editSaveStatus.textContent = 'Tái tạo thành công!';
+            } else {
+                throw new Error(result.message || 'Lỗi không xác định.');
+            }
+        } catch (error) {
+            console.error(`Lỗi khi tái tạo audio mặt ${side}:`, error);
+            editSaveStatus.textContent = `Lỗi: ${error.message}`;
+            editSaveStatus.style.color = '#dc3545';
+        } finally {
+            button.innerHTML = originalIcon;
+            button.disabled = false;
+            setTimeout(() => {
+                editSaveStatus.style.opacity = 0;
+            }, 3000);
+        }
+    }
+
+    document.querySelectorAll('.regenerate-audio-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const side = this.dataset.side;
+            regenerateAudio(side, this);
+        });
+    });
+    // --- KẾT THÚC THÊM MỚI ---
+
     if (openEditBtn) {
         openEditBtn.addEventListener('click', openEditModal);
     }
@@ -153,7 +168,6 @@ document.addEventListener('DOMContentLoaded', function() {
         saveEditBtn.addEventListener('click', saveCardChanges);
     }
 
-    // Đóng modal khi nhấn ra ngoài
     window.addEventListener('click', function(event) {
         if (event.target === editModal) {
             closeEditModal();

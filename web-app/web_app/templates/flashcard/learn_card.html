@@ -13,16 +13,13 @@
                     {% if image_to_show.startswith('http://') or image_to_show.startswith('https://') %}
                         <img src="{{ image_to_show }}" alt="Hình ảnh thẻ">
                     {% else %}
-                        {# BẮT ĐẦU SỬA: Sử dụng route mới cho hình ảnh Flashcard #}
                         <img src="{{ url_for('api.serve_flashcard_image', filename=image_to_show) }}" alt="Hình ảnh thẻ">
-                        {# KẾT THÚC SỬA #}
                     {% endif %}
                 </div>
             {% endif %}
         </div>
 
         <div class="flashcard-column">
-            {# Thêm ID cho flashcard #}
             <div id="main-flashcard" class="flashcard {% if not is_front %}is-back-side{% endif %}">
                 <div class="flashcard-header">
                     <div class="header-left">
@@ -41,10 +38,8 @@
                 </div>
 
                 <div id="dynamic-card-details" class="dynamic-card-details">
-                    {# BẮT ĐẦU THAY ĐỔI: Cấu trúc lại nội dung Dynamic Island #}
                     <div class="dynamic-island-content">
                         <div class="dynamic-card-details-summary">
-                            {# Nội dung này sẽ được JS cập nhật động #}
                             <span class="summary-text"></span> 
                             <i class="fas fa-chevron-down summary-icon"></i>
                         </div>
@@ -52,65 +47,25 @@
                             <div class="details-section">
                                 <h4 class="details-section-title"><i class="fas fa-chart-bar"></i> Hiệu suất Thẻ này</h4>
                                 <div class="details-grid">
-                                    <div class="detail-item">
-                                        <i class="fas fa-check-circle detail-icon correct-streak-icon"></i>
-                                        <span class="detail-label">Đúng l.tiếp:</span>
-                                        <span class="detail-value">{{ progress.correct_streak }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-chart-line detail-icon correct-count-icon"></i>
-                                        <span class="detail-label">Đúng:</span>
-                                        <span class="detail-value">{{ progress.correct_count }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-times-circle detail-icon incorrect-count-icon"></i>
-                                        <span class="detail-label">Sai:</span>
-                                        <span class="detail-value">{{ progress.incorrect_count }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-history detail-icon review-count-icon"></i>
-                                        <span class="detail-label">Ôn tập:</span>
-                                        <span class="detail-value">{{ progress.review_count }}</span>
-                                    </div>
+                                    <div class="detail-item"><i class="fas fa-check-circle detail-icon correct-streak-icon"></i><span class="detail-label">Đúng l.tiếp:</span><span class="detail-value">{{ progress.correct_streak }}</span></div>
+                                    <div class="detail-item"><i class="fas fa-chart-line detail-icon correct-count-icon"></i><span class="detail-label">Đúng:</span><span class="detail-value">{{ progress.correct_count }}</span></div>
+                                    <div class="detail-item"><i class="fas fa-times-circle detail-icon incorrect-count-icon"></i><span class="detail-label">Sai:</span><span class="detail-value">{{ progress.incorrect_count }}</span></div>
+                                    <div class="detail-item"><i class="fas fa-history detail-icon review-count-icon"></i><span class="detail-label">Ôn tập:</span><span class="detail-value">{{ progress.review_count }}</span></div>
                                 </div>
                             </div>
-
                             <div class="details-section">
                                 <h4 class="details-section-title"><i class="fas fa-layer-group"></i> Tổng quan Bộ thẻ</h4>
                                 <div class="details-grid">
-                                    <div class="detail-item">
-                                        <i class="fas fa-graduation-cap detail-icon learned-set-icon"></i>
-                                        <span class="detail-label">Đã học:</span>
-                                        <span class="detail-value">{{ set_learned_cards }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-brain detail-icon mastered-set-icon"></i>
-                                        <span class="detail-label">Nhớ sâu:</span>
-                                        <span class="detail-value">{{ set_mastered_cards }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-redo-alt detail-icon due-set-icon"></i>
-                                        <span class="detail-label">Cần ôn:</span>
-                                        <span class="detail-value">{{ set_due_cards }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-book-open detail-icon total-set-icon"></i>
-                                        <span class="detail-label">Tổng thẻ:</span>
-                                        <span class="detail-value">{{ set_total_cards }}</span>
-                                    </div>
+                                    <div class="detail-item"><i class="fas fa-graduation-cap detail-icon learned-set-icon"></i><span class="detail-label">Đã học:</span><span class="detail-value">{{ set_learned_cards }}</span></div>
+                                    <div class="detail-item"><i class="fas fa-brain detail-icon mastered-set-icon"></i><span class="detail-label">Nhớ sâu:</span><span class="detail-value">{{ set_mastered_cards }}</span></div>
+                                    <div class="detail-item"><i class="fas fa-redo-alt detail-icon due-set-icon"></i><span class="detail-label">Cần ôn:</span><span class="detail-value">{{ set_due_cards }}</span></div>
+                                    <div class="detail-item"><i class="fas fa-book-open detail-icon total-set-icon"></i><span class="detail-label">Tổng thẻ:</span><span class="detail-value">{{ set_total_cards }}</span></div>
                                 </div>
                             </div>
-
                             <div class="details-section">
                                 <h4 class="details-section-title"><i class="fas fa-star"></i> Điểm tổng thể</h4>
                                 <div class="details-grid">
-                                    <div class="detail-item full-width">
-                                        <i class="fas fa-trophy detail-icon overall-score-icon"></i>
-                                        {# BẮT ĐẦU SỬA LỖI: Sử dụng context_stats.total_score thay vì dashboard_data.total_score #}
-                                        <span class="detail-label">Tổng điểm:</span>
-                                        <span class="detail-value">{{ context_stats.total_score or 0 }}</span>
-                                        {# KẾT THÚC SỬA LỖI #}
-                                    </div>
+                                    <div class="detail-item full-width"><i class="fas fa-trophy detail-icon overall-score-icon"></i><span class="detail-label">Tổng điểm:</span><span class="detail-value">{{ context_stats.total_score or 0 }}</span></div>
                                 </div>
                             </div>
                         </div>
@@ -119,9 +74,7 @@
                         <div id="progressFill" class="progress-fill"></div>
                         <span id="progressText" class="progress-text"></span>
                     </div>
-                    {# KẾT THÚC THAY ĐỔI #}
                 </div>
-
 
                 <div class="flashcard-body">
                     <div class="scrollable-card-content">
@@ -131,20 +84,16 @@
                     </div>
                 </div>
 
-                {# BẮT ĐẦU SỬA: Di chuyển image-popup-container ra khỏi flashcard-body và đặt trước flashcard-footer #}
                 {% if image_to_show %}
-                    <div id="image-popup" class="image-popup-container {% if not show_image_popup %}hidden{% endif %}"> {# Thêm class 'hidden' nếu không muốn hiển thị ngay #}
+                    <div id="image-popup" class="image-popup-container {% if not show_image_popup %}hidden{% endif %}">
                         <button id="close-image-popup-btn" class="close-popup-btn">&times;</button>
                         {% if image_to_show.startswith('http://') or image_to_show.startswith('https://') %}
                             <img src="{{ image_to_show }}" alt="Hình ảnh thẻ">
                         {% else %}
-                            {# BẮT ĐẦU SỬA: Sử dụng route mới cho hình ảnh Flashcard #}
                             <img src="{{ url_for('api.serve_flashcard_image', filename=image_to_show) }}" alt="Hình ảnh thẻ">
-                            {# KẾT THÚC SỬA #}
                         {% endif %}
                     </div>
                 {% endif %}
-                {# KẾT THÚC SỬA #}
 
                 <div class="flashcard-footer">
                     {% if is_autoplay_mode %}
@@ -200,7 +149,6 @@
                     </div>
                 </div>
                 
-                {# Thông tin chi tiết của thẻ (chỉ hiển thị trên Desktop) #}
                 <div class="nav-section desktop-card-details">
                     <h3 class="nav-section-title">Chi tiết thẻ</h3>
                     <p>Lần đáp đúng liên tiếp: <span style="font-weight: bold;">{{ progress.correct_streak }}</span></p>
@@ -237,7 +185,6 @@
         </div>
         <div class="side-nav-content">
             <div class="side-nav-main">
-                {# Các phần của side-nav-main #}
                 <div class="nav-section">
                     <h3 class="nav-section-title">Bộ thẻ hiện tại</h3>
                     <p>{{ context_stats.set_title }}</p>
@@ -257,27 +204,12 @@
                 <hr class="nav-separator">
             </div>
             <div class="side-nav-footer">
-                {# BẮT ĐẦU THAY ĐỔI: Di chuyển các liên kết điều hướng chính xuống footer #}
                 <ul class="side-nav-links">
-                    <li>
-                        <a href="{{ url_for('flashcard.index') }}" class="nav-link">
-                            <i class="fas fa-layer-group"></i> Flashcard
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('quiz.index') }}" class="nav-link">
-                            <i class="fas fa-question-circle"></i> Trắc nghiệm
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('main.dashboard') }}" class="nav-link">
-                            <i class="fas fa-chart-line"></i> Thống kê
-                        </a>
-                    </li>
+                    <li><a href="{{ url_for('flashcard.index') }}" class="nav-link"><i class="fas fa-layer-group"></i> Flashcard</a></li>
+                    <li><a href="{{ url_for('quiz.index') }}" class="nav-link"><i class="fas fa-question-circle"></i> Trắc nghiệm</a></li>
+                    <li><a href="{{ url_for('main.dashboard') }}" class="nav-link"><i class="fas fa-chart-line"></i> Thống kê</a></li>
                 </ul>
-                {# Thêm phân cách mềm #}
                 <hr class="nav-separator">
-                {# KẾT THÚC THAY ĐỔI #}
                 <ul class="side-nav-links">
                     <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
                     <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
@@ -305,8 +237,28 @@
             <div class="edit-modal-body">
                 <div class="form-group"><label for="edit-front">Mặt trước:</label><textarea id="edit-front" rows="3"></textarea></div>
                 <div class="form-group"><label for="edit-back">Mặt sau:</label><textarea id="edit-back" rows="4"></textarea></div>
-                <div class="form-group"><label for="edit-front-audio">Nội dung Audio mặt trước:</label><textarea id="edit-front-audio" rows="2" placeholder="Ví dụ: en:Hello"></textarea></div>
-                <div class="form-group"><label for="edit-back-audio">Nội dung Audio mặt sau:</label><textarea id="edit-back-audio" rows="2" placeholder="Ví dụ: vi:Xin chào"></textarea></div>
+                
+                <!-- BẮT ĐẦU THÊM MỚI: Nút tái tạo audio -->
+                <div class="form-group audio-edit-group">
+                    <label for="edit-front-audio">Nội dung Audio mặt trước:</label>
+                    <div class="input-with-button">
+                        <textarea id="edit-front-audio" rows="2" placeholder="Ví dụ: en:Hello"></textarea>
+                        <button type="button" class="button secondary small-button regenerate-audio-btn" data-side="front" title="Tái tạo audio mặt trước">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group audio-edit-group">
+                    <label for="edit-back-audio">Nội dung Audio mặt sau:</label>
+                    <div class="input-with-button">
+                        <textarea id="edit-back-audio" rows="2" placeholder="Ví dụ: vi:Xin chào"></textarea>
+                        <button type="button" class="button secondary small-button regenerate-audio-btn" data-side="back" title="Tái tạo audio mặt sau">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- KẾT THÚC THÊM MỚI -->
+
                 <div class="form-group"><label for="edit-front-img">URL ảnh mặt trước:</label><input type="text" id="edit-front-img" placeholder="Để trống nếu không có"></div>
                 <div class="form-group"><label for="edit-back-img">URL ảnh mặt sau:</label><input type="text" id="edit-back-img" placeholder="Để trống nếu không có"></div>
             </div>
@@ -323,11 +275,8 @@
          data-has-back-audio-content="{{ 'true' if has_back_audio_content else 'false' }}"
          data-audio-url="{{ audio_url or '' }}"
          data-can-edit="{{ 'true' if can_edit else 'false' }}"
-         {# BẮT ĐẦU THAY ĐỔI: Thay thế data-has-image bằng data-has-front-image và data-has-back-image #}
          data-has-front-image="{{ 'true' if flashcard.front_img else 'false' }}"
          data-has-back-image="{{ 'true' if flashcard.back_img else 'false' }}"
-         {# KẾT THÚC THAY ĐỔI #}
-         {# BẮT ĐẦU THÊM MỚI: Dữ liệu cho Dynamic Island #}
          data-current-mode="{{ current_mode }}"
          data-progress-correct-streak="{{ progress.correct_streak }}"
          data-progress-correct-count="{{ progress.correct_count }}"
@@ -338,11 +287,9 @@
          data-set-mastered-cards="{{ set_mastered_cards }}"
          data-set-due-cards="{{ set_due_cards }}" 
          data-progress-last-reviewed="{{ progress.last_reviewed or '' }}"
-         {# THÊM MỚI: Các thuộc tính cần thiết cho hiệu suất thẻ cá nhân #}
          data-card-correct-count="{{ progress.correct_count }}"
          data-card-incorrect-count="{{ progress.incorrect_count }}"
          data-card-review-count="{{ progress.review_count }}">
-         {# KẾT THÚC THÊM MỚI #}
     </div>
 {% endblock %}
 
@@ -353,6 +300,5 @@
     <script src="{{ url_for('static', filename='js/mobile_menu_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/note_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edit_handler.js') }}"></script>
-    {# Script cho Dynamic Card Details #}
     <script src="{{ url_for('static', filename='js/card_details_handler.js') }}"></script>
 {% endblock %}
