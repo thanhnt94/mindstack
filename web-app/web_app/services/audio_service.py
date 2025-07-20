@@ -176,10 +176,16 @@ class AudioService:
             logger.critical(f"{log_prefix} Lỗi nghiêm trọng trong quá trình lấy/tạo/cache audio: {e}", exc_info=True)
             return None
 
+    # --- BẮT ĐẦU SỬA LỖI: Cập nhật logic để chỉ tạo các file còn thiếu ---
     async def generate_cache_for_all_cards(self, status_dict):
+        """
+        Mô tả: Quét toàn bộ database, xác định các file audio còn thiếu và tạo chúng.
+               Có thể dừng giữa chừng.
+        """
         log_prefix = "[AUDIO_SERVICE|GenerateAllCache]"
         logger.info(f"{log_prefix} Bắt đầu quá trình tạo cache cho toàn bộ audio.")
         
+        # 1. Lấy tất cả nội dung audio duy nhất từ DB
         all_audio_contents = set()
         cards_with_audio = Flashcard.query.filter(
             (Flashcard.front_audio_content != None) & (Flashcard.front_audio_content != '') |
@@ -192,6 +198,7 @@ class AudioService:
             if card.back_audio_content:
                 all_audio_contents.add(card.back_audio_content.strip())
         
+        # 2. Lọc ra những nội dung chưa có file trong cache
         contents_to_generate = []
         for content in all_audio_contents:
             content_hash = hashlib.sha1(content.encode('utf-8')).hexdigest()
@@ -199,6 +206,7 @@ class AudioService:
             if not os.path.exists(cached_file_path):
                 contents_to_generate.append(content)
 
+        # 3. Cập nhật tổng số file cần tạo
         total_to_process = len(contents_to_generate)
         status_dict['total'] = total_to_process
         status_dict['progress'] = 0
@@ -209,6 +217,7 @@ class AudioService:
             return 0, 0
 
         created_count = 0
+        # 4. Chỉ lặp qua danh sách các file cần tạo
         for content in contents_to_generate:
             if status_dict.get('stop_requested'):
                 logger.info(f"{log_prefix} Nhận được yêu cầu dừng. Kết thúc sớm.")
@@ -224,8 +233,8 @@ class AudioService:
 
         logger.info(f"{log_prefix} Hoàn tất. Đã tạo thành công {created_count}/{total_to_process} file audio mới.")
         return created_count, total_to_process
+    # --- KẾT THÚC SỬA LỖI ---
 
-    # --- BẮT ĐẦU THÊM MỚI ---
     def clean_orphan_audio_cache(self):
         """
         Mô tả: Dọn dẹp các file audio trong cache không còn được liên kết với bất kỳ flashcard nào.
@@ -236,7 +245,6 @@ class AudioService:
         logger.info(f"{log_prefix} Bắt đầu quá trình dọn dẹp cache audio.")
         
         try:
-            # 1. Lấy tất cả các nội dung audio đang được sử dụng trong DB
             active_audio_contents = set()
             cards_with_audio = Flashcard.query.filter(
                 (Flashcard.front_audio_content != None) & (Flashcard.front_audio_content != '') |
@@ -249,7 +257,6 @@ class AudioService:
                 if card.back_audio_content:
                     active_audio_contents.add(card.back_audio_content.strip())
 
-            # 2. Chuyển đổi nội dung thành tên file cache hợp lệ
             valid_cache_files = set()
             for content in active_audio_contents:
                 content_hash = hashlib.sha1(content.encode('utf-8')).hexdigest()
@@ -257,7 +264,6 @@ class AudioService:
             
             logger.info(f"{log_prefix} Tìm thấy {len(valid_cache_files)} file cache hợp lệ trong database.")
 
-            # 3. Quét thư mục cache và xóa file không hợp lệ
             deleted_count = 0
             if not os.path.exists(FLASHCARD_AUDIO_CACHE_DIR):
                 logger.warning(f"{log_prefix} Thư mục cache không tồn tại: {FLASHCARD_AUDIO_CACHE_DIR}")
@@ -277,7 +283,7 @@ class AudioService:
             return deleted_count
         except Exception as e:
             logger.error(f"{log_prefix} Lỗi nghiêm trọng trong quá trình dọn dẹp cache: {e}", exc_info=True)
-            return -1 # Trả về -1 để báo lỗi
+            return -1
 
     async def regenerate_audio_for_card(self, flashcard_id, side):
         """
@@ -307,7 +313,6 @@ class AudioService:
             return False
 
         try:
-            # Xóa file cache cũ nếu tồn tại
             content_hash = hashlib.sha1(audio_content.encode('utf-8')).hexdigest()
             cache_filename = f"{content_hash}.mp3"
             cached_file_path = os.path.join(FLASHCARD_AUDIO_CACHE_DIR, cache_filename)
@@ -315,7 +320,6 @@ class AudioService:
                 os.remove(cached_file_path)
                 logger.info(f"{log_prefix} Đã xóa file cache cũ: {cache_filename}")
 
-            # Gọi hàm tạo lại
             new_path = await self.get_cached_or_generate_audio(audio_content)
             if new_path:
                 logger.info(f"{log_prefix} Tái tạo audio thành công.")
@@ -326,4 +330,3 @@ class AudioService:
         except Exception as e:
             logger.error(f"{log_prefix} Lỗi nghiêm trọng khi tái tạo audio: {e}", exc_info=True)
             return False
-    # --- KẾT THÚC THÊM MỚI ---

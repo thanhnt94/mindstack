@@ -8,6 +8,7 @@ import json
 import os
 import time
 from datetime import datetime
+from sqlalchemy import text # BẮT ĐẦU THÊM MỚI
 from ..services import user_service, set_service, stats_service, quiz_service, audio_service
 from ..models import db, User, UserFlashcardProgress
 from .decorators import admin_required
@@ -277,11 +278,24 @@ def tools_page():
 @admin_bp.route('/backup-database')
 @admin_required
 def backup_database():
+    """
+    Mô tả: Xử lý việc tải xuống file sao lưu của cơ sở dữ liệu.
+           Thực hiện checkpoint WAL trước khi sao lưu để đảm bảo tính toàn vẹn.
+    """
     log_prefix = "[ADMIN_TOOLS|BackupDB]"
     try:
         logger.info(f"{log_prefix} Yêu cầu sao lưu database từ admin ID: {session.get('user_id')}")
+        
+        # --- BẮT ĐẦU SỬA LỖI: Buộc checkpoint WAL trước khi sao lưu ---
+        logger.info(f"{log_prefix} Đang thực hiện checkpoint WAL để đảm bảo dữ liệu nhất quán...")
+        db.session.execute(text('PRAGMA wal_checkpoint(TRUNCATE);'))
+        db.session.commit()
+        logger.info(f"{log_prefix} Checkpoint WAL thành công.")
+        # --- KẾT THÚC SỬA LỖI ---
+
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"mindstack_backup_{timestamp}.db"
+        
         return send_file(
             DATABASE_PATH,
             as_attachment=True,
@@ -289,6 +303,7 @@ def backup_database():
             mimetype='application/octet-stream'
         )
     except Exception as e:
+        db.session.rollback() # Rollback nếu có lỗi
         logger.error(f"{log_prefix} Lỗi khi tạo file sao lưu database: {e}", exc_info=True)
         flash("Đã xảy ra lỗi khi sao lưu database.", "error")
         return redirect(url_for('admin.tools_page'))
@@ -379,13 +394,9 @@ def stop_audio_cache():
         flash("Không có tác vụ nào đang chạy để dừng.", "warning")
     return redirect(url_for('admin.tools_page'))
 
-# --- BẮT ĐẦU THÊM MỚI ---
 @admin_bp.route('/clean-audio-cache', methods=['POST'])
 @admin_required
 def clean_audio_cache():
-    """
-    Mô tả: Kích hoạt quá trình dọn dẹp cache audio thừa.
-    """
     log_prefix = "[ADMIN_TOOLS|CleanAudioCache]"
     logger.info(f"{log_prefix} Yêu cầu dọn dẹp cache từ admin ID: {session.get('user_id')}")
     try:
@@ -398,4 +409,3 @@ def clean_audio_cache():
         logger.error(f"{log_prefix} Lỗi nghiêm trọng khi dọn dẹp cache: {e}", exc_info=True)
         flash("Đã xảy ra lỗi nghiêm trọng. Vui lòng kiểm tra log.", "error")
     return redirect(url_for('admin.tools_page'))
-# --- KẾT THÚC THÊM MỚI ---
