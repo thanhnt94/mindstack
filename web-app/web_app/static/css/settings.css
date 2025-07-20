@@ -1,0 +1,132 @@
+/*
+ * settings.css
+ * Mô tả: Chứa các kiểu CSS dành riêng cho trang cài đặt tài khoản.
+ */
+
+.settings-container {
+    max-width: 900px;
+    margin: 30px auto;
+}
+
+.settings-header {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+.settings-layout {
+    display: flex;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.settings-tabs {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    padding: 15px 0;
+}
+
+.tab-link {
+    background: none;
+    border: none;
+    padding: 15px 20px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    color: #495057;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tab-link:hover {
+    background-color: #e9ecef;
+}
+
+.tab-link.active {
+    background-color: #fff;
+    color: #007bff;
+    border-left-color: #007bff;
+}
+
+.settings-content {
+    flex-grow: 1;
+    padding: 30px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.tab-content h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #343a40;
+}
+
+.form-control {
+    width: 100%;
+    max-width: 400px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 1.2em;
+    height: 1.2em;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+/* Responsive for mobile */
+@media (max-width: 768px) {
+    .settings-layout {
+        flex-direction: column;
+    }
+    .settings-tabs {
+        flex-direction: row;
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+        padding: 0;
+    }
+    .tab-link {
+        flex-grow: 1;
+        justify-content: center;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+    }
+    .tab-link.active {
+        border-bottom-color: #007bff;
+    }
+    .settings-content {
+        padding: 20px;
+    }
+}

@@ -162,7 +162,9 @@
 
                 <hr class="nav-separator">
                 <ul class="side-nav-links">
-                    <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
+                    <!-- BẮT ĐẦU THAY ĐỔI: Cập nhật link Cài đặt -->
+                    <li><a href="{{ url_for('user.settings') }}"><i class="fas fa-cog"></i> Cài đặt</a></li>
+                    <!-- KẾT THÚC THAY ĐỔI -->
                     <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
                 </ul>
             </div>
@@ -211,7 +213,9 @@
                 </ul>
                 <hr class="nav-separator">
                 <ul class="side-nav-links">
-                    <li><a href="#"><i class="fas fa-cog"></i> Cài đặt</a></li>
+                    <!-- BẮT ĐẦU THAY ĐỔI: Cập nhật link Cài đặt -->
+                    <li><a href="{{ url_for('user.settings') }}"><i class="fas fa-cog"></i> Cài đặt</a></li>
+                    <!-- KẾT THÚC THAY ĐỔI -->
                     <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
                 </ul>
             </div>
@@ -238,7 +242,6 @@
                 <div class="form-group"><label for="edit-front">Mặt trước:</label><textarea id="edit-front" rows="3"></textarea></div>
                 <div class="form-group"><label for="edit-back">Mặt sau:</label><textarea id="edit-back" rows="4"></textarea></div>
                 
-                <!-- BẮT ĐẦU THÊM MỚI: Nút tái tạo audio -->
                 <div class="form-group audio-edit-group">
                     <label for="edit-front-audio">Nội dung Audio mặt trước:</label>
                     <div class="input-with-button">
@@ -257,7 +260,6 @@
                         </button>
                     </div>
                 </div>
-                <!-- KẾT THÚC THÊM MỚI -->
 
                 <div class="form-group"><label for="edit-front-img">URL ảnh mặt trước:</label><input type="text" id="edit-front-img" placeholder="Để trống nếu không có"></div>
                 <div class="form-group"><label for="edit-back-img">URL ảnh mặt sau:</label><input type="text" id="edit-back-img" placeholder="Để trống nếu không có"></div>

@@ -33,15 +33,13 @@ def create_app():
 
     @app.before_request
     def check_maintenance_mode():
-        # --- BẮT ĐẦU SỬA LỖI: Thêm 'auth.login' vào danh sách ngoại lệ ---
         if request.endpoint and (
             request.endpoint.startswith('static') or
             request.endpoint.startswith('admin.') or
             request.endpoint == 'main.maintenance_page' or
-            request.endpoint == 'auth.login'  # Cho phép truy cập trang login
+            request.endpoint == 'auth.login'
         ):
             return
-        # --- KẾT THÚC SỬA LỖI ---
 
         if session.get('user_role') == 'admin':
             return
@@ -65,12 +63,14 @@ def create_app():
     def log_request_info():
         logger.debug(f"REQUEST_DEBUG: Path: {request.path}, Endpoint: {request.endpoint}")
 
+    # Đăng ký các Blueprint
     from .routes.auth import auth_bp
     from .routes.flashcard import flashcard_bp
     from .routes.admin import admin_bp
     from .routes.api import api_bp
     from .routes.quiz import quiz_bp
     from .routes.main import main_bp
+    from .routes.user import user_bp # BẮT ĐẦU THÊM MỚI
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(flashcard_bp, url_prefix='/flashcard')
@@ -78,6 +78,7 @@ def create_app():
     app.register_blueprint(api_bp)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(user_bp) # BẮT ĐẦU THÊM MỚI
 
     logger.info("Ứng dụng Flask đã được khởi tạo và cấu hình với các route đã tách.")
     return app

@@ -1,5 +1,8 @@
 # web_app/services/user_service.py
 import logging
+# --- BẮT ĐẦU SỬA LỖI: Xóa import không cần thiết ---
+# from werkzeug.security import generate_password_hash, check_password_hash
+# --- KẾT THÚC SỬA LỖI ---
 from ..models import db, User
 
 logger = logging.getLogger(__name__)
@@ -10,241 +13,155 @@ class UserService:
 
     def authenticate_user(self, username, password):
         """
-        Mô tả: Xác thực người dùng bằng username và password.
+        Mô tả: Xác thực thông tin đăng nhập của người dùng.
         Args:
-            username (str): Username của người dùng.
-            password (str): Mật khẩu (chưa hash) của người dùng.
+            username (str): Tên đăng nhập.
+            password (str): Mật khẩu.
         Returns:
-            tuple: (User, "success") nếu xác thực thành công.
-                   (None, "user_not_found") nếu username không tồn tại.
-                   (None, "incorrect_password") nếu mật khẩu không đúng.
+            tuple: (User object, None) nếu thành công, (None, error_message) nếu thất bại.
         """
-        log_prefix = f"[AUTH_SERVICE|User:{username}]"
-        logger.info(f"{log_prefix} Đang cố gắng xác thực người dùng.")
+        log_prefix = f"[USER_SERVICE|Authenticate|User:{username}]"
+        if not username or not password:
+            return None, "Vui lòng nhập tên đăng nhập và mật khẩu."
 
-        # Sử dụng raw SQL để kiểm tra TRIM() trực tiếp trong DB
-        # Điều này giúp loại trừ các vấn đề về khoảng trắng hoặc ký tự ẩn
-        # mà SQLAlchemy ORM có thể không xử lý như mong đợi.
-        query = db.text("SELECT * FROM Users WHERE TRIM(username) = :username_param")
-        result = db.session.execute(query, {"username_param": username}).fetchone()
+        user = User.query.filter_by(username=username).first()
+        # --- BẮT ĐẦU SỬA LỖI: So sánh mật khẩu trực tiếp ---
+        if user and user.password == password:
+        # --- KẾT THÚC SỬA LỖI ---
+            logger.info(f"{log_prefix} Xác thực thành công.")
+            return user, None
         
-        user = None
-        if result:
-            # Tải lại đối tượng User bằng ORM sau khi tìm thấy bằng raw SQL
-            user = User.query.filter_by(user_id=result.user_id).first()
-            if not user:
-                logger.warning(f"{log_prefix} User_id {result.user_id} tìm thấy bằng raw SQL nhưng không tìm thấy bằng ORM.")
-                return None, "user_not_found"
-            
-            logger.debug(f"{log_prefix} User found in DB. DB Username: '{user.username}', DB Password: '{user.password}'")
+        logger.warning(f"{log_prefix} Sai tên đăng nhập hoặc mật khẩu.")
+        return None, "Sai tên đăng nhập hoặc mật khẩu."
 
-        if not user:
-            logger.warning(f"{log_prefix} Username '{username}' không tồn tại.")
-            return None, "user_not_found"
-
-        # CẢNH BÁO: So sánh mật khẩu plaintext.
-        # TRONG ỨNG DỤNG THỰC TẾ, HÃY SỬ DỤNG HASHED PASSWORDS!
-        # Ví dụ: if bcrypt.check_password_hash(user.password_hash, password):
-        # Sử dụng .strip() trên mật khẩu lấy từ DB để loại bỏ khoảng trắng thừa
-        if user.password and user.password.strip() == password:
-            logger.info(f"{log_prefix} Xác thực thành công cho user_id: {user.user_id}.")
-            return user, "success"
-        else:
-            logger.warning(f"{log_prefix} Mật khẩu không đúng cho username '{username}'.")
-            return None, "incorrect_password"
-
-    def update_user_profile(self, user_id, data):
-        """
-        Mô tả: Cập nhật thông tin hồ sơ của người dùng.
-        Args:
-            user_id (int): ID của người dùng cần cập nhật.
-            data (dict): Từ điển chứa các trường cần cập nhật và giá trị mới.
-                         Các trường có thể bao gồm 'username', 'telegram_id',
-                         'user_role', 'daily_new_limit', 'timezone_offset',
-                         'password'.
-        Returns:
-            tuple: (User, "success") nếu cập nhật thành công.
-                   (None, "user_not_found") nếu người dùng không tồn tại.
-                   (None, "username_exists") nếu username mới đã tồn tại.
-                   (None, "invalid_data") nếu dữ liệu không hợp lệ.
-                   (None, "error") nếu có lỗi khác.
-        """
-        log_prefix = f"[USER_SERVICE|UpdateUser:{user_id}]"
-        logger.info(f"{log_prefix} Đang cố gắng cập nhật thông tin người dùng.")
-
-        user = User.query.get(user_id)
-        if not user:
-            logger.warning(f"{log_prefix} Người dùng với ID {user_id} không tìm thấy.")
-            return None, "user_not_found"
-
+    def create_user(self, data):
+        log_prefix = "[USER_SERVICE|CreateUser]"
         try:
-            # Cập nhật username nếu có và kiểm tra trùng lặp
-            if 'username' in data and data['username'] is not None:
-                new_username = data['username'].strip()
-                if new_username and new_username != user.username:
-                    existing_user = User.query.filter(User.username == new_username, User.user_id != user_id).first()
-                    if existing_user:
-                        logger.warning(f"{log_prefix} Username '{new_username}' đã tồn tại cho người dùng khác.")
-                        return None, "username_exists"
-                    user.username = new_username
-                elif not new_username: # Cho phép đặt username về NULL
-                    user.username = None
-
-            # BẮT ĐẦU THAY ĐỔI: Xử lý telegram_id là tùy chọn
-            if 'telegram_id' in data:
-                new_telegram_id_str = data['telegram_id']
-                if new_telegram_id_str is not None and new_telegram_id_str != '':
-                    new_telegram_id = int(new_telegram_id_str)
-                    if new_telegram_id != user.telegram_id:
-                        # Kiểm tra trùng lặp telegram_id nếu có thay đổi và không phải là None
-                        existing_user_by_telegram_id = User.query.filter(User.telegram_id == new_telegram_id, User.user_id != user_id).first()
-                        if existing_user_by_telegram_id:
-                            logger.warning(f"{log_prefix} Telegram ID '{new_telegram_id}' đã tồn tại cho người dùng khác.")
-                            return None, "telegram_id_exists"
-                        user.telegram_id = new_telegram_id
-                else:
-                    user.telegram_id = None # Nếu giá trị rỗng, đặt là None
-            # KẾT THÚC THAY ĐỔI
-
-            # Cập nhật user_role
-            if 'user_role' in data and data['user_role'] is not None:
-                user.user_role = data['user_role'].strip()
-
-            # Cập nhật daily_new_limit
-            if 'daily_new_limit' in data and data['daily_new_limit'] is not None:
-                user.daily_new_limit = int(data['daily_new_limit'])
-
-            # Cập nhật timezone_offset
-            if 'timezone_offset' in data and data['timezone_offset'] is not None:
-                user.timezone_offset = int(data['timezone_offset'])
-
-            # Cập nhật password (chỉ khi được cung cấp và không rỗng)
-            if 'password' in data and data['password']:
-                # CẢNH BÁO: Trong ứng dụng thực tế, hãy hash mật khẩu trước khi lưu!
-                user.password = data['password'].strip()
-                logger.warning(f"{log_prefix} Mật khẩu người dùng {user_id} đã được cập nhật (chưa hash).")
-
+            if 'username' in data and data['username']:
+                if User.query.filter_by(username=data['username']).first():
+                    return None, "Tên người dùng đã tồn tại."
+            if 'telegram_id' in data and data['telegram_id']:
+                if User.query.filter_by(telegram_id=data['telegram_id']).first():
+                    return None, "Telegram ID đã tồn tại."
+            
+            # --- BẮT ĐẦU SỬA LỖI: Lưu mật khẩu trực tiếp, không hash ---
+            new_user = User(
+                username=data.get('username') or None,
+                telegram_id=data.get('telegram_id') or None,
+                password=data['password'], # Không hash
+                user_role=data.get('user_role', 'user'),
+                daily_new_limit=data.get('daily_new_limit', 10),
+                timezone_offset=data.get('timezone_offset', 7)
+            )
+            # --- KẾT THÚC SỬA LỖI ---
+            db.session.add(new_user)
             db.session.commit()
-            logger.info(f"{log_prefix} Thông tin người dùng {user_id} đã được cập nhật thành công.")
-            return user, "success"
-        except ValueError as ve:
-            db.session.rollback()
-            logger.error(f"{log_prefix} Lỗi chuyển đổi kiểu dữ liệu: {ve}", exc_info=True)
-            return None, "invalid_data"
+            logger.info(f"{log_prefix} Tạo người dùng mới thành công: {new_user.username or new_user.telegram_id}")
+            return new_user, "success"
         except Exception as e:
             db.session.rollback()
-            logger.error(f"{log_prefix} Lỗi không mong muốn khi cập nhật người dùng: {e}", exc_info=True)
-            return None, "error"
+            logger.error(f"{log_prefix} Lỗi khi tạo người dùng: {e}", exc_info=True)
+            return None, str(e)
 
-    def delete_user(self, user_id):
-        """
-        Mô tả: Xóa một người dùng khỏi cơ sở dữ liệu.
-        Args:
-            user_id (int): ID của người dùng cần xóa.
-        Returns:
-            tuple: (True, "success") nếu xóa thành công.
-                   (False, "user_not_found") nếu người dùng không tồn tại.
-                   (False, "error") nếu có lỗi khác.
-        """
-        log_prefix = f"[USER_SERVICE|DeleteUser:{user_id}]"
-        logger.info(f"{log_prefix} Đang cố gắng xóa người dùng.")
-
+    def update_user_profile(self, user_id, data):
+        log_prefix = f"[USER_SERVICE|UpdateProfile|User:{user_id}]"
         user = User.query.get(user_id)
         if not user:
-            logger.warning(f"{log_prefix} Người dùng với ID {user_id} không tìm thấy để xóa.")
-            return False, "user_not_found"
+            return None, "user_not_found"
+        try:
+            if 'username' in data and data['username'] != user.username:
+                if User.query.filter(User.user_id != user_id, User.username == data['username']).first():
+                    return None, "Tên người dùng đã tồn tại."
+                user.username = data['username'] or None
+            
+            if 'telegram_id' in data and data['telegram_id'] != user.telegram_id:
+                if User.query.filter(User.user_id != user_id, User.telegram_id == data['telegram_id']).first():
+                    return None, "Telegram ID đã tồn tại."
+                user.telegram_id = data['telegram_id'] or None
 
+            if 'user_role' in data: user.user_role = data['user_role']
+            if 'daily_new_limit' in data: user.daily_new_limit = int(data['daily_new_limit'])
+            if 'timezone_offset' in data: user.timezone_offset = int(data['timezone_offset'])
+            
+            # --- BẮT ĐẦU SỬA LỖI: Cập nhật mật khẩu trực tiếp ---
+            if 'password' in data and data['password']:
+                user.password = data['password'] # Không hash
+            # --- KẾT THÚC SỬA LỖI ---
+
+            db.session.commit()
+            logger.info(f"{log_prefix} Cập nhật hồ sơ thành công.")
+            return user, "success"
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"{log_prefix} Lỗi khi cập nhật hồ sơ: {e}", exc_info=True)
+            return None, str(e)
+
+    def delete_user(self, user_id):
+        log_prefix = f"[USER_SERVICE|DeleteUser|User:{user_id}]"
+        user = User.query.get(user_id)
+        if not user:
+            return False, "user_not_found"
         try:
             db.session.delete(user)
             db.session.commit()
-            logger.info(f"{log_prefix} Người dùng ID: {user_id} đã được xóa thành công.")
+            logger.info(f"{log_prefix} Xóa người dùng thành công.")
             return True, "success"
         except Exception as e:
             db.session.rollback()
-            logger.error(f"{log_prefix} Lỗi không mong muốn khi xóa người dùng ID: {user_id}: {e}", exc_info=True)
-            return False, "error"
+            logger.error(f"{log_prefix} Lỗi khi xóa người dùng: {e}", exc_info=True)
+            return False, str(e)
 
-    def create_user(self, data):
-        """
-        Mô tả: Tạo một người dùng mới trong cơ sở dữ liệu.
-        Args:
-            data (dict): Từ điển chứa thông tin người dùng mới.
-                         Bắt buộc phải có 'password'. 'telegram_id' không còn bắt buộc.
-                         Có thể có 'username', 'telegram_id', 'user_role', 'daily_new_limit', 'timezone_offset'.
-        Returns:
-            tuple: (User, "success") nếu tạo thành công.
-                   (None, "username_exists") nếu username đã tồn tại.
-                   (None, "telegram_id_exists") nếu telegram_id đã tồn tại và không phải None.
-                   (None, "missing_required_fields") nếu thiếu trường bắt buộc (password).
-                   (None, "invalid_data") nếu dữ liệu không hợp lệ.
-                   (None, "error") nếu có lỗi khác.
-        """
-        log_prefix = "[USER_SERVICE|CreateUser]"
-        logger.info(f"{log_prefix} Đang cố gắng tạo người dùng mới.")
+    def change_user_password(self, user_id, data):
+        log_prefix = f"[USER_SERVICE|ChangePassword|User:{user_id}]"
+        user = User.query.get(user_id)
+        if not user:
+            return False, "Không tìm thấy người dùng."
 
-        # BẮT ĐẦU THAY ĐỔI: Chỉ password là bắt buộc
-        if 'password' not in data:
-            logger.warning(f"{log_prefix} Thiếu trường bắt buộc (password).")
-            return None, "missing_required_fields"
-        # KẾT THÚC THAY ĐỔI
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        if not all([current_password, new_password, confirm_password]):
+            return False, "Vui lòng điền đầy đủ tất cả các trường."
+        
+        # --- BẮT ĐẦU SỬA LỖI: So sánh mật khẩu trực tiếp ---
+        if user.password != current_password:
+        # --- KẾT THÚC SỬA LỖI ---
+            return False, "Mật khẩu hiện tại không đúng."
+        
+        if new_password != confirm_password:
+            return False, "Mật khẩu mới và xác nhận không khớp."
+        
+        if len(new_password) < 6:
+            return False, "Mật khẩu mới phải có ít nhất 6 ký tự."
 
         try:
-            new_username = data.get('username', '').strip()
-            new_password = data['password'].strip()
-            
-            # BẮT ĐẦU THAY ĐỔI: Xử lý telegram_id là tùy chọn
-            new_telegram_id = None
-            telegram_id_str = data.get('telegram_id', '').strip()
-            if telegram_id_str: # Nếu có giá trị (không rỗng)
-                new_telegram_id = int(telegram_id_str)
-            # KẾT THÚC THAY ĐỔI
-
-            # Kiểm tra trùng lặp username (nếu có)
-            if new_username:
-                existing_user_by_username = User.query.filter_by(username=new_username).first()
-                if existing_user_by_username:
-                    logger.warning(f"{log_prefix} Username '{new_username}' đã tồn tại.")
-                    return None, "username_exists"
-            else:
-                new_username = None # Đảm bảo là None nếu rỗng để lưu vào DB
-
-            # BẮT ĐẦU THAY ĐỔI: Kiểm tra trùng lặp telegram_id chỉ khi nó có giá trị (không phải None)
-            if new_telegram_id is not None:
-                existing_user_by_telegram_id = User.query.filter_by(telegram_id=new_telegram_id).first()
-                if existing_user_by_telegram_id:
-                    logger.warning(f"{log_prefix} Telegram ID '{new_telegram_id}' đã tồn tại.")
-                    return None, "telegram_id_exists"
-            # KẾT THÚC THAY ĐỔI
-
-            new_user = User(
-                username=new_username,
-                telegram_id=new_telegram_id, # Đã xử lý là None nếu rỗng
-                password=new_password, # CẢNH BÁO: Trong ứng dụng thực tế, hãy hash mật khẩu!
-                user_role=data.get('user_role', 'user').strip(),
-                daily_new_limit=int(data.get('daily_new_limit', 10)),
-                timezone_offset=int(data.get('timezone_offset', 7)),
-                score=0, # Mặc định điểm ban đầu là 0
-                front_audio=1, # Mặc định bật audio mặt trước
-                back_audio=1,  # Mặc định bật audio mặt sau
-                front_image_enabled=1, # Mặc định bật ảnh mặt trước
-                back_image_enabled=1,  # Mặc định bật ảnh mặt sau
-                is_notification_enabled=0, # Mặc định tắt thông báo
-                notification_interval_minutes=60,
-                current_mode='sequential_interspersed',
-                default_mode='sequential_interspersed',
-                show_review_summary=1,
-                enable_morning_brief=1
-            )
-
-            db.session.add(new_user)
+            # --- BẮT ĐẦU SỬA LỖI: Lưu mật khẩu mới trực tiếp ---
+            user.password = new_password
+            # --- KẾT THÚC SỬA LỖI ---
             db.session.commit()
-            logger.info(f"{log_prefix} Người dùng mới '{new_user.username or new_user.telegram_id}' (ID: {new_user.user_id}) đã được tạo thành công.")
-            return new_user, "success"
-        except ValueError as ve:
-            db.session.rollback()
-            logger.error(f"{log_prefix} Lỗi chuyển đổi kiểu dữ liệu: {ve}", exc_info=True)
-            return None, "invalid_data"
+            logger.info(f"{log_prefix} Đổi mật khẩu thành công.")
+            return True, "Đổi mật khẩu thành công!"
         except Exception as e:
             db.session.rollback()
-            logger.error(f"{log_prefix} Lỗi không mong muốn khi tạo người dùng mới: {e}", exc_info=True)
-            return None, "error"
+            logger.error(f"{log_prefix} Lỗi khi đổi mật khẩu: {e}", exc_info=True)
+            return False, "Đã xảy ra lỗi server."
+
+    def update_user_flashcard_options(self, user_id, data):
+        log_prefix = f"[USER_SERVICE|UpdateFCOptions|User:{user_id}]"
+        user = User.query.get(user_id)
+        if not user:
+            return None, "user_not_found"
+        try:
+            user.auto_play_audio_front = 'auto_play_audio_front' in data
+            user.auto_play_audio_back = 'auto_play_audio_back' in data
+            user.auto_show_image_front = 'auto_show_image_front' in data
+            user.auto_show_image_back = 'auto_show_image_back' in data
+            
+            db.session.commit()
+            logger.info(f"{log_prefix} Cập nhật tùy chọn flashcard thành công.")
+            return user, "success"
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"{log_prefix} Lỗi khi cập nhật tùy chọn: {e}", exc_info=True)
+            return None, str(e)

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Cài đặt Tài khoản{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container settings-container">
+    <h1 class="settings-header"><i class="fas fa-cog"></i> Cài đặt Tài khoản</h1>
+
+    <div class="settings-layout">
+        <div class="settings-tabs">
+            <button class="tab-link active" data-tab="profile"><i class="fas fa-user-circle"></i> Hồ sơ</button>
+            <button class="tab-link" data-tab="password"><i class="fas fa-key"></i> Mật khẩu</button>
+            <button class="tab-link" data-tab="flashcard-options"><i class="fas fa-layer-group"></i> Tùy chọn Flashcard</button>
+        </div>
+
+        <div class="settings-content">
+            <!-- Tab Hồ sơ -->
+            <div id="profile" class="tab-content active">
+                <h2>Thông tin Hồ sơ</h2>
+                <form method="POST" action="{{ url_for('user.settings') }}">
+                    <input type="hidden" name="action" value="update_profile">
+                    <div class="form-group">
+                        <label for="username">Tên người dùng</label>
+                        <input type="text" id="username" name="username" value="{{ user.username or '' }}" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="daily_new_limit">Giới hạn thẻ mới mỗi ngày</label>
+                        <input type="number" id="daily_new_limit" name="daily_new_limit" value="{{ user.daily_new_limit }}" min="1" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="timezone_offset">Múi giờ (so với UTC)</label>
+                        <input type="number" id="timezone_offset" name="timezone_offset" value="{{ user.timezone_offset }}" min="-12" max="14" class="form-control">
+                        <small>Ví dụ: Việt Nam là 7.</small>
+                    </div>
+                    <button type="submit" class="button primary">Lưu thay đổi</button>
+                </form>
+            </div>
+
+            <!-- Tab Mật khẩu -->
+            <div id="password" class="tab-content">
+                <h2>Thay đổi Mật khẩu</h2>
+                <form id="password-form" method="POST" action="{{ url_for('user.settings') }}">
+                    <input type="hidden" name="action" value="change_password">
+                    <div class="form-group">
+                        <label for="current_password">Mật khẩu hiện tại</label>
+                        <input type="password" id="current_password" name="current_password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_password">Mật khẩu mới</label>
+                        <input type="password" id="new_password" name="new_password" class="form-control" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Xác nhận mật khẩu mới</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required minlength="6">
+                        <small id="password-match-error" class="error-message" style="display: none;">Mật khẩu xác nhận không khớp.</small>
+                    </div>
+                    <button type="submit" class="button primary">Đổi Mật khẩu</button>
+                </form>
+            </div>
+
+            <!-- Tab Tùy chọn Flashcard -->
+            <div id="flashcard-options" class="tab-content">
+                <h2>Tùy chọn học Flashcard</h2>
+                <form method="POST" action="{{ url_for('user.settings') }}">
+                    <input type="hidden" name="action" value="update_flashcard_options">
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="auto_play_audio_front" name="auto_play_audio_front" {% if user.auto_play_audio_front %}checked{% endif %}>
+                        <label for="auto_play_audio_front">Tự động phát audio mặt trước</label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="auto_play_audio_back" name="auto_play_audio_back" {% if user.auto_play_audio_back %}checked{% endif %}>
+                        <label for="auto_play_audio_back">Tự động phát audio mặt sau</label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="auto_show_image_front" name="auto_show_image_front" {% if user.auto_show_image_front %}checked{% endif %}>
+                        <label for="auto_show_image_front">Tự động hiển thị ảnh mặt trước (nếu có)</label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="auto_show_image_back" name="auto_show_image_back" {% if user.auto_show_image_back %}checked{% endif %}>
+                        <label for="auto_show_image_back">Tự động hiển thị ảnh mặt sau (nếu có)</label>
+                    </div>
+                    <button type="submit" class="button primary">Lưu Tùy chọn</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}
