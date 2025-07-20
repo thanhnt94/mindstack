@@ -104,7 +104,7 @@ class QuizService:
                                                 total_key='total_questions', 
                                                 completed_key='answered_questions')
             # KẾT THÚC THAY ĐỔI
-
+            
             # BẮT ĐẦU THAY ĐỔI: Sắp xếp bộ mới theo alphabet
             new_sets_query = QuestionSet.query.filter(
                 QuestionSet.is_public == True,
@@ -122,27 +122,36 @@ class QuizService:
             logger.error(f"{log_prefix} Lỗi khi phân loại bộ câu hỏi: {e}", exc_info=True)
             return [], []
 
-    def get_next_question_for_user(self, user_id, set_id, mode):
+    # BẮT ĐẦU THAY ĐỔI: Hàm get_next_question_group_for_user để trả về nhóm câu hỏi
+    def get_next_question_group_for_user(self, user_id, set_id, mode):
         """
-        Mô tả: Lấy câu hỏi tiếp theo cho người dùng dựa trên chế độ đã chọn.
+        Mô tả: Lấy nhóm câu hỏi tiếp theo cho người dùng dựa trên chế độ đã chọn.
                Ưu tiên các câu hỏi trong cùng một nhóm đoạn văn nếu người dùng đang làm dở.
+               Trả về một danh sách các câu hỏi (nếu thuộc cùng đoạn văn) hoặc một câu hỏi đơn lẻ.
+        Args:
+            user_id (int): ID của người dùng.
+            set_id (int): ID của bộ câu hỏi.
+            mode (str): Chế độ làm bài quiz.
+        Returns:
+            tuple: (list of QuizQuestion objects, QuizPassage object or None)
+                   Trả về danh sách các câu hỏi cần hiển thị cùng lúc và đoạn văn liên quan.
+                   Nếu không còn câu hỏi nào, trả về (None, None).
         """
-        log_prefix = f"[QUIZ_SERVICE|GetNextQ|User:{user_id}|Set:{set_id}|Mode:{mode}]"
-        
+        log_prefix = f"[QUIZ_SERVICE|GetNextQGroup|User:{user_id}|Set:{set_id}|Mode:{mode}]"
+        logger.info(f"{log_prefix} Bắt đầu tìm nhóm câu hỏi tiếp theo.")
+
         # Lấy tất cả các ID câu hỏi trong bộ
         all_q_ids_in_set = {row[0] for row in QuizQuestion.query.with_entities(QuizQuestion.question_id).filter_by(set_id=set_id).all()}
         if not all_q_ids_in_set:
             logger.warning(f"{log_prefix} Bộ câu hỏi này không có câu hỏi nào.")
-            return None
+            return None, None
 
         # Lấy các ID câu hỏi mà người dùng đã trả lời trong bộ này
         answered_q_ids = {row[0] for row in UserQuizProgress.query.with_entities(UserQuizProgress.question_id).filter_by(user_id=user_id).join(QuizQuestion).filter(QuizQuestion.set_id == set_id).all()}
-        
-        next_question_id = None
-        
-        # Logic ưu tiên câu hỏi trong cùng nhóm đoạn văn (dựa trên passage_id và passage_order)
+
+        # 1. Ưu tiên hoàn thành nhóm câu hỏi trong cùng đoạn văn đang làm dở
         user = User.query.get(user_id)
-        if user and user.current_question_set_id == set_id: # Đảm bảo người dùng đang ở đúng bộ quiz
+        if user and user.current_question_set_id == set_id:
             # Tìm câu hỏi cuối cùng mà người dùng đã trả lời trong bộ này
             last_answered_progress = UserQuizProgress.query.filter_by(user_id=user_id)\
                                      .join(QuizQuestion).filter(QuizQuestion.set_id == set_id)\
@@ -152,24 +161,33 @@ class QuizService:
             if last_answered_progress and last_answered_progress.question.passage_id:
                 current_passage_id = last_answered_progress.question.passage_id
                 
-                # Tìm câu hỏi tiếp theo trong cùng nhóm đoạn văn chưa được trả lời, sắp xếp theo passage_order
-                next_question_in_passage = QuizQuestion.query.filter(
+                # Kiểm tra xem còn câu hỏi nào trong đoạn văn này chưa được trả lời không
+                unanswered_in_passage_count = QuizQuestion.query.filter(
                     QuizQuestion.set_id == set_id,
                     QuizQuestion.passage_id == current_passage_id,
                     ~QuizQuestion.progresses.any(user_id=user_id) # Chưa được trả lời bởi người dùng này
-                ).order_by(QuizQuestion.passage_order.asc(), QuizQuestion.question_id.asc()).first() # Sắp xếp theo order, sau đó ID
-                
-                if next_question_in_passage:
-                    logger.info(f"{log_prefix} Tìm thấy câu hỏi tiếp theo trong cùng nhóm đoạn văn (ID: {next_question_in_passage.question_id}).")
-                    return next_question_in_passage
+                ).count()
+
+                if unanswered_in_passage_count > 0:
+                    # Nếu còn, trả về tất cả các câu hỏi trong đoạn văn này (để người dùng làm lại hoặc làm tiếp)
+                    questions_in_passage = QuizQuestion.query.filter(
+                        QuizQuestion.set_id == set_id,
+                        QuizQuestion.passage_id == current_passage_id
+                    ).order_by(QuizQuestion.passage_order.asc(), QuizQuestion.question_id.asc()).all()
+                    
+                    logger.info(f"{log_prefix} Tìm thấy {len(questions_in_passage)} câu hỏi trong nhóm đoạn văn đang làm dở (Passage ID: {current_passage_id}).")
+                    return questions_in_passage, questions_in_passage[0].passage # Trả về list và passage object
+
                 else:
                     logger.info(f"{log_prefix} Đã hoàn thành nhóm đoạn văn hiện tại. Chuyển sang tìm câu hỏi mới/ôn tập.")
         
-        # Logic cũ để tìm câu hỏi mới/ôn tập
+        # 2. Nếu không có nhóm đoạn văn đang làm dở, tìm câu hỏi mới hoặc ôn tập
+        next_question_id = None
+        
         if mode == QUIZ_MODE_NEW_SEQUENTIAL:
             new_q_ids = all_q_ids_in_set - answered_q_ids
             if new_q_ids:
-                # Sắp xếp theo question_id để đảm bảo tuần tự
+                # Tìm câu hỏi mới có ID nhỏ nhất (tuần tự)
                 next_question_id = min(new_q_ids)
             else:
                 logger.info(f"{log_prefix} Đã hoàn thành tất cả câu hỏi mới.")
@@ -192,80 +210,132 @@ class QuizService:
             logger.error(f"{log_prefix} Chế độ không hợp lệ: {mode}")
 
         if next_question_id:
-            return self.get_question_by_id(next_question_id)
+            next_question = self.get_question_by_id(next_question_id)
+            if next_question.passage_id:
+                # Nếu câu hỏi được tìm thấy thuộc về một đoạn văn, trả về tất cả câu hỏi trong đoạn văn đó
+                questions_in_passage = QuizQuestion.query.filter(
+                    QuizQuestion.set_id == set_id,
+                    QuizQuestion.passage_id == next_question.passage_id
+                ).order_by(QuizQuestion.passage_order.asc(), QuizQuestion.question_id.asc()).all()
+                logger.info(f"{log_prefix} Tìm thấy nhóm câu hỏi mới từ đoạn văn (Passage ID: {next_question.passage_id}).")
+                return questions_in_passage, next_question.passage
+            else:
+                # Nếu là câu hỏi độc lập, trả về một danh sách chứa một câu hỏi duy nhất
+                logger.info(f"{log_prefix} Tìm thấy câu hỏi độc lập (ID: {next_question.question_id}).")
+                return [next_question], None # Trả về list và None cho passage
         
-        return None
+        logger.info(f"{log_prefix} Không tìm thấy câu hỏi nào để hiển thị.")
+        return None, None
 
-    def process_user_answer(self, user_id, question_id, selected_option):
-        """
-        Mô tả: Xử lý câu trả lời của người dùng, cập nhật tiến độ và điểm số.
-        """
-        log_prefix = f"[QUIZ_SERVICE|ProcessAnswer|User:{user_id}|Q:{question_id}]"
-        
-        question = self.get_question_by_id(question_id)
-        if not question:
-            logger.error(f"{log_prefix} Không tìm thấy câu hỏi ID: {question_id}")
-            return None, None
+    # KẾT THÚC THAY ĐỔI: Hàm get_next_question_group_for_user để trả về nhóm câu hỏi
 
-        is_correct = (selected_option == question.correct_answer)
-        
+    # BẮT ĐẦU THAY ĐỔI: Hàm process_user_answers để xử lý nhiều câu trả lời
+    def process_user_answers(self, user_id, answers_data):
+        """
+        Mô tả: Xử lý nhiều câu trả lời của người dùng cho một nhóm câu hỏi, cập nhật tiến độ và điểm số cho từng câu.
+        Args:
+            user_id (int): ID của người dùng.
+            answers_data (list): Danh sách các dictionary, mỗi dict chứa 'question_id' và 'selected_option'.
+        Returns:
+            list: Danh sách các dictionary kết quả, mỗi dict chứa 'question_id', 'is_correct', 'correct_answer', 'guidance'.
+        """
+        log_prefix = f"[QUIZ_SERVICE|ProcessAnswers|User:{user_id}]"
+        logger.info(f"{log_prefix} Bắt đầu xử lý {len(answers_data)} câu trả lời.")
+
+        results = []
         try:
-            progress = UserQuizProgress.query.filter_by(user_id=user_id, question_id=question_id).first()
-            if not progress:
-                progress = UserQuizProgress(user_id=user_id, question_id=question_id)
-                db.session.add(progress)
-            
-            if progress.times_correct is None: progress.times_correct = 0
-            if progress.times_incorrect is None: progress.times_incorrect = 0
-            if progress.correct_streak is None: progress.correct_streak = 0
+            for answer in answers_data:
+                question_id = answer.get('question_id')
+                selected_option = answer.get('selected_option')
 
-            progress.last_answered = int(time.time())
-            score_change = 0
-            
-            is_first_correct = False
-            if is_correct:
-                is_first_correct = (progress.times_correct == 0)
+                question = self.get_question_by_id(question_id)
+                if not question:
+                    logger.error(f"{log_prefix} Không tìm thấy câu hỏi ID: {question_id}. Bỏ qua.")
+                    results.append({
+                        'question_id': question_id,
+                        'is_correct': False,
+                        'correct_answer': None,
+                        'guidance': 'Không tìm thấy câu hỏi.',
+                        'status': 'error'
+                    })
+                    continue
+
+                is_correct = (selected_option == question.correct_answer)
                 
-                if is_first_correct:
-                    score_change = SCORE_QUIZ_CORRECT_FIRST_TIME
-                    logger.info(f"{log_prefix} Câu trả lời ĐÚNG lần đầu. Điểm cộng: {score_change}")
+                progress = UserQuizProgress.query.filter_by(user_id=user_id, question_id=question_id).first()
+                if not progress:
+                    progress = UserQuizProgress(user_id=user_id, question_id=question_id)
+                    db.session.add(progress)
+                
+                # Khởi tạo giá trị nếu là None
+                if progress.times_correct is None: progress.times_correct = 0
+                if progress.times_incorrect is None: progress.times_incorrect = 0
+                if progress.correct_streak is None: progress.correct_streak = 0
+
+                progress.last_answered = int(time.time())
+                score_change = 0
+                
+                is_first_correct = False
+                if is_correct:
+                    is_first_correct = (progress.times_correct == 0)
+                    
+                    if is_first_correct:
+                        score_change = SCORE_QUIZ_CORRECT_FIRST_TIME
+                        logger.info(f"{log_prefix} Câu hỏi {question_id}: ĐÚNG lần đầu. Điểm cộng: {score_change}")
+                    else:
+                        score_change = SCORE_QUIZ_CORRECT_REPEAT
+                        logger.info(f"{log_prefix} Câu hỏi {question_id}: ĐÚNG (lặp lại). Điểm cộng: {score_change}")
+                    
+                    progress.times_correct += 1
+                    progress.correct_streak += 1
                 else:
-                    score_change = SCORE_QUIZ_CORRECT_REPEAT
-                    logger.info(f"{log_prefix} Câu trả lời ĐÚNG (lặp lại). Điểm cộng: {score_change}")
+                    progress.times_incorrect += 1
+                    progress.correct_streak = 0
+                    logger.info(f"{log_prefix} Câu hỏi {question_id}: SAI. Không cộng điểm.")
                 
-                progress.times_correct += 1
-                progress.correct_streak += 1
-            else:
-                progress.times_incorrect += 1
-                progress.correct_streak = 0
-                logger.info(f"{log_prefix} Câu trả lời SAI. Không cộng điểm.")
+                # Cập nhật trạng thái mastered (ví dụ: 3 lần đúng liên tiếp)
+                if progress.correct_streak >= 3: # Có thể điều chỉnh ngưỡng này trong config
+                    progress.is_mastered = True
+                else:
+                    progress.is_mastered = False
+
+                if score_change > 0:
+                    user = User.query.get(user_id) # Lấy lại user để đảm bảo cập nhật điểm tổng
+                    user.score = (user.score or 0) + score_change
+                    db.session.add(user)
+                    
+                    reason = f"quiz_answer_{'first_correct' if is_first_correct else 'correct'}"
+                    score_log = ScoreLog(
+                        user_id=user_id,
+                        score_change=score_change,
+                        timestamp=int(time.time()),
+                        reason=reason,
+                        source_type='quiz'
+                    )
+                    db.session.add(score_log)
+                    logger.info(f"{log_prefix} Câu hỏi {question_id}: Đã ghi ScoreLog cho Quiz: {score_change} điểm.")
+                else:
+                    logger.info(f"{log_prefix} Câu hỏi {question_id}: score_change là 0, không ghi ScoreLog.")
+                
+                db.session.add(progress) # Thêm progress vào session để commit
+                
+                results.append({
+                    'question_id': question_id,
+                    'is_correct': is_correct,
+                    'correct_answer': question.correct_answer,
+                    'guidance': question.guidance or '',
+                    'status': 'success'
+                })
             
-            if score_change > 0:
-                user = User.query.get(user_id)
-                user.score = (user.score or 0) + score_change
-                
-                reason = f"quiz_answer_{'first_correct' if is_first_correct else 'correct'}"
-                score_log = ScoreLog(
-                    user_id=user_id,
-                    score_change=score_change,
-                    timestamp=int(time.time()),
-                    reason=reason,
-                    source_type='quiz'
-                )
-                db.session.add(score_log)
-                logger.info(f"{log_prefix} Đã ghi ScoreLog cho Quiz: {score_change} điểm. Tổng điểm mới: {user.score}")
-            else:
-                logger.info(f"{log_prefix} score_change là 0, không ghi ScoreLog cho Quiz.")
-
-
-            db.session.commit()
-            logger.info(f"{log_prefix} Cập nhật tiến độ Quiz thành công. Is Correct: {is_correct}")
-            return is_correct, question.correct_answer
+            db.session.commit() # Commit tất cả các thay đổi sau khi xử lý tất cả câu hỏi
+            logger.info(f"{log_prefix} Hoàn tất xử lý tất cả câu trả lời. Commit DB thành công.")
+            return results
             
         except Exception as e:
             db.session.rollback()
             logger.error(f"{log_prefix} Lỗi khi xử lý câu trả lời: {e}", exc_info=True)
-            return None, None
+            return [{'status': 'error', 'message': 'Lỗi server nội bộ khi xử lý câu trả lời.'}]
+    # KẾT THÚC THAY ĐỔI: Hàm process_user_answers để xử lý nhiều câu trả lời
 
     def get_all_question_sets_with_details(self):
         """
@@ -689,7 +759,8 @@ class QuizService:
         stats = {
             'total_questions': 0, 'answered_questions': 0, 'correct_answers': 0,
             'incorrect_answers': 0, 'mastered_questions': 0, 'unanswered_questions': 0,
-            'set_title': 'N/A'
+            'set_title': 'N/A',
+            'set_id': set_id # BẮT ĐẦU THÊM MỚI: Thêm set_id vào dictionary trả về
         }
 
         question_set = QuestionSet.query.get(set_id)

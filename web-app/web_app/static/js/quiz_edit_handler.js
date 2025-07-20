@@ -1,20 +1,19 @@
 // web_app/static/js/quiz_edit_handler.js
 
+/**
+ * Mô tả: Xử lý logic cho chức năng sửa câu hỏi trắc nghiệm, bao gồm mở/đóng modal,
+ * lấy dữ liệu, lưu thay đổi. Được điều chỉnh để hỗ trợ nhiều nút sửa trên cùng một trang.
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    const openEditBtn = document.getElementById('open-quiz-edit-btn');
-    if (!openEditBtn) return;
-
     const editModal = document.getElementById('quiz-edit-modal');
     const closeEditBtn = document.getElementById('quiz-edit-modal-close-btn');
     const saveEditBtn = document.getElementById('save-quiz-edit-btn');
     const editSaveStatus = document.getElementById('quiz-edit-save-status');
-    const quizForm = document.getElementById('quiz-form');
-    const questionId = quizForm.dataset.questionId;
+    
+    // Biến để lưu trữ question_id của câu hỏi hiện tại đang được chỉnh sửa
+    let currentQuestionIdForEdit = null;
 
     // BẮT ĐẦU THAY ĐỔI: Lấy các phần tử liên quan đến đoạn văn và thứ tự
-    const quizJsDataElement = document.getElementById('quizJsData');
-    const currentPassageId = quizJsDataElement.dataset.passageId; // Lấy passage_id hiện tại
-    
     const editPassageContent = document.getElementById('edit-passage-content');
     const editPassageOrder = document.getElementById('edit-passage-order');
     const passageEditInfo = document.getElementById('passage-edit-info');
@@ -30,40 +29,53 @@ document.addEventListener('DOMContentLoaded', function() {
         option_d: document.getElementById('edit-option-d'),
         correct_answer: document.getElementById('edit-correct-answer'),
         guidance: document.getElementById('edit-guidance'),
-        // BẮT ĐẦU THAY ĐỔI: Thêm trường passage_order vào fields
         passage_order: editPassageOrder
-        // KẾT THÚC THAY ĐỔI
     };
 
+    // Chỉ chạy script nếu các phần tử modal cần thiết tồn tại
+    if (!editModal || !closeEditBtn || !saveEditBtn) {
+        console.warn("Thiếu các phần tử HTML cần thiết cho Quiz Edit Modal. Script sẽ không chạy.");
+        return;
+    }
+
+    // Lắng nghe sự kiện click trên TẤT CẢ các nút "Sửa"
+    document.querySelectorAll('.open-quiz-edit-btn').forEach(openEditBtn => {
+        openEditBtn.addEventListener('click', function() {
+            // Lấy question_id từ data attribute của nút được click
+            currentQuestionIdForEdit = this.dataset.questionId;
+            openEditModal();
+        });
+    });
+
     /**
-     * Mô tả: Mở modal chỉnh sửa câu hỏi và tải dữ liệu chi tiết.
+     * Mô tả: Mở modal chỉnh sửa câu hỏi và tải dữ liệu chi tiết cho câu hỏi đang chọn.
      */
     async function openEditModal() {
+        if (!currentQuestionIdForEdit) {
+            console.error("Không có Question ID để mở sửa.");
+            return;
+        }
+
         // Đặt trạng thái tải cho tất cả các trường
         Object.values(fields).forEach(field => {
             if (field.tagName === 'TEXTAREA' || field.tagName === 'INPUT' || field.tagName === 'SELECT') {
                 field.value = 'Đang tải...';
             }
         });
-        // BẮT ĐẦU THAY ĐỔI: Đặt trạng thái tải cho passage_content
         if (editPassageContent) editPassageContent.value = 'Đang tải...';
-        // KẾT THÚC THAY ĐỔI
         editModal.style.display = 'flex';
 
         try {
             // Gọi API để lấy chi tiết câu hỏi (bao gồm cả các trường đoạn văn)
-            const response = await fetch(`/api/quiz_question/details/${questionId}`);
+            const response = await fetch(`/api/quiz_question/details/${currentQuestionIdForEdit}`);
             if (!response.ok) throw new Error('Lỗi server');
             const result = await response.json();
 
             if (result.status === 'success') {
                 const data = result.data;
                 for (const key in fields) {
-                    // Đảm bảo gán giá trị chỉ khi key tồn tại trong data
                     if (data.hasOwnProperty(key)) {
-                        // BẮT ĐẦU SỬA: Gán giá trị rỗng nếu là null để input hiển thị trống
                         fields[key].value = data[key] === null ? '' : data[key];
-                        // KẾT THÚC SỬA
                     }
                 }
 
@@ -92,14 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Lỗi khi tải chi tiết câu hỏi:', error);
             fields.question.value = 'Không thể tải dữ liệu. Vui lòng thử lại.';
-            // BẮT ĐẦU THAY ĐỔI: Vô hiệu hóa trường đoạn văn nếu tải lỗi
             if (editPassageContent) {
                 editPassageContent.value = 'Lỗi tải dữ liệu.';
                 editPassageContent.disabled = true;
             }
             if (passageEditInfo) passageEditInfo.style.display = 'block';
             if (passageEditInfo) passageEditInfo.textContent = 'Không thể tải đoạn văn.';
-            // KẾT THÚC THAY ĐỔI
         }
     }
 
@@ -108,34 +118,37 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function closeEditModal() {
         editModal.style.display = 'none';
+        currentQuestionIdForEdit = null; // Reset ID khi đóng modal
     }
 
     /**
      * Mô tả: Lưu các thay đổi của câu hỏi thông qua API.
      */
     async function saveChanges() {
+        if (!currentQuestionIdForEdit) {
+            console.error("Không có Question ID để lưu thay đổi.");
+            return;
+        }
+
         editSaveStatus.style.color = '#28a745';
         editSaveStatus.textContent = 'Đang lưu...';
         editSaveStatus.style.opacity = 1;
 
         const updatedData = {};
         for (const key in fields) {
-            // BẮT ĐẦU SỬA: Gửi chuỗi rỗng nếu giá trị là rỗng, để backend có thể chuyển thành None
             updatedData[key] = fields[key].value.trim();
-            // KẾT THÚC SỬA
         }
 
         // BẮT ĐẦU THAY ĐỔI: Thêm passage_content vào dữ liệu gửi đi nếu nó được phép chỉnh sửa
         if (editPassageContent && !editPassageContent.disabled) {
-            updatedData['passage_content'] = editPassageContent.value.trim(); // SỬA: trim()
+            updatedData['passage_content'] = editPassageContent.value.trim();
         } else {
-            // Nếu không được chỉnh sửa hoặc không có đoạn văn, đảm bảo không gửi passage_content
             delete updatedData['passage_content'];
         }
         // KẾT THÚC THAY ĐỔI
 
         try {
-            const response = await fetch(`/api/quiz_question/edit/${questionId}`, {
+            const response = await fetch(`/api/quiz_question/edit/${currentQuestionIdForEdit}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
@@ -161,11 +174,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    openEditBtn.addEventListener('click', openEditModal);
     closeEditBtn.addEventListener('click', closeEditModal);
     saveEditBtn.addEventListener('click', saveChanges);
     window.addEventListener('click', (event) => {
         if (event.target === editModal) closeEditModal();
     });
 });
-

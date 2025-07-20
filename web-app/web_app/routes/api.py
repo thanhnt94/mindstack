@@ -1,12 +1,12 @@
 # web_app/routes/api.py
-from flask import Blueprint, send_file, session, jsonify, request, redirect
+from flask import Blueprint, send_file, session, jsonify, request, redirect, Response # Bỏ make_response
 import logging
 import os
 import asyncio
 import hashlib
 from ..services import audio_service, note_service, flashcard_service, quiz_service, quiz_note_service
 from ..models import Flashcard, QuizQuestion, UserQuizProgress, QuizPassage, User 
-from ..config import FLASHCARD_IMAGES_DIR, QUIZ_IMAGES_DIR, QUIZ_AUDIO_CACHE_DIR
+from ..config import FLASHCARD_IMAGES_DIR, QUIZ_IMAGES_DIR, QUIZ_AUDIO_CACHE_DIR 
 from .decorators import login_required
 from ..db_instance import db 
 
@@ -105,7 +105,6 @@ def edit_flashcard(flashcard_id):
     card_data = {'front': updated_card.front, 'back': updated_card.back, 'front_img': updated_card.front_img, 'back_img': updated_card.back_img}
     return jsonify({'status': 'success', 'message': 'Cập nhật thành công!', 'data': card_data})
 
-# --- BẮT ĐẦU SỬA LỖI: Chuyển route từ async def sang def ---
 @api_bp.route('/flashcard/regenerate_audio/<int:flashcard_id>/<string:side>', methods=['POST'])
 @login_required
 def regenerate_audio(flashcard_id, side):
@@ -128,7 +127,6 @@ def regenerate_audio(flashcard_id, side):
         return jsonify({'status': 'success', 'message': f'Đã gửi yêu cầu tái tạo audio cho mặt {side}.'})
     else:
         return jsonify({'status': 'error', 'message': 'Tái tạo audio thất bại.'}), 500
-# --- KẾT THÚC SỬA LỖI ---
 
 @api_bp.route('/cards_by_category/<int:set_id>/<string:category>')
 @login_required
@@ -242,32 +240,44 @@ def edit_quiz_question(question_id):
     
     if status != "success":
         message_map = {"permission_denied": "Bạn không có quyền sửa câu hỏi này.", "question_not_found": "Không tìm thấy câu hỏi."}
-        return jsonify({'status': 'error', 'message': message_map.get(status, "Lỗi server.")}), 403 if status == "permission_denied" else 404 if status == "question_not_found" else 500
+        return jsonify({'status': 'error', 'message': message_map.get(status, "Lỗi server.")}), 403 if status == "permission_denied" else 404 if status == "card_not_found" else 500
     
     return jsonify({'status': 'success', 'message': 'Cập nhật thành công!'})
 
-@api_bp.route('/quiz_audio/<int:question_id>')
+# BẮT ĐẦU THAY ĐỔI: Route API cho audio quiz sẽ nhận đường dẫn đầy đủ
+@api_bp.route('/quiz_audio/<path:filepath>')
 @login_required
-def get_quiz_audio(question_id):
-    question = QuizQuestion.query.get_or_404(question_id)
-    audio_file_ref = question.question_audio_file
-    if not audio_file_ref:
-        logger.warning(f"Không có tham chiếu audio cho câu hỏi quiz ID: {question_id}")
-        return {"error": "No audio content for this question"}, 404
-    if audio_file_ref.startswith('http://') or audio_file_ref.startswith('https://'):
-        logger.info(f"Chuyển hướng đến URL audio bên ngoài: {audio_file_ref}")
-        return redirect(audio_file_ref)
-    else:
-        try:
-            full_path = os.path.join(QUIZ_AUDIO_CACHE_DIR, audio_file_ref)
-            if not os.path.exists(full_path):
-                logger.warning(f"Không tìm thấy file audio cục bộ: {full_path}")
-                return "Audio file not found", 404
-            logger.info(f"Phục vụ file audio cục bộ: {full_path}")
-            return send_file(full_path, mimetype="audio/mpeg")
-        except Exception as e:
-            logger.error(f"Lỗi khi phục vụ file audio cục bộ {audio_file_ref} cho câu hỏi {question_id}: {e}", exc_info=True)
-            return "Internal server error", 500
+def get_quiz_audio(filepath):
+    """
+    Mô tả: Phục vụ file audio cho quiz dựa trên đường dẫn tương đối của file (bao gồm thư mục con).
+    Args:
+        filepath (str): Đường dẫn tương đối của file audio từ thư mục QUIZ_AUDIO_CACHE_DIR
+                        (ví dụ: "study4_toeic/hash.mp3").
+    Returns:
+        file: File audio nếu tìm thấy.
+        Response: 404 hoặc 500 nếu không tìm thấy hoặc lỗi.
+    """
+    if not filepath or not filepath.strip():
+        logger.warning(f"Yêu cầu audio quiz với đường dẫn rỗng.")
+        return Response(status=404, mimetype='audio/mpeg')
+
+    full_path = os.path.join(QUIZ_AUDIO_CACHE_DIR, filepath) 
+    
+    try:
+        if not os.path.exists(full_path):
+            logger.warning(f"Không tìm thấy file audio cục bộ: {full_path}")
+            return Response(status=404, mimetype='audio/mpeg')
+        logger.info(f"Phục vụ file audio cục bộ: {full_path}")
+        
+        # BẮT ĐẦU SỬA: Chỉ dùng send_file với mimetype, không thêm headers tùy chỉnh
+        # Điều này sẽ làm cho hành vi giống hệt như get_card_audio
+        return send_file(full_path, mimetype="audio/mpeg")
+        # KẾT THÚC SỬA
+    except Exception as e:
+        logger.error(f"Lỗi khi phục vụ file audio cục bộ {filepath}: {e}", exc_info=True)
+        return Response(status=500, mimetype='audio/mpeg')
+
+# KẾT THÚC THAY ĐỔI
 
 @api_bp.route('/quiz_questions_by_category/<int:set_id>/<string:category>')
 @login_required
