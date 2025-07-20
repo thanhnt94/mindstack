@@ -16,6 +16,11 @@ logger = logging.getLogger(__name__)
 def _check_edit_permission(user_id, flashcard_obj):
     """
     Mô tả: Helper function để kiểm tra quyền sửa thẻ.
+    Args:
+        user_id (int): ID của người dùng hiện tại.
+        flashcard_obj (Flashcard): Đối tượng flashcard cần kiểm tra.
+    Returns:
+        bool: True nếu người dùng có quyền, False nếu không.
     """
     user = User.query.get(user_id)
     if not user or not flashcard_obj:
@@ -26,24 +31,51 @@ def _check_edit_permission(user_id, flashcard_obj):
 @api_bp.route('/card_audio/<int:flashcard_id>/<string:side>')
 @login_required
 def get_card_audio(flashcard_id, side):
+    """
+    Mô tả: Phục vụ file audio cho một mặt của flashcard.
+    Args:
+        flashcard_id (int): ID của flashcard.
+        side (str): 'front' hoặc 'back' của flashcard.
+    Returns:
+        send_file: File audio nếu thành công.
+        jsonify: Thông báo lỗi nếu có vấn đề.
+    """
     if side not in ['front', 'back']:
-        return {"error": "Invalid side specified"}, 400
+        logger.warning(f"Yêu cầu audio flashcard {flashcard_id} với mặt không hợp lệ: {side}")
+        return jsonify({"error": "Mặt thẻ không hợp lệ"}), 400
+
     flashcard = Flashcard.query.get_or_404(flashcard_id)
     audio_content = flashcard.front_audio_content if side == 'front' else flashcard.back_audio_content
-    if not audio_content:
-        return {"error": "No audio content for this side"}, 404
+
+    if not audio_content or not audio_content.strip():
+        logger.info(f"Flashcard {flashcard_id} ({side}) không có nội dung audio.")
+        return jsonify({"error": "Không có nội dung audio cho mặt này"}), 404
+
     try:
-        audio_file_path = asyncio.run(audio_service.get_cached_or_generate_audio(audio_content))
-        if audio_file_path and os.path.exists(audio_file_path):
+        # BẮT ĐẦU SỬA LỖI: Nhận kết quả trả về từ audio_service đúng cách
+        audio_file_path, success, message = asyncio.run(audio_service.get_cached_or_generate_audio(audio_content))
+        
+        if success and audio_file_path and os.path.exists(audio_file_path):
+            logger.info(f"Phục vụ audio thành công cho flashcard {flashcard_id} ({side}): {audio_file_path}")
             return send_file(audio_file_path, mimetype="audio/mpeg")
         else:
-            return {"error": "Failed to generate or retrieve audio file"}, 500
+            # Ghi log lỗi chi tiết hơn từ service
+            logger.error(f"Lỗi khi phục vụ audio flashcard {flashcard_id} ({side}): {message}")
+            return jsonify({"error": f"Không thể tạo hoặc lấy file audio: {message}"}), 500
     except Exception as e:
-        logger.error(f"Lỗi khi phục vụ audio flashcard {flashcard_id} ({side}): {e}", exc_info=True)
-        return {"error": "Internal server error"}, 500
+        logger.error(f"Lỗi không mong muốn khi phục vụ audio flashcard {flashcard_id} ({side}): {e}", exc_info=True)
+        return jsonify({"error": "Lỗi server nội bộ khi xử lý audio"}), 500
 
 @api_bp.route('/flashcard_images/<path:filename>')
 def serve_flashcard_image(filename):
+    """
+    Mô tả: Phục vụ hình ảnh cho flashcard từ thư mục cache.
+    Args:
+        filename (str): Tên file hình ảnh.
+    Returns:
+        send_file: File hình ảnh nếu tìm thấy.
+        Response: 404 hoặc 500 nếu không tìm thấy hoặc lỗi.
+    """
     try:
         full_path = os.path.join(FLASHCARD_IMAGES_DIR, filename)
         if not os.path.exists(full_path):
@@ -56,6 +88,14 @@ def serve_flashcard_image(filename):
 
 @api_bp.route('/quiz_images/<path:filename>')
 def serve_quiz_image(filename):
+    """
+    Mô tả: Phục vụ hình ảnh cho quiz từ thư mục cache.
+    Args:
+        filename (str): Tên file hình ảnh.
+    Returns:
+        send_file: File hình ảnh nếu tìm thấy.
+        Response: 404 hoặc 500 nếu không tìm thấy hoặc lỗi.
+    """
     try:
         full_path = os.path.join(QUIZ_IMAGES_DIR, filename)
         if not os.path.exists(full_path):
@@ -69,6 +109,13 @@ def serve_quiz_image(filename):
 @api_bp.route('/note/<int:flashcard_id>', methods=['GET', 'POST'])
 @login_required
 def handle_note(flashcard_id):
+    """
+    Mô tả: Xử lý việc lấy và cập nhật ghi chú cho flashcard.
+    Args:
+        flashcard_id (int): ID của flashcard.
+    Returns:
+        jsonify: Dữ liệu ghi chú hoặc trạng thái cập nhật.
+    """
     user_id = session.get('user_id')
     if request.method == 'GET':
         note = note_service.get_note_by_flashcard_id(user_id, flashcard_id)
@@ -85,6 +132,13 @@ def handle_note(flashcard_id):
 @api_bp.route('/flashcard/details/<int:flashcard_id>', methods=['GET'])
 @login_required
 def get_flashcard_details(flashcard_id):
+    """
+    Mô tả: Lấy chi tiết của một flashcard.
+    Args:
+        flashcard_id (int): ID của flashcard.
+    Returns:
+        jsonify: Dữ liệu chi tiết flashcard hoặc thông báo lỗi.
+    """
     card = flashcard_service.get_card_by_id(flashcard_id)
     if not card:
         return jsonify({'status': 'error', 'message': 'Không tìm thấy thẻ.'}), 404
@@ -94,6 +148,13 @@ def get_flashcard_details(flashcard_id):
 @api_bp.route('/flashcard/edit/<int:flashcard_id>', methods=['POST'])
 @login_required
 def edit_flashcard(flashcard_id):
+    """
+    Mô tả: Chỉnh sửa nội dung của một flashcard.
+    Args:
+        flashcard_id (int): ID của flashcard cần chỉnh sửa.
+    Returns:
+        jsonify: Trạng thái cập nhật và thông báo.
+    """
     user_id = session.get('user_id')
     data = request.get_json()
     if not data:
@@ -110,6 +171,11 @@ def edit_flashcard(flashcard_id):
 def regenerate_audio(flashcard_id, side):
     """
     Mô tả: API để tái tạo audio cho một mặt của flashcard.
+    Args:
+        flashcard_id (int): ID của flashcard.
+        side (str): 'front' hoặc 'back'.
+    Returns:
+        jsonify: Trạng thái và thông báo của quá trình tái tạo.
     """
     user_id = session.get('user_id')
     card = flashcard_service.get_card_by_id(flashcard_id)
@@ -121,16 +187,26 @@ def regenerate_audio(flashcard_id, side):
         return jsonify({'status': 'error', 'message': 'Mặt thẻ không hợp lệ.'}), 400
 
     # Chạy hàm async trong một event loop mới
-    success = asyncio.run(audio_service.regenerate_audio_for_card(flashcard_id, side))
+    # BẮT ĐẦU SỬA LỖI: Nhận kết quả trả về từ audio_service đúng cách
+    success, message = asyncio.run(audio_service.regenerate_audio_for_card(flashcard_id, side))
     
     if success:
         return jsonify({'status': 'success', 'message': f'Đã gửi yêu cầu tái tạo audio cho mặt {side}.'})
     else:
-        return jsonify({'status': 'error', 'message': 'Tái tạo audio thất bại.'}), 500
+        # Trả về thông báo lỗi chi tiết từ service
+        return jsonify({'status': 'error', 'message': f'Tái tạo audio thất bại: {message}. Vui lòng liên hệ quản trị viên.'}), 500
 
 @api_bp.route('/cards_by_category/<int:set_id>/<string:category>')
 @login_required
 def get_cards_by_category(set_id, category):
+    """
+    Mô tả: Lấy danh sách các flashcard theo danh mục (ví dụ: due, mastered).
+    Args:
+        set_id (int): ID của bộ thẻ.
+        category (str): Danh mục thẻ cần lấy.
+    Returns:
+        jsonify: Danh sách thẻ và thông tin phân trang.
+    """
     user_id = session.get('user_id')
     page = request.args.get('page', 1, type=int)
     
@@ -151,6 +227,13 @@ def get_cards_by_category(set_id, category):
 @api_bp.route('/quiz_note/<int:question_id>', methods=['GET', 'POST'])
 @login_required
 def handle_quiz_note(question_id):
+    """
+    Mô tả: Xử lý việc lấy và cập nhật ghi chú cho câu hỏi quiz.
+    Args:
+        question_id (int): ID của câu hỏi quiz.
+    Returns:
+        jsonify: Dữ liệu ghi chú hoặc trạng thái cập nhật.
+    """
     user_id = session.get('user_id')
     if request.method == 'GET':
         note = quiz_note_service.get_note_by_question_id(user_id, question_id)
@@ -167,6 +250,13 @@ def handle_quiz_note(question_id):
 @api_bp.route('/quiz_passage/<int:passage_id>', methods=['GET'])
 @login_required
 def get_quiz_passage(passage_id):
+    """
+    Mô tả: Lấy nội dung của một đoạn văn quiz.
+    Args:
+        passage_id (int): ID của đoạn văn.
+    Returns:
+        jsonify: Nội dung đoạn văn hoặc thông báo lỗi.
+    """
     passage = QuizPassage.query.get(passage_id)
     if not passage:
         return jsonify({'status': 'error', 'message': 'Không tìm thấy đoạn văn.'}), 404
@@ -175,6 +265,13 @@ def get_quiz_passage(passage_id):
 @api_bp.route('/quiz_question/details/<int:question_id>')
 @login_required
 def get_quiz_question_details(question_id):
+    """
+    Mô tả: Lấy chi tiết của một câu hỏi quiz.
+    Args:
+        question_id (int): ID của câu hỏi quiz.
+    Returns:
+        jsonify: Dữ liệu chi tiết câu hỏi hoặc thông báo lỗi.
+    """
     question = quiz_service.get_question_by_id(question_id)
     if not question:
         return jsonify({'status': 'error', 'message': 'Không tìm thấy câu hỏi.'}), 404
@@ -192,6 +289,13 @@ def get_quiz_question_details(question_id):
 @api_bp.route('/quiz_question/edit/<int:question_id>', methods=['POST'])
 @login_required
 def edit_quiz_question(question_id):
+    """
+    Mô tả: Chỉnh sửa nội dung của một câu hỏi quiz.
+    Args:
+        question_id (int): ID của câu hỏi quiz.
+    Returns:
+        jsonify: Trạng thái cập nhật và thông báo.
+    """
     user_id = session.get('user_id')
     data = request.get_json()
     if not data:
@@ -244,7 +348,6 @@ def edit_quiz_question(question_id):
     
     return jsonify({'status': 'success', 'message': 'Cập nhật thành công!'})
 
-# BẮT ĐẦU THAY ĐỔI: Route API cho audio quiz sẽ nhận đường dẫn đầy đủ
 @api_bp.route('/quiz_audio/<path:filepath>')
 @login_required
 def get_quiz_audio(filepath):
@@ -269,19 +372,22 @@ def get_quiz_audio(filepath):
             return Response(status=404, mimetype='audio/mpeg')
         logger.info(f"Phục vụ file audio cục bộ: {full_path}")
         
-        # BẮT ĐẦU SỬA: Chỉ dùng send_file với mimetype, không thêm headers tùy chỉnh
-        # Điều này sẽ làm cho hành vi giống hệt như get_card_audio
         return send_file(full_path, mimetype="audio/mpeg")
-        # KẾT THÚC SỬA
     except Exception as e:
         logger.error(f"Lỗi khi phục vụ file audio cục bộ {filepath}: {e}", exc_info=True)
         return Response(status=500, mimetype='audio/mpeg')
 
-# KẾT THÚC THAY ĐỔI
-
 @api_bp.route('/quiz_questions_by_category/<int:set_id>/<string:category>')
 @login_required
 def get_quiz_questions_by_category(set_id, category):
+    """
+    Mô tả: Lấy danh sách các câu hỏi quiz theo danh mục.
+    Args:
+        set_id (int): ID của bộ câu hỏi.
+        category (str): Danh mục câu hỏi cần lấy.
+    Returns:
+        jsonify: Danh sách câu hỏi và thông tin phân trang.
+    """
     user_id = session.get('user_id')
     page = request.args.get('page', 1, type=int)
     valid_categories = ['correct', 'incorrect', 'unanswered', 'mastered']
@@ -328,6 +434,13 @@ def get_quiz_questions_by_category(set_id, category):
 @api_bp.route('/quiz_set_stats/<int:set_id>', methods=['GET'])
 @login_required
 def get_quiz_set_stats(set_id):
+    """
+    Mô tả: Lấy thống kê của một bộ câu hỏi quiz cho người dùng.
+    Args:
+        set_id (int): ID của bộ câu hỏi.
+    Returns:
+        jsonify: Dữ liệu thống kê hoặc thông báo lỗi.
+    """
     user_id = session.get('user_id')
     stats = quiz_service.get_quiz_set_stats_for_user(user_id, set_id)
     if not stats:
@@ -337,6 +450,13 @@ def get_quiz_set_stats(set_id):
 @api_bp.route('/quiz_question_progress/<int:question_id>', methods=['GET'])
 @login_required
 def get_quiz_question_progress(question_id):
+    """
+    Mô tả: Lấy tiến độ học tập của người dùng đối với một câu hỏi quiz cụ thể.
+    Args:
+        question_id (int): ID của câu hỏi quiz.
+    Returns:
+        jsonify: Dữ liệu tiến độ hoặc thông báo mặc định nếu không có tiến độ.
+    """
     user_id = session.get('user_id')
     progress = UserQuizProgress.query.filter_by(
         user_id=user_id, question_id=question_id
