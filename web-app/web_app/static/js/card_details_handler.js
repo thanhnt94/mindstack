@@ -139,10 +139,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const setLearnedCards = parseInt(jsDataElement.dataset.setLearnedCards || '0');
         const setMasteredCards = parseInt(jsDataElement.dataset.setMasteredCards || '0');
         const setDueCards = parseInt(jsDataElement.dataset.setDueCards || '0'); // Lấy số thẻ cần ôn
+        const cardCorrectStreak = parseInt(jsDataElement.dataset.progressCorrectStreak || '0');
         const cardCorrectCount = parseInt(jsDataElement.dataset.cardCorrectCount || '0');
         const cardReviewCount = parseInt(jsDataElement.dataset.cardReviewCount || '0');
 
         if (!isNewCard) { // Thẻ cũ (đã ôn tập)
+            // BẮT ĐẦU THAY ĐỔI: Thêm trạng thái thống kê của thẻ hiện tại vào đầu chuỗi animation
+            animationSequence.push({
+                type: 'text',
+                text: `<span title="Đúng liên tiếp"><i class="fas fa-bolt" style="color: #f1c40f;"></i> ${cardCorrectStreak}</span> | <span title="Tổng lần đúng"><i class="fas fa-check-circle" style="color: #28a745;"></i> ${cardCorrectCount}</span> | <span title="Tổng lần ôn tập"><i class="fas fa-history" style="color: #3498db;"></i> ${cardReviewCount}</span>`,
+                iconClass: 'fas fa-info-circle',
+                specialClass: 'animated-border'
+            });
+            // KẾT THÚC THAY ĐỔI
+
             // 1. Đã ôn tập: (số thẻ đã học - số thẻ cần ôn tập)/ số thẻ đã học 
             const reviewedCardsNotDue = setLearnedCards - setDueCards;
             const reviewedProgressPercentage = setLearnedCards > 0 ? (reviewedCardsNotDue / setLearnedCards) * 100 : 0;

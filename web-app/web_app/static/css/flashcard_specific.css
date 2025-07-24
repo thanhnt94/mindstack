@@ -44,8 +44,9 @@
     /* THAY ĐỔI: Sử dụng flex-grow để nó tự co giãn trong flex container cha (.flashcard-column) */
     flex-grow: 1; /* Cho phép nó chiếm không gian còn lại */
     flex-shrink: 0; /* Đảm bảo nó không bị co lại */
-    /* THAY ĐỔI: Đặt max-height theo vh để giới hạn chiều cao tổng thể */
-    max-height: 50vh; /* Ví dụ: tối đa 50% chiều cao viewport */
+    /* BẮT ĐẦU THAY ĐỔI: Giới hạn chiều cao tối đa của khung ảnh là 40vh */
+    max-height: 40vh; /* Tối đa 40% chiều cao viewport */
+    /* KẾT THÚC THAY ĐỔI */
     background-color: #f8f9fa;
     display: flex; /* Mặc định là flex để nó chiếm không gian */
     flex-direction: column;
@@ -407,22 +408,34 @@
     transition: opacity 0.3s ease-out;
     /* Mặc định ẩn, sẽ được JS điều khiển */
     display: none;
-    /* THÊM MỚI: Các thuộc tính cho đường viền chuyển động */
     border: 2px solid transparent; /* Viền mặc định trong suốt */
 }
 
+/* BẮT ĐẦU THAY ĐỔI: Hiệu ứng mới cho .animated-border */
 .dynamic-island-progress-bar.animated-border {
-    animation: moving-border-animation 2s linear infinite alternate; /* Kích hoạt animation */
+    /* Nền trắng sữa, hơi trong suốt */
+    background-color: rgba(248, 249, 250, 0.85);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    
+    /* Viền Gradient chuyển động */
+    border: 2px solid transparent;
+    background-image: 
+        linear-gradient(rgba(248, 249, 250, 0.85), rgba(248, 249, 250, 0.85)), /* Lớp nền bên trong */
+        linear-gradient(120deg, #8e44ad, #3498db, #8e44ad); /* Lớp viền gradient */
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 200% 100%;
+    animation: border-gradient-animation 4s ease infinite;
 }
 
-@keyframes moving-border-animation {
-    0% { border-color: #3498db; } /* Xanh dương */
-    25% { border-color: #FFB6C1; } /* Tím */
-    50% { border-color: #2ecc71; } /* Xanh lá */
-    75% { border-color: #f1c40f; } /* Vàng */
-    100% { border-color: #e74c3c; } /* Đỏ */
+/* Keyframes cho viền gradient chuyển động */
+@keyframes border-gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
-
+/* KẾT THÚC THAY ĐỔI */
 
 .dynamic-island-progress-bar .progress-fill {
     height: 100%;
@@ -456,14 +469,16 @@
 }
 /* KẾT THÚC THÊM MỚI */
 
+/* BẮT ĐẦU THAY ĐỔI: Logic màu chữ mới */
 .dynamic-island-progress-bar .progress-text {
-    position: relative; 
-    color: #000; /* THAY ĐỔI: Màu chữ đen */
+    position: relative;
     font-weight: bold;
     font-size: 0.9em;
-    text-shadow: 1px 1px 2px rgba(255,255,255,0.5); /* THAY ĐỔI: Đổ bóng trắng để dễ đọc trên nền màu */
     white-space: nowrap;
-    z-index: 1; 
+    z-index: 1;
+    /* Màu chữ mặc định là đen */
+    color: #000;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.5); /* Đổ bóng trắng để dễ đọc trên nền màu */
 }
 /* KẾT THÚC THAY ĐỔI */
 
