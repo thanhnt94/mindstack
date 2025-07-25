@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Danh sách Feedback{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container feedback-container">
+    
+    <!-- BẮT ĐẦU THAY ĐỔI: Phần Feedback bạn đã gửi -->
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h1><i class="fas fa-paper-plane"></i> Feedback bạn đã gửi</h1>
+        </div>
+
+        {% if feedbacks_sent %}
+            <div class="table-responsive">
+                <table class="data-table feedback-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nội dung</th>
+                            <th>Mục liên quan</th>
+                            <th>Trạng thái</th>
+                            <th>Thời gian gửi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fb in feedbacks_sent %}
+                        <tr>
+                            <td>{{ fb.feedback_id }}</td>
+                            <td class="feedback-content-cell">{{ fb.content }}</td>
+                            <td>
+                                {% if fb.flashcard %}
+                                    <span class="feedback-item-type">Flashcard</span>
+                                    <div class="feedback-item-details">
+                                        <strong>Bộ:</strong> {{ fb.flashcard.vocabulary_set.title }}<br>
+                                        <strong>Trước:</strong> {{ fb.flashcard.front[:50] }}...
+                                    </div>
+                                {% elif fb.quiz_question %}
+                                    <span class="feedback-item-type">Quiz</span>
+                                     <div class="feedback-item-details">
+                                        <strong>Bộ:</strong> {{ fb.quiz_question.question_set.title }}<br>
+                                        <strong>Câu hỏi:</strong> {{ fb.quiz_question.question[:50] }}...
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ fb.status }}">{{ fb.status }}</span>
+                            </td>
+                            <td>{{ fb.timestamp | format_unix_timestamp }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>Bạn chưa gửi feedback nào.</p>
+        {% endif %}
+    </div>
+    <!-- KẾT THÚC THAY ĐỔI -->
+
+    <!-- BẮT ĐẦU THAY ĐỔI: Phần Feedback nhận được (chỉ hiển thị nếu có) -->
+    {% if feedbacks_received %}
+    <div class="admin-panel" style="margin-top: 40px;">
+        <div class="admin-panel-header">
+            <h1><i class="fas fa-inbox"></i> Feedback nhận được</h1>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table feedback-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Người gửi</th>
+                        <th>Nội dung</th>
+                        <th>Mục liên quan</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fb in feedbacks_received %}
+                    <tr>
+                        <td>{{ fb.feedback_id }}</td>
+                        <td>{{ fb.user.username or 'N/A' }}</td>
+                        <td class="feedback-content-cell">{{ fb.content }}</td>
+                        <td>
+                            {% if fb.flashcard %}
+                                <span class="feedback-item-type">Flashcard</span>
+                                <div class="feedback-item-details">
+                                    <strong>Bộ:</strong> {{ fb.flashcard.vocabulary_set.title }}<br>
+                                    <strong>Trước:</strong> {{ fb.flashcard.front[:50] }}...
+                                </div>
+                            {% elif fb.quiz_question %}
+                                <span class="feedback-item-type">Quiz</span>
+                                 <div class="feedback-item-details">
+                                    <strong>Bộ:</strong> {{ fb.quiz_question.question_set.title }}<br>
+                                    <strong>Câu hỏi:</strong> {{ fb.quiz_question.question[:50] }}...
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ fb.status }}">{{ fb.status }}</span>
+                        </td>
+                        <td>{{ fb.timestamp | format_unix_timestamp }}</td>
+                        <td>
+                            <form action="{{ url_for('feedback.update_status', feedback_id=fb.feedback_id) }}" method="POST">
+                                <select name="status" class="form-control-small">
+                                    <option value="new" {% if fb.status == 'new' %}selected{% endif %}>Mới</option>
+                                    <option value="seen" {% if fb.status == 'seen' %}selected{% endif %}>Đã xem</option>
+                                    <option value="resolved" {% if fb.status == 'resolved' %}selected{% endif %}>Đã giải quyết</option>
+                                </select>
+                                <button type="submit" class="button primary small-button">Cập nhật</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    <!-- KẾT THÚC THAY ĐỔI -->
+
+</div>
+{% endblock %}

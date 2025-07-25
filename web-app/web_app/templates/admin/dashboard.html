@@ -86,7 +86,7 @@
                 </div>
             </div>
 
-            <!-- BẮT ĐẦU THAY ĐỔI: Panel Hoạt động gần đây -->
+            <!-- Panel Hoạt động gần đây -->
             <div class="recent-activity-panel">
                 <h2 class="activity-section-title"><i class="fas fa-history"></i> Hoạt động gần đây</h2>
                 <div class="activity-grid">
@@ -101,6 +101,11 @@
                                     <div class="activity-item-info">
                                         <span class="activity-item-main">{{ user.username or user.telegram_id }}</span>
                                     </div>
+                                    {# BẮT ĐẦU THAY ĐỔI: Hiển thị thời gian hoạt động cuối #}
+                                    <span class="activity-item-timestamp">
+                                        {{ user.last_seen | format_unix_time_only }}
+                                    </span>
+                                    {# KẾT THÚC THAY ĐỔI #}
                                 </li>
                                 {% endfor %}
                             </ul>
@@ -170,7 +175,6 @@
 
                 </div>
             </div>
-            <!-- KẾT THÚC THAY ĐỔI -->
         </div>
     </div>
 </div>

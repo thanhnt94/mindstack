@@ -144,6 +144,16 @@
     background-color: #6c3483;
 }
 
+/* BẮT ĐẦU THÊM MỚI: Kiểu cho nút Feedback */
+.button.feedback-button {
+    background-color: #17a2b8; /* Màu xanh mòng két (teal) */
+    color: white;
+}
+.button.feedback-button:hover {
+    background-color: #138496;
+}
+/* KẾT THÚC THÊM MỚI */
+
 /* Nút nhỏ trong bảng */
 .small-button {
     padding: 5px 10px;

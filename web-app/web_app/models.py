@@ -45,6 +45,7 @@ class User(db.Model):
     created_question_sets = db.relationship('QuestionSet', backref='creator', lazy=True, foreign_keys='QuestionSet.creator_user_id')
     quiz_progresses = db.relationship('UserQuizProgress', backref='user', lazy=True, cascade="all, delete-orphan")
     quiz_notes = db.relationship('QuizQuestionNote', backref='user', lazy=True, cascade="all, delete-orphan")
+    feedbacks = db.relationship('Feedback', backref='user', lazy=True, cascade="all, delete-orphan") # THÊM MỚI
 
     def __repr__(self):
         return f"<User {self.username or self.telegram_id}>"
@@ -82,6 +83,7 @@ class Flashcard(db.Model):
 
     progresses = db.relationship('UserFlashcardProgress', backref='flashcard', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('FlashcardNote', backref='flashcard', lazy=True, cascade="all, delete-orphan")
+    feedbacks = db.relationship('Feedback', backref='flashcard', lazy=True, cascade="all, delete-orphan") # THÊM MỚI
 
     def __repr__(self):
         return f"<Flashcard {self.flashcard_id} - {self.front[:20]}>"
@@ -184,6 +186,7 @@ class QuizQuestion(db.Model):
     # KẾT THÚC THAY ĐỔI
     progresses = db.relationship('UserQuizProgress', backref='question', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('QuizQuestionNote', backref='question', lazy=True, cascade="all, delete-orphan")
+    feedbacks = db.relationship('Feedback', backref='quiz_question', lazy=True, cascade="all, delete-orphan") # THÊM MỚI
 
     def __repr__(self):
         return f"<QuizQuestion {self.question_id} - {self.question[:20]}>"
@@ -219,3 +222,17 @@ class QuizQuestionNote(db.Model):
     def __repr__(self):
         return f"<QuizNote ID:{self.note_id} Question:{self.question_id} User:{self.user_id}>"
 
+# ========================== BẮT ĐẦU THÊM MỚI: Bảng Feedback ==========================
+class Feedback(db.Model):
+    __tablename__ = 'Feedbacks'
+    feedback_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='CASCADE'), nullable=False)
+    flashcard_id = db.Column(db.Integer, db.ForeignKey('Flashcards.flashcard_id', ondelete='CASCADE'), nullable=True)
+    question_id = db.Column(db.Integer, db.ForeignKey('QuizQuestions.question_id', ondelete='CASCADE'), nullable=True)
+    content = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(50), default='new', nullable=False) # Ví dụ: 'new', 'seen', 'resolved'
+    timestamp = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return f"<Feedback ID:{self.feedback_id} User:{self.user_id} Status:{self.status}>"
+# ========================== KẾT THÚC THÊM MỚI ==========================

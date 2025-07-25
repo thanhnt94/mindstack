@@ -64,10 +64,11 @@ def create_or_update_tables_with_sqlite_direct_drops():
                 cursor = conn.cursor()
                 
                 # Xóa các bảng Quiz cũ để đảm bảo schema mới
-                logger.info("Đang xóa các bảng Quiz cũ (nếu tồn tại) để cập nhật schema mới...")
+                logger.info("Đang xóa các bảng cũ (nếu tồn tại) để cập nhật schema mới...")
                 
                 # Thứ tự xóa quan trọng do khóa ngoại
                 tables_to_drop = [
+                    'Feedbacks', # THÊM MỚI: Xóa bảng feedback cũ nếu có để tạo lại
                     'QuizQuestionNotes',
                     'UserQuizProgress',
                     'QuizQuestions',
@@ -83,9 +84,9 @@ def create_or_update_tables_with_sqlite_direct_drops():
                         logger.warning(f"Không thể xóa bảng {table_name}: {e}. Có thể do khóa ngoại chưa được giải quyết hoặc bảng không tồn tại.")
                 
                 conn.commit()
-                logger.info("Hoàn tất việc xóa các bảng Quiz cũ.")
+                logger.info("Hoàn tất việc xóa các bảng cũ.")
 
-                logger.info("Đang chạy db.create_all() để tạo tất cả các bảng mới (bao gồm cả các bảng Quiz đã xóa)...")
+                logger.info("Đang chạy db.create_all() để tạo tất cả các bảng mới (bao gồm cả các bảng đã xóa)...")
                 db.create_all() # Tạo lại tất cả các bảng theo models.py
                 logger.info("db.create_all() đã hoàn tất.")
 
@@ -139,4 +140,3 @@ def create_or_update_tables_with_sqlite_direct_drops():
 if __name__ == '__main__':
     create_or_update_tables_with_sqlite_direct_drops()
     logger.info("Script cập nhật cơ sở dữ liệu đã hoàn tất.")
-

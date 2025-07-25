@@ -38,6 +38,7 @@
 @import url("quiz.css");
 /* --- BẮT ĐẦU THÊM MỚI --- */
 @import url("home.css");
+@import url("feedback.css"); /* Thêm file css mới */
 /* --- KẾT THÚC THÊM MỚI --- */
 /* Nhập các kiểu cho footer */
 @import url("footer.css");

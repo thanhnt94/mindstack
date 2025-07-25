@@ -4,7 +4,7 @@ import logging
 import os
 import asyncio
 import hashlib
-from ..services import audio_service, note_service, flashcard_service, quiz_service, quiz_note_service
+from ..services import audio_service, note_service, flashcard_service, quiz_service, quiz_note_service, feedback_service
 from ..models import Flashcard, QuizQuestion, UserQuizProgress, QuizPassage, User 
 from ..config import FLASHCARD_IMAGES_DIR, QUIZ_IMAGES_DIR, QUIZ_AUDIO_CACHE_DIR 
 from .decorators import login_required
@@ -473,3 +473,30 @@ def get_quiz_question_progress(question_id):
             'times_incorrect': progress.times_incorrect
         }
     })
+
+# --- BẮT ĐẦU THÊM MỚI: Endpoint gửi feedback ---
+@api_bp.route('/feedback/submit', methods=['POST'])
+@login_required
+def submit_feedback():
+    """
+    Mô tả: API endpoint để người dùng gửi feedback về một thẻ hoặc câu hỏi.
+    """
+    user_id = session.get('user_id')
+    data = request.get_json()
+    
+    content = data.get('content')
+    flashcard_id = data.get('flashcard_id')
+    question_id = data.get('question_id')
+
+    feedback_obj, status, message = feedback_service.create_feedback(
+        user_id=user_id,
+        content=content,
+        flashcard_id=flashcard_id,
+        question_id=question_id
+    )
+
+    if status == 'error':
+        return jsonify({'status': 'error', 'message': message}), 400 if "Nội dung" in message else 500
+    
+    return jsonify({'status': 'success', 'message': message})
+# --- KẾT THÚC THÊM MỚI ---

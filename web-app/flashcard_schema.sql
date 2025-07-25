@@ -105,3 +105,19 @@ CREATE TABLE "QuizQuestionNotes" (
 	FOREIGN KEY(user_id) REFERENCES "Users" (user_id) ON DELETE CASCADE
 );
 
+-- Đây là câu lệnh SQL để tạo bảng Feedbacks mới.
+-- Bạn có thể thêm vào tệp .sql của mình để tham khảo.
+
+CREATE TABLE "Feedbacks" (
+    feedback_id INTEGER NOT NULL, 
+    user_id INTEGER NOT NULL, 
+    flashcard_id INTEGER, 
+    question_id INTEGER, 
+    content TEXT NOT NULL, 
+    status VARCHAR(50) NOT NULL, 
+    timestamp INTEGER NOT NULL, 
+    PRIMARY KEY (feedback_id), 
+    FOREIGN KEY(user_id) REFERENCES "Users" (user_id) ON DELETE CASCADE, 
+    FOREIGN KEY(flashcard_id) REFERENCES "Flashcards" (flashcard_id) ON DELETE CASCADE, 
+    FOREIGN KEY(question_id) REFERENCES "QuizQuestions" (question_id) ON DELETE CASCADE
+);

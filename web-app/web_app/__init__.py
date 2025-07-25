@@ -31,6 +31,49 @@ def create_app():
             logger.error(f"Lỗi khi định dạng timestamp {timestamp}: {e}", exc_info=True)
             return "Invalid Date"
 
+    @app.template_filter('format_unix_time_only')
+    def format_unix_time_only_filter(timestamp):
+        if timestamp is None:
+            return ""
+        try:
+            from .config import DEFAULT_TIMEZONE_OFFSET
+            tz = timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))
+            dt_object = datetime.fromtimestamp(timestamp, tz)
+            return dt_object.strftime("%H:%M")
+        except (TypeError, ValueError, OSError) as e:
+            logger.error(f"Lỗi khi định dạng time only cho timestamp {timestamp}: {e}", exc_info=True)
+            return "Invalid Time"
+
+    # --- BẮT ĐẦU THAY ĐỔI: Thêm hàm cập nhật last_seen trước mỗi request ---
+    @app.before_request
+    def update_last_seen():
+        """
+        Mô tả: Tự động cập nhật thời gian hoạt động cuối cùng của người dùng
+               cho mỗi yêu cầu họ thực hiện.
+        """
+        # Chỉ thực hiện nếu người dùng đã đăng nhập
+        if 'user_id' in session:
+            # Bỏ qua các yêu cầu không cần thiết như tải file tĩnh để giảm tải cho DB
+            if request.endpoint and (
+                request.endpoint.startswith('static') or
+                request.endpoint.startswith('api.') # Bỏ qua các API call để tối ưu
+            ):
+                return
+
+            from .models import User
+            
+            try:
+                # Lấy người dùng và cập nhật thời gian
+                user = User.query.get(session['user_id'])
+                if user:
+                    user.last_seen = int(time.time())
+                    db.session.commit()
+            except Exception as e:
+                # Ghi lại lỗi nhưng không làm gián đoạn yêu cầu của người dùng
+                logger.error(f"Lỗi khi cập nhật last_seen cho user {session['user_id']}: {e}")
+                db.session.rollback()
+    # --- KẾT THÚC THAY ĐỔI ---
+
     @app.before_request
     def check_maintenance_mode():
         if request.endpoint and (
@@ -70,7 +113,8 @@ def create_app():
     from .routes.api import api_bp
     from .routes.quiz import quiz_bp
     from .routes.main import main_bp
-    from .routes.user import user_bp # BẮT ĐẦU THÊM MỚI
+    from .routes.user import user_bp
+    from .routes.feedback import feedback_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(flashcard_bp, url_prefix='/flashcard')
@@ -78,7 +122,8 @@ def create_app():
     app.register_blueprint(api_bp)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(main_bp)
-    app.register_blueprint(user_bp) # BẮT ĐẦU THÊM MỚI
+    app.register_blueprint(user_bp)
+    app.register_blueprint(feedback_bp)
 
     logger.info("Ứng dụng Flask đã được khởi tạo và cấu hình với các route đã tách.")
     return app
