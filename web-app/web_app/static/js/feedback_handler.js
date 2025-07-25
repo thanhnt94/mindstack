@@ -1,3 +1,5 @@
+// web_app/static/js/feedback_handler.js
+
 /**
  * Mô tả: Xử lý logic cho modal gửi feedback.
  */
@@ -13,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFlashcardId = null;
     let currentQuestionId = null;
 
+    /**
+     * Mô tả: Mở modal feedback, reset các trường và focus vào textarea.
+     */
     function openFeedbackModal() {
         textarea.value = '';
         statusEl.textContent = '';
@@ -21,12 +26,18 @@ document.addEventListener('DOMContentLoaded', function() {
         textarea.focus();
     }
 
+    /**
+     * Mô tả: Đóng modal feedback và reset các ID đang được giữ.
+     */
     function closeFeedbackModal() {
         feedbackModal.style.display = 'none';
         currentFlashcardId = null;
         currentQuestionId = null;
     }
 
+    /**
+     * Mô tả: Gửi nội dung feedback đến API.
+     */
     async function sendFeedback() {
         const content = textarea.value.trim();
         if (!content) {
@@ -75,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Gắn sự kiện cho tất cả các nút feedback
+    // Gắn sự kiện cho tất cả các nút có class 'open-feedback-btn'
     document.querySelectorAll('.open-feedback-btn').forEach(button => {
         button.addEventListener('click', function() {
             currentFlashcardId = this.dataset.flashcardId || null;
@@ -84,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Gắn các sự kiện đóng/mở/lưu
     if(closeBtn) closeBtn.addEventListener('click', closeFeedbackModal);
     if(saveBtn) saveBtn.addEventListener('click', sendFeedback);
     window.addEventListener('click', (event) => {

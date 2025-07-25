@@ -7,7 +7,7 @@ import time
 from ..services import stats_service
 from ..models import User
 from .decorators import login_required
-from ..config import MAINTENANCE_CONFIG_PATH # Thêm import
+from ..config import MAINTENANCE_CONFIG_PATH
 
 main_bp = Blueprint('main', __name__)
 logger = logging.getLogger(__name__)
@@ -59,19 +59,17 @@ def dashboard():
         current_timeframe=timeframe
     )
 
-# --- BẮT ĐẦU THÊM MỚI: Route cho trang bảo trì ---
 @main_bp.route('/maintenance')
 def maintenance_page():
     """
     Mô tả: Hiển thị trang thông báo bảo trì cho người dùng.
     """
-    config = {'end_timestamp': time.time() + 3600, 'message': 'Hệ thống sẽ sớm quay trở lại.'} # Mặc định
+    config = {'end_timestamp': time.time() + 3600, 'message': 'Hệ thống sẽ sớm quay trở lại.'}
     if os.path.exists(MAINTENANCE_CONFIG_PATH):
         try:
             with open(MAINTENANCE_CONFIG_PATH, 'r') as f:
                 config = json.load(f)
         except (IOError, json.JSONDecodeError):
-            pass # Sử dụng giá trị mặc định nếu có lỗi
+            pass
     
     return render_template('maintenance.html', config=config)
-# --- KẾT THÚC THÊM MỚI ---

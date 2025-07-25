@@ -45,7 +45,7 @@ class User(db.Model):
     created_question_sets = db.relationship('QuestionSet', backref='creator', lazy=True, foreign_keys='QuestionSet.creator_user_id')
     quiz_progresses = db.relationship('UserQuizProgress', backref='user', lazy=True, cascade="all, delete-orphan")
     quiz_notes = db.relationship('QuizQuestionNote', backref='user', lazy=True, cascade="all, delete-orphan")
-    feedbacks = db.relationship('Feedback', backref='user', lazy=True, cascade="all, delete-orphan") # THÊM MỚI
+    feedbacks = db.relationship('Feedback', backref='user', lazy=True, cascade="all, delete-orphan", foreign_keys='Feedback.user_id')
 
     def __repr__(self):
         return f"<User {self.username or self.telegram_id}>"
@@ -83,7 +83,7 @@ class Flashcard(db.Model):
 
     progresses = db.relationship('UserFlashcardProgress', backref='flashcard', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('FlashcardNote', backref='flashcard', lazy=True, cascade="all, delete-orphan")
-    feedbacks = db.relationship('Feedback', backref='flashcard', lazy=True, cascade="all, delete-orphan") # THÊM MỚI
+    feedbacks = db.relationship('Feedback', backref='flashcard', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Flashcard {self.flashcard_id} - {self.front[:20]}>"
@@ -149,18 +149,16 @@ class QuestionSet(db.Model):
     def __repr__(self):
         return f"<QuestionSet {self.title}>"
 
-# BẮT ĐẦU THÊM MỚI: Bảng QuizPassages để lưu trữ đoạn văn duy nhất
 class QuizPassage(db.Model):
     __tablename__ = 'QuizPassages'
     passage_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    passage_content = db.Column(db.Text, nullable=False, unique=True) # Nội dung đoạn văn, phải là duy nhất
-    passage_hash = db.Column(db.String(64), nullable=False, unique=True) # Hash của nội dung để tìm kiếm nhanh
+    passage_content = db.Column(db.Text, nullable=False, unique=True)
+    passage_hash = db.Column(db.String(64), nullable=False, unique=True)
 
     questions = db.relationship('QuizQuestion', backref='passage', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<QuizPassage {self.passage_id} - {self.passage_content[:50]}>"
-# KẾT THÚC THÊM MỚI
 
 # ========================== QuizQuestion ==========================
 class QuizQuestion(db.Model):
@@ -168,25 +166,21 @@ class QuizQuestion(db.Model):
     question_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     set_id = db.Column(db.Integer, db.ForeignKey('QuestionSets.set_id', ondelete='CASCADE'), nullable=False)
     pre_question_text = db.Column(db.Text)
-    # BẮT ĐẦU SỬA: question có thể nullable
     question = db.Column(db.Text, nullable=True) 
-    # KẾT THÚC SỬA
     option_a = db.Column(db.String, nullable=False)
     option_b = db.Column(db.String, nullable=False)
-    option_c = db.Column(db.String, nullable=True) # SỬA: option_c có thể nullable
-    option_d = db.Column(db.String, nullable=True) # SỬA: option_d có thể nullable
-    correct_answer = db.Column(db.String(1), nullable=False) # 'A', 'B', 'C', 'D'
+    option_c = db.Column(db.String, nullable=True)
+    option_d = db.Column(db.String, nullable=True)
+    correct_answer = db.Column(db.String(1), nullable=False)
     guidance = db.Column(db.Text)
     question_image_file = db.Column(db.String)
     question_audio_file = db.Column(db.String)
     
-    # BẮT ĐẦU THAY ĐỔI: Thay thế các trường đoạn văn cũ bằng khóa ngoại và thứ tự
     passage_id = db.Column(db.Integer, db.ForeignKey('QuizPassages.passage_id', ondelete='SET NULL'), nullable=True)
-    passage_order = db.Column(db.Integer, nullable=True) # Thứ tự câu hỏi trong đoạn văn
-    # KẾT THÚC THAY ĐỔI
+    passage_order = db.Column(db.Integer, nullable=True)
     progresses = db.relationship('UserQuizProgress', backref='question', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('QuizQuestionNote', backref='question', lazy=True, cascade="all, delete-orphan")
-    feedbacks = db.relationship('Feedback', backref='quiz_question', lazy=True, cascade="all, delete-orphan") # THÊM MỚI
+    feedbacks = db.relationship('Feedback', backref='quiz_question', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<QuizQuestion {self.question_id} - {self.question[:20]}>"
@@ -222,7 +216,7 @@ class QuizQuestionNote(db.Model):
     def __repr__(self):
         return f"<QuizNote ID:{self.note_id} Question:{self.question_id} User:{self.user_id}>"
 
-# ========================== BẮT ĐẦU THÊM MỚI: Bảng Feedback ==========================
+# ========================== BẮT ĐẦU THAY ĐỔI: Bảng Feedback ==========================
 class Feedback(db.Model):
     __tablename__ = 'Feedbacks'
     feedback_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -230,9 +224,17 @@ class Feedback(db.Model):
     flashcard_id = db.Column(db.Integer, db.ForeignKey('Flashcards.flashcard_id', ondelete='CASCADE'), nullable=True)
     question_id = db.Column(db.Integer, db.ForeignKey('QuizQuestions.question_id', ondelete='CASCADE'), nullable=True)
     content = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(50), default='new', nullable=False) # Ví dụ: 'new', 'seen', 'resolved'
+    status = db.Column(db.String(50), default='new', nullable=False)
     timestamp = db.Column(db.Integer, nullable=False)
+    
+    # Các trường mới cho người giải quyết
+    resolver_comment = db.Column(db.Text, nullable=True)
+    resolved_by_user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='SET NULL'), nullable=True)
+    resolved_timestamp = db.Column(db.Integer, nullable=True)
+
+    # Mối quan hệ để lấy thông tin người giải quyết
+    resolver = db.relationship('User', foreign_keys=[resolved_by_user_id])
 
     def __repr__(self):
         return f"<Feedback ID:{self.feedback_id} User:{self.user_id} Status:{self.status}>"
-# ========================== KẾT THÚC THÊM MỚI ==========================
+# ========================== KẾT THÚC THAY ĐỔI ==========================

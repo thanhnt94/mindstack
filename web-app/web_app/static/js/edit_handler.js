@@ -3,21 +3,28 @@
 /**
  * Mô tả: Xử lý logic cho chức năng sửa flashcard, bao gồm mở/đóng modal,
  * lấy dữ liệu, lưu thay đổi và tái tạo audio qua API.
+ * Đã được cập nhật để hỗ trợ nhiều nút sửa trên cùng một trang.
  */
 document.addEventListener('DOMContentLoaded', function() {
-    const jsData = document.getElementById('jsData');
-    const canEdit = jsData.dataset.canEdit === 'true';
+    const editModal = document.getElementById('edit-modal');
+    // Bỏ qua việc kiểm tra jsData và canEdit vì trang feedback có thể không có
+    // const jsData = document.getElementById('jsData');
+    // const canEdit = jsData && jsData.dataset.canEdit === 'true';
+    // if (!canEdit) {
+    //     return;
+    // }
 
-    if (!canEdit) {
+    // Chỉ chạy nếu có modal trên trang
+    if (!editModal) {
         return;
     }
 
-    const editModal = document.getElementById('edit-modal');
-    const openEditBtn = document.getElementById('open-edit-btn');
     const closeEditBtn = document.getElementById('edit-modal-close-btn');
     const saveEditBtn = document.getElementById('save-edit-btn');
     const editSaveStatus = document.getElementById('edit-save-status');
-    const flashcardId = jsData.dataset.flashcardId;
+    
+    // Biến để lưu ID của thẻ đang được sửa
+    let currentFlashcardId = null;
 
     const editFront = document.getElementById('edit-front');
     const editBack = document.getElementById('edit-back');
@@ -26,17 +33,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const editFrontImg = document.getElementById('edit-front-img');
     const editBackImg = document.getElementById('edit-back-img');
 
+    // Tìm thẻ main-card-text nếu có (trên trang học)
     const mainCardText = document.querySelector('.flashcard-body .card-text');
 
+    /**
+     * Mô tả: Mở modal và tải dữ liệu cho thẻ được chọn.
+     */
     async function openEditModal() {
-        if (!editModal) return;
+        if (!editModal || !currentFlashcardId) return;
 
         editFront.value = "Đang tải...";
         editBack.value = "Đang tải...";
         editModal.style.display = 'flex';
 
         try {
-            const response = await fetch(`/api/flashcard/details/${flashcardId}`);
+            const response = await fetch(`/api/flashcard/details/${currentFlashcardId}`);
             if (!response.ok) {
                 throw new Error('Không thể lấy chi tiết thẻ từ máy chủ.');
             }
@@ -60,13 +71,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /**
+     * Mô tả: Đóng modal sửa lỗi.
+     */
     function closeEditModal() {
         if (editModal) {
             editModal.style.display = 'none';
+            currentFlashcardId = null; // Reset ID
         }
     }
 
+    /**
+     * Mô tả: Lưu các thay đổi vào DB.
+     */
     async function saveCardChanges() {
+        if (!currentFlashcardId) return;
+
         editSaveStatus.style.color = '#28a745';
         editSaveStatus.textContent = 'Đang lưu...';
         editSaveStatus.style.opacity = 1;
@@ -81,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         try {
-            const response = await fetch(`/api/flashcard/edit/${flashcardId}`, {
+            const response = await fetch(`/api/flashcard/edit/${currentFlashcardId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
@@ -91,16 +111,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (response.ok && result.status === 'success') {
                 editSaveStatus.textContent = 'Đã lưu!';
-                const isFront = jsData.dataset.isFront === 'true';
-                if (isFront) {
-                    mainCardText.textContent = result.data.front;
-                } else {
-                    mainCardText.textContent = result.data.back;
+                
+                // Nếu đang ở trang học, cập nhật nội dung thẻ ngay lập tức
+                if (mainCardText && document.getElementById('jsData')) {
+                    const isFront = document.getElementById('jsData').dataset.isFront === 'true';
+                    mainCardText.textContent = isFront ? result.data.front : result.data.back;
                 }
                 
                 setTimeout(() => {
                     editSaveStatus.style.opacity = 0;
                     closeEditModal();
+                    // Nếu không ở trang học (ví dụ: trang feedback), tải lại trang để thấy thay đổi
+                    if (!mainCardText) {
+                        window.location.reload();
+                    }
                 }, 1500);
             } else {
                 throw new Error(result.message || 'Lỗi không xác định khi lưu.');
@@ -115,8 +139,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- BẮT ĐẦU THÊM MỚI: Logic tái tạo audio ---
+    /**
+     * Mô tả: Tái tạo audio cho một mặt của thẻ.
+     */
     async function regenerateAudio(side, button) {
+        if (!currentFlashcardId) return;
         const originalIcon = button.innerHTML;
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         button.disabled = true;
@@ -126,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
         editSaveStatus.style.opacity = 1;
 
         try {
-            const response = await fetch(`/api/flashcard/regenerate_audio/${flashcardId}/${side}`, {
+            const response = await fetch(`/api/flashcard/regenerate_audio/${currentFlashcardId}/${side}`, {
                 method: 'POST',
             });
             const result = await response.json();
@@ -150,24 +177,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Gắn sự kiện cho tất cả các nút có class '.open-edit-btn'
+    document.querySelectorAll('.open-edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            currentFlashcardId = this.dataset.flashcardId;
+            openEditModal();
+        });
+    });
+
+    // Gắn sự kiện cho các nút trong modal
+    if (closeEditBtn) closeEditBtn.addEventListener('click', closeEditModal);
+    if (saveEditBtn) saveEditBtn.addEventListener('click', saveCardChanges);
+    
     document.querySelectorAll('.regenerate-audio-btn').forEach(button => {
         button.addEventListener('click', function() {
             const side = this.dataset.side;
             regenerateAudio(side, this);
         });
     });
-    // --- KẾT THÚC THÊM MỚI ---
 
-    if (openEditBtn) {
-        openEditBtn.addEventListener('click', openEditModal);
-    }
-    if (closeEditBtn) {
-        closeEditBtn.addEventListener('click', closeEditModal);
-    }
-    if (saveEditBtn) {
-        saveEditBtn.addEventListener('click', saveCardChanges);
-    }
-
+    // Đóng modal khi click ra ngoài
     window.addEventListener('click', function(event) {
         if (event.target === editModal) {
             closeEditModal();

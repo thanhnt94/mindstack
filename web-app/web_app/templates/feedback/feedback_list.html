@@ -3,69 +3,101 @@
 
 {% block head_extra %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_modal.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="container feedback-container">
     
-    <!-- BẮT ĐẦU THAY ĐỔI: Phần Feedback bạn đã gửi -->
+    <!-- Phần Feedback bạn đã gửi -->
     <div class="admin-panel">
         <div class="admin-panel-header">
             <h1><i class="fas fa-paper-plane"></i> Feedback bạn đã gửi</h1>
+            <form method="GET" action="{{ url_for('feedback.list_feedback') }}" class="feedback-filter-form">
+                <input type="hidden" name="filter_received" value="{{ current_filter_received }}">
+                <select name="filter_sent" onchange="this.form.submit()">
+                    <option value="all" {% if current_filter_sent == 'all' %}selected{% endif %}>Tất cả trạng thái</option>
+                    <option value="new" {% if current_filter_sent == 'new' %}selected{% endif %}>Chưa giải quyết</option>
+                    <option value="seen" {% if current_filter_sent == 'seen' %}selected{% endif %}>Đã tiếp nhận</option>
+                    <option value="resolved" {% if current_filter_sent == 'resolved' %}selected{% endif %}>Đã giải quyết</option>
+                </select>
+            </form>
         </div>
 
         {% if feedbacks_sent %}
-            <div class="table-responsive">
-                <table class="data-table feedback-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nội dung</th>
-                            <th>Mục liên quan</th>
-                            <th>Trạng thái</th>
-                            <th>Thời gian gửi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for fb in feedbacks_sent %}
-                        <tr>
-                            <td>{{ fb.feedback_id }}</td>
-                            <td class="feedback-content-cell">{{ fb.content }}</td>
-                            <td>
-                                {% if fb.flashcard %}
-                                    <span class="feedback-item-type">Flashcard</span>
-                                    <div class="feedback-item-details">
-                                        <strong>Bộ:</strong> {{ fb.flashcard.vocabulary_set.title }}<br>
-                                        <strong>Trước:</strong> {{ fb.flashcard.front[:50] }}...
-                                    </div>
-                                {% elif fb.quiz_question %}
-                                    <span class="feedback-item-type">Quiz</span>
-                                     <div class="feedback-item-details">
-                                        <strong>Bộ:</strong> {{ fb.quiz_question.question_set.title }}<br>
-                                        <strong>Câu hỏi:</strong> {{ fb.quiz_question.question[:50] }}...
-                                    </div>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <span class="status-badge status-{{ fb.status }}">{{ fb.status }}</span>
-                            </td>
-                            <td>{{ fb.timestamp | format_unix_timestamp }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="feedback-card-list">
+                {% for fb in feedbacks_sent %}
+                <div class="feedback-card">
+                    <div class="feedback-card-main">
+                        <div class="feedback-content-wrapper">
+                            {# BẮT ĐẦU THAY ĐỔI: Thêm khối và tiêu đề cho feedback của người dùng #}
+                            <div class="user-feedback-section">
+                                <h4 class="feedback-section-title">Góp ý của bạn</h4>
+                                <p class="feedback-content-user">{{ fb.content }}</p>
+                            </div>
+                            {# KẾT THÚC THAY ĐỔI #}
+                            {% if fb.resolver_comment %}
+                            <div class="resolver-comment">
+                                <h4 class="resolver-comment-header">
+                                    Phản hồi từ {{ fb.resolver.username or 'Admin' }}
+                                </h4>
+                                <p class="resolver-comment-body">{{ fb.resolver_comment }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="feedback-item-wrapper">
+                            {% if fb.flashcard %}
+                                <span class="feedback-item-type">Flashcard</span>
+                                <div class="feedback-item-details">
+                                    <strong>Bộ:</strong> {{ fb.flashcard.vocabulary_set.title }}<br>
+                                    <strong>Trước:</strong> {{ fb.flashcard.front[:50] }}...
+                                </div>
+                            {% elif fb.quiz_question %}
+                                <span class="feedback-item-type">Quiz</span>
+                                 <div class="feedback-item-details">
+                                    <strong>Bộ:</strong> {{ fb.quiz_question.question_set.title }}<br>
+                                    <strong>Câu hỏi:</strong> {{ fb.quiz_question.question[:50] }}...
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="feedback-card-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Trạng thái</span>
+                            {% set status_map = {'new': 'Chưa giải quyết', 'seen': 'Đã tiếp nhận', 'resolved': 'Đã giải quyết'} %}
+                            <span class="status-badge status-{{ fb.status }}">{{ status_map.get(fb.status, fb.status) }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Thời gian gửi</span>
+                            <span class="meta-value">{{ fb.timestamp | format_unix_timestamp }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Hoàn thành</span>
+                            <span class="meta-value">{{ fb.resolved_timestamp | format_unix_timestamp if fb.resolved_timestamp else 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         {% else %}
-            <p>Bạn chưa gửi feedback nào.</p>
+            <p class="empty-message">Bạn chưa gửi feedback nào.</p>
         {% endif %}
     </div>
-    <!-- KẾT THÚC THAY ĐỔI -->
 
-    <!-- BẮT ĐẦU THAY ĐỔI: Phần Feedback nhận được (chỉ hiển thị nếu có) -->
+    <!-- Phần Feedback nhận được (chỉ hiển thị nếu có) -->
     {% if feedbacks_received %}
     <div class="admin-panel" style="margin-top: 40px;">
         <div class="admin-panel-header">
             <h1><i class="fas fa-inbox"></i> Feedback nhận được</h1>
+            <form method="GET" action="{{ url_for('feedback.list_feedback') }}" class="feedback-filter-form">
+                <input type="hidden" name="filter_sent" value="{{ current_filter_sent }}">
+                <select name="filter_received" onchange="this.form.submit()">
+                    <option value="all" {% if current_filter_received == 'all' %}selected{% endif %}>Tất cả trạng thái</option>
+                    <option value="new" {% if current_filter_received == 'new' %}selected{% endif %}>Chưa giải quyết</option>
+                    <option value="seen" {% if current_filter_received == 'seen' %}selected{% endif %}>Đã tiếp nhận</option>
+                    <option value="resolved" {% if current_filter_received == 'resolved' %}selected{% endif %}>Đã giải quyết</option>
+                </select>
+            </form>
         </div>
 
         <div class="table-responsive">
@@ -76,9 +108,7 @@
                         <th>Người gửi</th>
                         <th>Nội dung</th>
                         <th>Mục liên quan</th>
-                        <th>Trạng thái</th>
-                        <th>Thời gian</th>
-                        <th>Hành động</th>
+                        <th>Hành động & Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -103,17 +133,33 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="status-badge status-{{ fb.status }}">{{ fb.status }}</span>
-                        </td>
-                        <td>{{ fb.timestamp | format_unix_timestamp }}</td>
-                        <td>
-                            <form action="{{ url_for('feedback.update_status', feedback_id=fb.feedback_id) }}" method="POST">
-                                <select name="status" class="form-control-small">
-                                    <option value="new" {% if fb.status == 'new' %}selected{% endif %}>Mới</option>
-                                    <option value="seen" {% if fb.status == 'seen' %}selected{% endif %}>Đã xem</option>
-                                    <option value="resolved" {% if fb.status == 'resolved' %}selected{% endif %}>Đã giải quyết</option>
-                                </select>
-                                <button type="submit" class="button primary small-button">Cập nhật</button>
+                            <form action="{{ url_for('feedback.update_status', feedback_id=fb.feedback_id) }}" method="POST" class="feedback-action-form">
+                                <fieldset {% if fb.status == 'resolved' %}disabled{% endif %}>
+                                    <div class="form-group">
+                                        <label for="status-{{ fb.feedback_id }}">Trạng thái:</label>
+                                        <select name="status" id="status-{{ fb.feedback_id }}" class="form-control-small">
+                                            <option value="new" {% if fb.status == 'new' %}selected{% endif %}>Chưa giải quyết</option>
+                                            <option value="seen" {% if fb.status == 'seen' %}selected{% endif %}>Đã tiếp nhận</option>
+                                            <option value="resolved" {% if fb.status == 'resolved' %}selected{% endif %}>Đã giải quyết</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="comment-{{ fb.feedback_id }}">Phản hồi:</label>
+                                        <textarea name="resolver_comment" id="comment-{{ fb.feedback_id }}" class="form-control-small" rows="3" placeholder="Chỉ có thể phản hồi khi ở trạng thái 'Đã tiếp nhận'" {% if fb.status == 'new' %}disabled{% endif %}>{{ fb.resolver_comment or '' }}</textarea>
+                                    </div>
+                                    <div class="button-group" style="justify-content: flex-start;">
+                                        <button type="submit" class="button primary small-button"><i class="fas fa-save"></i> Lưu</button>
+                                        {% if fb.flashcard %}
+                                            <button type="button" class="button warning small-button open-edit-btn" data-flashcard-id="{{ fb.flashcard.flashcard_id }}">
+                                                <i class="fas fa-edit"></i> Sửa Thẻ
+                                            </button>
+                                        {% elif fb.quiz_question %}
+                                            <button type="button" class="button warning small-button open-quiz-edit-btn" data-question-id="{{ fb.quiz_question.question_id }}">
+                                                <i class="fas fa-edit"></i> Sửa Câu hỏi
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </fieldset>
                             </form>
                         </td>
                     </tr>
@@ -123,7 +169,80 @@
         </div>
     </div>
     {% endif %}
-    <!-- KẾT THÚC THAY ĐỔI -->
-
 </div>
+
+<!-- Modal Sửa Flashcard -->
+<div id="edit-modal" class="edit-modal">
+    <div class="edit-modal-content">
+        <span id="edit-modal-close-btn" class="edit-modal-close-btn">&times;</span>
+        <h2>Sửa Flashcard</h2>
+        <div class="edit-modal-body">
+            <div class="form-group"><label for="edit-front">Mặt trước:</label><textarea id="edit-front" rows="3"></textarea></div>
+            <div class="form-group"><label for="edit-back">Mặt sau:</label><textarea id="edit-back" rows="4"></textarea></div>
+            <div class="form-group audio-edit-group">
+                <label for="edit-front-audio">Nội dung Audio mặt trước:</label>
+                <div class="input-with-button">
+                    <textarea id="edit-front-audio" rows="2" placeholder="Ví dụ: en:Hello"></textarea>
+                    <button type="button" class="button secondary small-button regenerate-audio-btn" data-side="front" title="Tái tạo audio mặt trước"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+            <div class="form-group audio-edit-group">
+                <label for="edit-back-audio">Nội dung Audio mặt sau:</label>
+                <div class="input-with-button">
+                    <textarea id="edit-back-audio" rows="2" placeholder="Ví dụ: vi:Xin chào"></textarea>
+                    <button type="button" class="button secondary small-button regenerate-audio-btn" data-side="back" title="Tái tạo audio mặt sau"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+            <div class="form-group"><label for="edit-front-img">URL ảnh mặt trước:</label><input type="text" id="edit-front-img" placeholder="Để trống nếu không có"></div>
+            <div class="form-group"><label for="edit-back-img">URL ảnh mặt sau:</label><input type="text" id="edit-back-img" placeholder="Để trống nếu không có"></div>
+        </div>
+        <div class="edit-modal-footer">
+            <span id="edit-save-status"></span>
+            <button id="save-edit-btn" class="button primary">Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa câu hỏi Quiz -->
+<div id="quiz-edit-modal" class="edit-modal">
+    <div class="edit-modal-content">
+        <span id="quiz-edit-modal-close-btn" class="quiz-edit-modal-close-btn">&times;</span>
+        <h2>Sửa Câu hỏi Quiz</h2>
+        <div class="edit-modal-body">
+            <div class="form-group">
+                <label for="edit-passage-content">Nội dung đoạn văn:</label>
+                <textarea id="edit-passage-content" rows="5"></textarea>
+                <small id="passage-edit-info" style="display: none; color: #6c757d; font-style: italic; margin-top: 5px;">
+                    Chỉnh sửa đoạn văn ở đây sẽ cập nhật cho tất cả các câu hỏi sử dụng cùng đoạn văn này.
+                </small>
+            </div>
+            <div class="form-group">
+                <label for="edit-passage-order">Thứ tự trong đoạn văn:</label>
+                <input type="number" id="edit-passage-order" placeholder="Để trống nếu không thuộc đoạn văn">
+            </div>
+            <div class="form-group"><label for="edit-pre-question-text">Văn bản trước câu hỏi:</label><textarea id="edit-pre-question-text" rows="2"></textarea></div>
+            <div class="form-group"><label for="edit-question">Nội dung câu hỏi:</label><textarea id="edit-question" rows="3"></textarea></div>
+            <div class="form-group"><label for="edit-option-a">Lựa chọn A:</label><input type="text" id="edit-option-a" required></div>
+            <div class="form-group"><label for="edit-option-b">Lựa chọn B:</label><input type="text" id="edit-option-b" required></div>
+            <div class="form-group"><label for="edit-option-c">Lựa chọn C:</label><input type="text" id="edit-option-c"></div>
+            <div class="form-group"><label for="edit-option-d">Lựa chọn D:</label><input type="text" id="edit-option-d"></div>
+            <div class="form-group">
+                <label for="edit-correct-answer">Đáp án đúng:</label>
+                <select id="edit-correct-answer" required>
+                    <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+                </select>
+            </div>
+            <div class="form-group"><label for="edit-guidance">Giải thích:</label><textarea id="edit-guidance" rows="3"></textarea></div>
+        </div>
+        <div class="edit-modal-footer">
+            <span id="quiz-edit-save-status"></span>
+            <button id="save-quiz-edit-btn" class="button primary">Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+    <script src="{{ url_for('static', filename='js/edit_handler.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/quiz_edit_handler.js') }}"></script>
 {% endblock %}

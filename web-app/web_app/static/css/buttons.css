@@ -1,31 +1,28 @@
 /*
  * buttons.css
  * Mô tả: Chứa các kiểu CSS dành riêng cho tất cả các loại nút (buttons) trong ứng dụng.
- * Bao gồm kiểu dáng chung cho nút, các biến thể màu sắc (primary, success, danger, v.v.),
- * và các nút điều khiển nhỏ hơn.
  */
 
-/* Nút điều khiển chung (Bộ, Chế độ, Lật thẻ, đánh giá) */
+/* Nút điều khiển chung */
 .control-button {
-    display: inline-flex; /* Sử dụng inline-flex để căn chỉnh nội dung */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 12px; /* Padding nhỏ hơn */
-    border-radius: 6px; /* Bo tròn vừa phải */
+    padding: 6px 12px;
+    border-radius: 6px;
     text-decoration: none;
     font-weight: bold;
-    font-size: 0.85em; /* Cỡ chữ nhỏ hơn */
+    font-size: 0.85em;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.2s ease;
     border: 1px solid #ccc;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    white-space: nowrap; /* Ngăn văn bản xuống dòng */
+    white-space: nowrap;
 }
 
-.control-button .fas, .control-button .far, .control-button .fab { /* BẮT ĐẦU THÊM MỚI: Khoảng cách cho icon trong control-button */
+.control-button .fas, .control-button .far, .control-button .fab {
     margin-right: 5px;
 }
-/* KẾT THÚC THÊM MỚI */
 
 .control-button:hover {
     transform: translateY(-1px);
@@ -33,8 +30,8 @@
 }
 
 .control-button.set-button {
-    background-color: #e0f2f7; /* Màu nền xanh nhạt */
-    color: #2196f3; /* Màu chữ xanh */
+    background-color: #e0f2f7;
+    color: #2196f3;
     border-color: #b3e5fc;
 }
 
@@ -43,8 +40,8 @@
 }
 
 .control-button.mode-button {
-    background-color: #e8f5e9; /* Màu nền xanh lá nhạt */
-    color: #4caf50; /* Màu chữ xanh lá */
+    background-color: #e8f5e9;
+    color: #4caf50;
     border-color: #c8e6c9;
 }
 
@@ -52,97 +49,54 @@
     background-color: #d8eed9;
 }
 
-/* Nhóm các nút đánh giá (Chưa nhớ, Mơ hồ, Nhớ) */
+/* Nhóm các nút đánh giá */
 .button-group {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    justify-content: center; /* Đảm bảo các nút được căn giữa */
-    width: 100%; /* Đảm bảo nhóm nút chiếm toàn bộ chiều rộng của footer */
+    justify-content: center;
+    width: 100%;
 }
 
 /* Kiểu dáng chung cho tất cả các nút */
 .button {
-    display: inline-flex; /* Sử dụng inline-flex để căn chỉnh nội dung và chiều rộng tự động */
-    align-items: center; /* Căn giữa nội dung theo chiều dọc */
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
     padding: 12px 25px;
-    border-radius: 8px; /* Bo tròn góc */
+    border-radius: 8px;
     text-decoration: none;
     font-weight: bold;
     font-size: 1em;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.3s ease;
     border: none;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: auto; /* Đảm bảo chiều rộng tự động */
-    max-width: 200px; /* Giới hạn chiều rộng tối đa cho nút */
+    width: auto;
+    max-width: 200px;
 }
 
-.button .fas, .button .far, .button .fab { /* BẮT ĐẦU THÊM MỚI: Khoảng cách cho icon trong button */
-    margin-right: 8px; /* Khoảng cách giữa icon và text */
+.button .fas, .button .far, .button .fab {
+    margin-right: 8px;
 }
-/* KẾT THÚC THÊM MỚI */
 
 .button:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-.button.primary {
-    background-color: #007bff;
-    color: white;
-}
-
-.button.primary:hover {
-    background-color: #0056b3;
-}
-
-.button.success {
-    background-color: #28a745;
-    color: white;
-}
-
-.button.success:hover {
-    background-color: #218838;
-}
-
-.button.warning {
-    background-color: #ffc107;
-    color: #333;
-}
-
-.button.warning:hover {
-    background-color: #e0a800;
-}
-
-.button.danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.button.danger:hover {
-    background-color: #c82333;
-}
-
-.button.secondary {
-    background-color: #6c757d;
-    color: white;
-}
-
-.button.secondary:hover {
-    background-color: #5a6268;
-}
-
-/* Kiểu cho nút AI */
-.button.ai-button {
-    background-color: #8e44ad; /* Màu tím */
-    color: white;
-}
-
-.button.ai-button:hover {
-    background-color: #6c3483;
-}
+.button.primary { background-color: #007bff; color: white; }
+.button.primary:hover { background-color: #0056b3; }
+.button.success { background-color: #28a745; color: white; }
+.button.success:hover { background-color: #218838; }
+.button.warning { background-color: #ffc107; color: #333; }
+.button.warning:hover { background-color: #e0a800; }
+.button.danger { background-color: #dc3545; color: white; }
+.button.danger:hover { background-color: #c82333; }
+.button.secondary { background-color: #6c757d; color: white; }
+.button.secondary:hover { background-color: #5a6268; }
+.button.ai-button { background-color: #8e44ad; color: white; }
+.button.ai-button:hover { background-color: #6c3483; }
 
 /* BẮT ĐẦU THÊM MỚI: Kiểu cho nút Feedback */
 .button.feedback-button {
@@ -159,20 +113,19 @@
     padding: 5px 10px;
     font-size: 0.75em;
     border-radius: 5px;
-    margin-right: 5px; /* Khoảng cách giữa các nút */
+    margin-right: 5px;
 }
 
 .small-button .fas {
     margin-right: 5px;
 }
 
-/* Điều chỉnh responsive cho nút */
+/* Responsive cho nút */
 @media (max-width: 768px) {
     .button {
         padding: 10px 20px;
         font-size: 0.9em;
     }
-
     .small-button {
         padding: 3px 6px;
         font-size: 0.65em;

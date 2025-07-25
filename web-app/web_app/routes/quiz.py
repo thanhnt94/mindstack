@@ -7,7 +7,7 @@ from ..config import QUIZ_MODE_DISPLAY_NAMES
 from .decorators import login_required
 from markupsafe import Markup, escape
 import json
-import os # Import os để xử lý đường dẫn
+import os
 
 quiz_bp = Blueprint('quiz', __name__, url_prefix='/quiz')
 logger = logging.getLogger(__name__)
@@ -21,23 +21,28 @@ def _check_quiz_edit_permission(user, question_obj):
     set_creator_id = question_obj.question_set.creator_user_id
     return user.user_role == 'admin' or user.user_id == set_creator_id
 
+# BẮT ĐẦU THÊM MỚI: Hàm kiểm tra quyền gửi feedback
+def _check_quiz_feedback_permission(user, question_obj):
+    """
+    Mô tả: Kiểm tra xem người dùng có quyền gửi feedback cho câu hỏi hay không.
+           Người dùng có thể gửi feedback nếu họ KHÔNG phải là người tạo hoặc admin.
+    """
+    if not user or not question_obj:
+        return False
+    # Nếu người dùng có quyền sửa, họ không cần gửi feedback
+    return not _check_quiz_edit_permission(user, question_obj)
+# KẾT THÚC THÊM MỚI
+
 def _serialize_quiz_question(q_data_dict):
     """
     Mô tả: Chuyển đổi đối tượng QuizQuestion và các dữ liệu liên quan thành một dictionary
            có thể JSON serializable.
-    Args:
-        q_data_dict (dict): Dictionary chứa 'obj' (QuizQuestion), 'can_edit', 'has_note', 'progress'.
-                            và các cờ hiển thị mới.
-    Returns:
-        dict: Dictionary đã được serialize.
     """
     question_obj = q_data_dict['obj']
     question_progress_obj = q_data_dict['progress']
 
-    # BẮT ĐẦU THAY ĐỔI: KHÔNG dùng os.path.basename() nữa, truyền đường dẫn nguyên vẹn
     question_audio_filepath = question_obj.question_audio_file
     question_image_filepath = question_obj.question_image_file
-    # KẾT THÚC THAY ĐỔI
 
     serialized_question = {
         'question_id': question_obj.question_id,
@@ -50,8 +55,8 @@ def _serialize_quiz_question(q_data_dict):
         'option_d': question_obj.option_d,
         'correct_answer': question_obj.correct_answer,
         'guidance': question_obj.guidance,
-        'question_image_file': question_image_filepath, # Sử dụng đường dẫn nguyên vẹn
-        'question_audio_file': question_audio_filepath, # Sử dụng đường dẫn nguyên vẹn
+        'question_image_file': question_image_filepath,
+        'question_audio_file': question_audio_filepath,
         'passage_id': question_obj.passage_id,
         'passage_order': question_obj.passage_order,
     }
@@ -69,6 +74,7 @@ def _serialize_quiz_question(q_data_dict):
     return {
         'obj': serialized_question,
         'can_edit': q_data_dict['can_edit'],
+        'can_feedback': q_data_dict['can_feedback'], # THÊM MỚI
         'has_note': q_data_dict['has_note'],
         'progress': serialized_progress,
         'display_pre_question_text': q_data_dict.get('display_pre_question_text', True),
@@ -94,7 +100,6 @@ def index():
 def take_set(set_id):
     """
     Mô tả: Bắt đầu làm bài hoặc lấy nhóm câu hỏi tiếp theo trong một bộ đề.
-           Có thể là một câu hỏi độc lập hoặc nhiều câu hỏi thuộc một đoạn văn.
     """
     user_id = session.get('user_id')
     log_prefix = f"[QUIZ_ROUTE|TakeSet|User:{user_id}|Set:{set_id}]"
@@ -127,43 +132,29 @@ def take_set(set_id):
     questions_data_for_template = []
     
     previous_pre_question_text = None
-    previous_audio_file = None # Giữ nguyên tên biến, nhưng sẽ chứa full path
-    previous_image_file = None # Giữ nguyên tên biến, nhưng sẽ chứa full path
+    previous_audio_file = None
+    previous_image_file = None
     previous_passage_id = None
 
     common_audio_file_for_group = None
     common_image_file_for_group = None
     
-    if passage: # Nếu đây là nhóm câu hỏi thuộc một đoạn văn
-        # Kiểm tra audio chung
+    if passage:
         first_q_audio_in_group = questions[0].question_audio_file if questions else None
         if first_q_audio_in_group and first_q_audio_in_group.strip():
-            # BẮT ĐẦU THAY ĐỔI: So sánh với đường dẫn đầy đủ
-            all_share_same_audio = True
-            for q_item in questions:
-                if (q_item.question_audio_file or '') != first_q_audio_in_group:
-                    all_share_same_audio = False
-                    break
-            
+            all_share_same_audio = all((q.question_audio_file or '') == first_q_audio_in_group for q in questions)
             if all_share_same_audio:
-                common_audio_file_for_group = first_q_audio_in_group # Lưu đường dẫn đầy đủ
-                logger.debug(f"{log_prefix} Identified common audio for passage group: {common_audio_file_for_group}")
+                common_audio_file_for_group = first_q_audio_in_group
 
-        # Kiểm tra hình ảnh chung cho cả nhóm câu hỏi
         first_q_image_in_group = questions[0].question_image_file if questions else None
         if first_q_image_in_group and first_q_image_in_group.strip():
-            # BẮT ĐẦU THAY ĐỔI: So sánh với đường dẫn đầy đủ
-            all_share_same_image = True
-            for q_item in questions:
-                if (q_item.question_image_file or '') != first_q_image_in_group:
-                    all_share_same_image = False
-                    break
+            all_share_same_image = all((q.question_image_file or '') == first_q_image_in_group for q in questions)
             if all_share_same_image:
-                common_image_file_for_group = first_q_image_in_group # Lưu đường dẫn đầy đủ
-                logger.debug(f"{log_prefix} Identified common image for passage group: {common_image_file_for_group}")
+                common_image_file_for_group = first_q_image_in_group
 
     for i, q in enumerate(questions):
         can_edit_q = _check_quiz_edit_permission(user, q)
+        can_feedback_q = _check_quiz_feedback_permission(user, q) # THÊM MỚI
         note = quiz_note_service.get_note_by_question_id(user_id, q.question_id)
         has_note_q = note is not None
         
@@ -176,30 +167,24 @@ def take_set(set_id):
         display_audio_controls_flag = True
         display_image_controls_flag = True
 
-        # Logic cho pre_question_text: chỉ ẩn nếu là câu hỏi thứ 2 trở đi trong cùng passage và text giống nhau
         if i > 0 and q.passage_id is not None and q.passage_id == questions[i-1].passage_id:
             if q.pre_question_text == previous_pre_question_text:
                 display_pre_question_text_flag = False
         
-        # Logic cho audio controls:
-        # Nếu có audio chung cho cả nhóm, thì ẩn các audio control riêng lẻ
         if common_audio_file_for_group:
             display_audio_controls_flag = False
         elif not q.question_audio_file or not q.question_audio_file.strip():
-            # Nếu không có audio chung và audio riêng lẻ cũng trống, thì ẩn control
             display_audio_controls_flag = False
 
-        # Logic cho image controls
-        # Nếu có image chung cho cả nhóm, thì ẩn các image control riêng lẻ
         if common_image_file_for_group:
             display_image_controls_flag = False
         elif not q.question_image_file or not q.question_image_file.strip():
-            # Nếu không có image chung và image riêng lẻ cũng trống, thì ẩn control
             display_image_controls_flag = False
 
         questions_data_for_template.append({
             'obj': q,
             'can_edit': can_edit_q,
+            'can_feedback': can_feedback_q, # THÊM MỚI
             'has_note': has_note_q,
             'progress': question_progress,
             'display_pre_question_text': display_pre_question_text_flag,
@@ -209,16 +194,13 @@ def take_set(set_id):
         })
         
         previous_pre_question_text = q.pre_question_text
-        # BẮT ĐẦU THAY ĐỔI: Cập nhật biến theo dõi với đường dẫn đầy đủ
         previous_audio_file = q.question_audio_file
         previous_image_file = q.question_image_file
-        # KẾT THÚC THAY ĐỔI
         previous_passage_id = q.passage_id
     
     serialized_questions_data = [_serialize_quiz_question(q_data) for q_data in questions_data_for_template]
     serialized_questions_data_json_safe = escape(json.dumps(serialized_questions_data))
 
-    logger.info(f"{log_prefix} Hiển thị nhóm {len(questions)} câu hỏi. Đầu tiên là ID: {questions[0].question_id} ở chế độ '{current_mode}'")
     return render_template('quiz/take_quiz.html', 
                            questions=questions_data_for_template,
                            current_passage=passage,
@@ -241,12 +223,12 @@ def submit_answers():
     data = request.get_json()
     
     if not data or not isinstance(data, list):
-        return jsonify({'status': 'error', 'message': 'Dữ liệu không hợp lệ. Cần một danh sách các câu trả lời.'}), 400
+        return jsonify({'status': 'error', 'message': 'Dữ liệu không hợp lệ.'}), 400
 
     results = quiz_service.process_user_answers(user_id, data)
     
     if not results or any(r.get('status') == 'error' for r in results):
-        return jsonify({'status': 'error', 'message': 'Lỗi khi xử lý một hoặc nhiều câu trả lời.', 'results': results}), 500
+        return jsonify({'status': 'error', 'message': 'Lỗi khi xử lý câu trả lời.', 'results': results}), 500
 
     return jsonify({'status': 'success', 'message': 'Đã nộp câu trả lời thành công!', 'results': results})
 
