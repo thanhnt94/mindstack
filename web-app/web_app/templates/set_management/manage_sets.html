@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý Bộ thẻ của tôi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h1><i class="fas fa-book-reader"></i> Quản lý Bộ thẻ của tôi</h1>
+        </div>
+
+        <!-- Phần Bộ Flashcard -->
+        <div class="set-management-section">
+            <div class="admin-panel-header">
+                <h2><i class="fas fa-layer-group"></i> Bộ Flashcard</h2>
+                <div class="admin-actions">
+                    <a href="{{ url_for('set_management.add_flashcard_set') }}" class="button primary"><i class="fas fa-plus-circle"></i> Thêm Bộ Flashcard mới</a>
+                </div>
+            </div>
+            {% if flashcard_sets %}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên bộ thẻ</th>
+                                <th>Số thẻ</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for set_item in flashcard_sets %}
+                            <tr>
+                                <td>{{ set_item.set_id }}</td>
+                                <td>{{ set_item.title }}</td>
+                                <td>{{ set_item.flashcard_count }}</td>
+                                <td>
+                                    {% if set_item.is_public %}
+                                        <span style="color: green;">Công khai</span>
+                                    {% else %}
+                                        <span style="color: red;">Riêng tư</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('set_management.edit_flashcard_set', set_id=set_item.set_id) }}" class="button warning small-button"><i class="fas fa-edit"></i> Sửa</a>
+                                    <form action="{{ url_for('set_management.delete_flashcard_set', set_id=set_item.set_id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="button danger small-button" onclick="return confirm('Bạn có chắc chắn muốn xóa bộ thẻ \'{{ set_item.title }}\'?');">
+                                            <i class="fas fa-trash-alt"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>Bạn chưa tạo bộ flashcard nào.</p>
+            {% endif %}
+        </div>
+
+        <!-- Phần Bộ Câu hỏi Quiz -->
+        <div class="set-management-section" style="margin-top: 40px;">
+            <div class="admin-panel-header">
+                <h2><i class="fas fa-tasks"></i> Bộ Câu hỏi Quiz</h2>
+                <div class="admin-actions">
+                    <a href="{{ url_for('set_management.add_quiz_set') }}" class="button primary"><i class="fas fa-plus-circle"></i> Thêm Bộ Quiz mới</a>
+                </div>
+            </div>
+            {% if quiz_sets %}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên bộ câu hỏi</th>
+                                <th>Số câu hỏi</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for set_item in quiz_sets %}
+                            <tr>
+                                <td>{{ set_item.set_id }}</td>
+                                <td>{{ set_item.title }}</td>
+                                <td>{{ set_item.question_count }}</td>
+                                <td>
+                                    {% if set_item.is_public %}
+                                        <span style="color: green;">Công khai</span>
+                                    {% else %}
+                                        <span style="color: red;">Riêng tư</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('set_management.edit_quiz_set', set_id=set_item.set_id) }}" class="button warning small-button"><i class="fas fa-edit"></i> Sửa</a>
+                                    <form action="{{ url_for('set_management.delete_quiz_set', set_id=set_item.set_id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="button danger small-button" onclick="return confirm('Bạn có chắc chắn muốn xóa bộ câu hỏi \'{{ set_item.title }}\'?');">
+                                            <i class="fas fa-trash-alt"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>Bạn chưa tạo bộ câu hỏi quiz nào.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

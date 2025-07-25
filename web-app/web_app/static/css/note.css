@@ -1,32 +1,27 @@
 /*
  * note.css
- * Mô tả: Chứa các kiểu CSS dành riêng cho chức năng ghi chú (note) trên trang học thẻ.
+ * Mô tả: Chứa các kiểu CSS dành riêng cho chức năng ghi chú (note) trên trang học thẻ và quiz.
+ * Đã được thiết kế lại để có giao diện hiện đại, đồng bộ với modal feedback.
  */
 
 /* --- Nút bấm để mở modal ghi chú --- */
-/* * Nút này giờ đây được định kiểu bởi class .header-icon-btn trong flashcard_specific.css
- * và được sắp xếp bởi layout flexbox của .flashcard-header.
- * Chúng ta chỉ giữ lại quy tắc hover để có màu khác biệt.
-*/
 .note-button:hover {
-    color: #3498db; /* Giữ lại màu hover đặc trưng */
+    color: #3498db;
 }
-
-/* --- THÊM MỚI: Kiểu cho nút khi có ghi chú --- */
 .note-button.has-note {
-    color: #3498db; /* Màu xanh dương để báo hiệu có ghi chú */
+    color: #3498db;
 }
-
 .note-button.has-note:hover {
-    color: #2980b9; /* Màu xanh đậm hơn khi hover */
+    color: #2980b9;
 }
 
+/* --- BẮT ĐẦU THAY ĐỔI: Thiết kế lại toàn bộ Modal Ghi chú --- */
 
-/* --- Modal Ghi chú (dựa trên modal.css nhưng có tùy chỉnh) --- */
+/* Lớp nền mờ */
 .note-modal {
-    display: none; /* Ẩn theo mặc định */
+    display: none;
     position: fixed;
-    z-index: 1003; /* Phải cao hơn side-nav-overlay (1001) */
+    z-index: 1003;
     left: 0;
     top: 0;
     width: 100%;
@@ -41,16 +36,22 @@
 .note-modal-content {
     background-color: #fefefe;
     margin: auto;
-    padding: 25px;
+    padding: 25px 30px; /* Tăng padding ngang */
     border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    max-width: 600px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    max-width: 550px; /* Tăng chiều rộng một chút */
     width: 90%;
     position: relative;
-    animation-name: animatetop; /* Hiệu ứng trượt từ trên xuống */
+    animation-name: animatetop;
     animation-duration: 0.4s;
     display: flex;
     flex-direction: column;
+}
+
+/* Hiệu ứng trượt từ trên xuống */
+@keyframes animatetop {
+    from {top: -300px; opacity: 0}
+    to {top: 0; opacity: 1}
 }
 
 /* Nút đóng modal */
@@ -62,6 +63,7 @@
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
+    transition: color 0.2s;
 }
 
 .note-modal-close-btn:hover,
@@ -69,39 +71,61 @@
     color: black;
 }
 
+/* Phần header của modal */
+.note-modal-content h2 {
+    font-size: 1.5em;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.note-modal-content h2 .fas {
+    color: #3498db;
+}
+.note-modal-content p {
+    font-size: 1em;
+    color: #555;
+    margin-top: 0;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
 /* Vùng nhập liệu ghi chú */
-#note-textarea {
+#note-textarea, #quiz-note-textarea {
     width: 100%;
-    height: 250px; /* Chiều cao lớn hơn cho việc ghi chú */
+    height: 200px; /* Giảm chiều cao mặc định một chút */
     padding: 15px;
     font-family: 'Inter', sans-serif;
     font-size: 1em;
     line-height: 1.6;
     border: 1px solid #ddd;
     border-radius: 8px;
-    resize: vertical; /* Cho phép người dùng thay đổi chiều cao */
+    resize: vertical;
     box-sizing: border-box;
-    margin-top: 10px;
     margin-bottom: 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-#note-textarea:focus {
+#note-textarea:focus, #quiz-note-textarea:focus {
     border-color: #007bff;
     outline: none;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
-/* Chân modal chứa nút lưu */
+/* Chân modal chứa nút lưu và trạng thái */
 .note-modal-footer {
-    text-align: right;
+    display: flex;
+    justify-content: flex-end; /* Căn phải nút bấm */
+    align-items: center;
+    gap: 15px;
 }
 
-/* Thông báo lưu (ẩn theo mặc định) */
-#note-save-status {
-    display: inline-block;
-    margin-right: 15px;
-    color: #28a745;
+#note-save-status, #quiz-note-save-status {
+    margin-right: auto; /* Đẩy status về bên trái */
     font-weight: bold;
     opacity: 0;
     transition: opacity 0.5s;
 }
+/* --- KẾT THÚC THAY ĐỔI --- */

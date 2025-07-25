@@ -30,12 +30,10 @@
                 <div class="feedback-card">
                     <div class="feedback-card-main">
                         <div class="feedback-content-wrapper">
-                            {# BẮT ĐẦU THAY ĐỔI: Thêm khối và tiêu đề cho feedback của người dùng #}
                             <div class="user-feedback-section">
                                 <h4 class="feedback-section-title">Góp ý của bạn</h4>
                                 <p class="feedback-content-user">{{ fb.content }}</p>
                             </div>
-                            {# KẾT THÚC THAY ĐỔI #}
                             {% if fb.resolver_comment %}
                             <div class="resolver-comment">
                                 <h4 class="resolver-comment-header">
@@ -56,7 +54,9 @@
                                 <span class="feedback-item-type">Quiz</span>
                                  <div class="feedback-item-details">
                                     <strong>Bộ:</strong> {{ fb.quiz_question.question_set.title }}<br>
-                                    <strong>Câu hỏi:</strong> {{ fb.quiz_question.question[:50] }}...
+                                    {# BẮT ĐẦU SỬA LỖI: Kiểm tra trước khi cắt chuỗi #}
+                                    <strong>Câu hỏi:</strong> {{ (fb.quiz_question.question[:50] + '...') if fb.quiz_question.question else '[Câu hỏi không có văn bản]' }}
+                                    {# KẾT THÚC SỬA LỖI #}
                                 </div>
                             {% endif %}
                         </div>
@@ -128,7 +128,9 @@
                                 <span class="feedback-item-type">Quiz</span>
                                  <div class="feedback-item-details">
                                     <strong>Bộ:</strong> {{ fb.quiz_question.question_set.title }}<br>
-                                    <strong>Câu hỏi:</strong> {{ fb.quiz_question.question[:50] }}...
+                                    {# BẮT ĐẦU SỬA LỖI: Kiểm tra trước khi cắt chuỗi #}
+                                    <strong>Câu hỏi:</strong> {{ (fb.quiz_question.question[:50] + '...') if fb.quiz_question.question else '[Câu hỏi không có văn bản]' }}
+                                    {# KẾT THÚC SỬA LỖI #}
                                 </div>
                             {% endif %}
                         </td>

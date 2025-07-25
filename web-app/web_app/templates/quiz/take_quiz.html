@@ -48,9 +48,7 @@
             {% for q_data in questions %}
                 {% set question = q_data.obj %}
                 {% set can_edit = q_data.can_edit %}
-                {# BẮT ĐẦU THAY ĐỔI: Thêm biến can_feedback #}
                 {% set can_feedback = q_data.can_feedback %}
-                {# KẾT THÚC THAY ĐỔI #}
                 {% set has_note = q_data.has_note %}
                 {% set question_progress = q_data.progress %}
                 {% set display_pre_question_text = q_data.display_pre_question_text %}
@@ -152,7 +150,6 @@
                             <button type="button" class="button secondary small-button open-quiz-note-btn {% if has_note %}has-note{% endif %}" data-question-id="{{ question.question_id }}">
                                 <i class="fas fa-pencil-alt"></i> Ghi chú
                             </button>
-                            {# BẮT ĐẦU THAY ĐỔI: Thêm nút Feedback #}
                             {% if can_edit %}
                             <button type="button" class="button warning small-button open-quiz-edit-btn" data-question-id="{{ question.question_id }}">
                                 <i class="fas fa-edit"></i> Sửa
@@ -162,7 +159,6 @@
                                 <i class="fas fa-flag"></i> Feedback
                             </button>
                             {% endif %}
-                            {# KẾT THÚC THAY ĐỔI #}
                         </div>
                     </div>
                 </div>
@@ -177,10 +173,11 @@
 </div>
 
 <!-- Modal Ghi chú -->
+{# BẮT ĐẦU THAY ĐỔI: Cập nhật cấu trúc HTML của modal ghi chú #}
 <div id="quiz-note-modal" class="note-modal" style="display: none;">
     <div class="note-modal-content">
         <span id="quiz-note-modal-close-btn" class="note-modal-close-btn">&times;</span>
-        <h2>Ghi chú cá nhân</h2>
+        <h2><i class="fas fa-pencil-alt"></i> Ghi chú cá nhân</h2>
         <p>Ghi chú của bạn cho câu hỏi này.</p>
         <textarea id="quiz-note-textarea" placeholder="Viết ghi chú của bạn vào đây..."></textarea>
         <div class="note-modal-footer">
@@ -189,6 +186,7 @@
         </div>
     </div>
 </div>
+{# KẾT THÚC THAY ĐỔI #}
 
 <!-- Modal Sửa câu hỏi -->
 <div id="quiz-edit-modal" class="edit-modal" style="display: none;">
@@ -227,7 +225,6 @@
     </div>
 </div>
 
-{# BẮT ĐẦU THÊM MỚI: Modal gửi Feedback (dùng chung) #}
 <div id="feedback-modal" class="feedback-modal">
     <div class="feedback-modal-content">
         <span id="feedback-modal-close-btn" class="feedback-modal-close-btn">&times;</span>
@@ -240,7 +237,6 @@
         </div>
     </div>
 </div>
-{# KẾT THÚC THÊM MỚI #}
 
 <div id="quizJsData"
      data-quiz-set-id="{{ quiz_set_stats.set_id }}"
@@ -261,7 +257,5 @@
     <script src="{{ url_for('static', filename='js/quiz_edit_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/quiz_audio_image_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/quiz_status_bar_handler.js') }}"></script>
-    {# BẮT ĐẦU THÊM MỚI: Script cho feedback #}
     <script src="{{ url_for('static', filename='js/feedback_handler.js') }}"></script>
-    {# KẾT THÚC THÊM MỚI #}
 {% endblock %}

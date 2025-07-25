@@ -30,13 +30,11 @@
                         <p id="card-side-text" class="card-side">{% if is_front %}Mặt trước{% else %}Mặt sau{% endif %}</p>
                     </div>
                     <div class="header-right">
-                        {# BẮT ĐẦU THAY ĐỔI: Thêm nút Feedback #}
                         {% if can_edit %}
                             <button id="open-edit-btn" class="edit-button header-icon-btn" aria-label="Sửa thẻ"><i class="fas fa-pen-to-square"></i></button>
-                        {% else %}
+                        {% elif can_feedback %}
                             <button class="open-feedback-btn header-icon-btn" data-flashcard-id="{{ flashcard.flashcard_id }}" aria-label="Gửi Feedback"><i class="fas fa-flag"></i></button>
                         {% endif %}
-                        {# KẾT THÚC THAY ĐỔI #}
                         <button id="playAudioButton" class="play-audio-button" aria-label="Phát âm thanh"><i class="fas fa-volume-up"></i></button>
                     </div>
                 </div>
@@ -223,11 +221,12 @@
         </div>
     </nav>
     
+    {# BẮT ĐẦU THAY ĐỔI: Cập nhật cấu trúc HTML của modal ghi chú #}
     <div id="note-modal" class="note-modal">
         <div class="note-modal-content">
             <span id="note-modal-close-btn" class="note-modal-close-btn">&times;</span>
-            <h2>Ghi chú cá nhân</h2>
-            <p>Nội dung bạn viết ở đây sẽ chỉ hiển thị cho riêng bạn.</p>
+            <h2><i class="fas fa-pencil-alt"></i> Ghi chú cá nhân</h2>
+            <p>Nội dung bạn viết ở đây sẽ chỉ hiển thị cho riêng bạn khi xem lại thẻ này.</p>
             <textarea id="note-textarea" placeholder="Viết ghi chú của bạn vào đây..."></textarea>
             <div class="note-modal-footer">
                 <span id="note-save-status"></span>
@@ -235,6 +234,8 @@
             </div>
         </div>
     </div>
+    {# KẾT THÚC THAY ĐỔI #}
+
     <div id="edit-modal" class="edit-modal">
         <div class="edit-modal-content">
             <span id="edit-modal-close-btn" class="edit-modal-close-btn">&times;</span>
@@ -269,7 +270,6 @@
         </div>
     </div>
 
-    {# BẮT ĐẦU THÊM MỚI: Modal gửi Feedback #}
     <div id="feedback-modal" class="feedback-modal">
         <div class="feedback-modal-content">
             <span id="feedback-modal-close-btn" class="feedback-modal-close-btn">&times;</span>
@@ -282,7 +282,6 @@
             </div>
         </div>
     </div>
-    {# KẾT THÚC THÊM MỚI #}
 
     <audio id="cardAudioPlayer" hidden></audio>
     <div id="jsData"
@@ -319,7 +318,5 @@
     <script src="{{ url_for('static', filename='js/note_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edit_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/card_details_handler.js') }}"></script>
-    {# BẮT ĐẦU THÊM MỚI: Script cho feedback #}
     <script src="{{ url_for('static', filename='js/feedback_handler.js') }}"></script>
-    {# KẾT THÚC THÊM MỚI #}
 {% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Chỉnh sửa Bộ thẻ{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h1><i class="fas fa-edit"></i> Chỉnh sửa Bộ thẻ: {{ set_data.title }}</h1>
+            </div>
+            <form method="POST" action="{{ url_for('set_management.edit_flashcard_set', set_id=set_data.set_id) }}" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Tên bộ thẻ (Title): <span class="required-field">*</span></label>
+                    <input type="text" id="title" name="title" value="{{ set_data.title or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Mô tả (Description):</label>
+                    <textarea id="description" name="description" rows="3">{{ set_data.description or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="tags">Thẻ (Tags, cách nhau bởi dấu phẩy):</label>
+                    <input type="text" id="tags" name="tags" value="{{ set_data.tags or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="is_public">Trạng thái:</label>
+                    <select id="is_public" name="is_public">
+                        <option value="1" {% if set_data.is_public %}selected{% endif %}>Công khai (Public)</option>
+                        <option value="0" {% if not set_data.is_public %}selected{% endif %}>Riêng tư (Private)</option>
+                    </select>
+                </div>
+
+                <hr style="margin: 20px 0; border: 1px solid #eee;">
+                <div class="form-group">
+                    <label for="excel_file">Đồng bộ hóa từ file Excel (.xlsx):</label>
+                    <input type="file" id="excel_file" name="excel_file" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    <small style="color: #dc3545; font-weight: bold;">CẢNH BÁO: Tải file lên sẽ GHI ĐÈ toàn bộ nội dung của bộ thẻ này. Các thẻ cũ không có trong file sẽ bị xóa.</small>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="button primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                    <a href="{{ url_for('set_management.manage') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

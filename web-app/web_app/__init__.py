@@ -27,8 +27,7 @@ def create_app():
             tz = timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))
             dt_object = datetime.fromtimestamp(timestamp, tz)
             return dt_object.strftime("%H:%M %d/%m/%Y")
-        except (TypeError, ValueError, OSError) as e:
-            logger.error(f"Lỗi khi định dạng timestamp {timestamp}: {e}", exc_info=True)
+        except (TypeError, ValueError, OSError):
             return "Invalid Date"
 
     @app.template_filter('format_unix_time_only')
@@ -40,39 +39,25 @@ def create_app():
             tz = timezone(timedelta(hours=DEFAULT_TIMEZONE_OFFSET))
             dt_object = datetime.fromtimestamp(timestamp, tz)
             return dt_object.strftime("%H:%M")
-        except (TypeError, ValueError, OSError) as e:
-            logger.error(f"Lỗi khi định dạng time only cho timestamp {timestamp}: {e}", exc_info=True)
+        except (TypeError, ValueError, OSError):
             return "Invalid Time"
 
-    # --- BẮT ĐẦU THAY ĐỔI: Thêm hàm cập nhật last_seen trước mỗi request ---
     @app.before_request
     def update_last_seen():
-        """
-        Mô tả: Tự động cập nhật thời gian hoạt động cuối cùng của người dùng
-               cho mỗi yêu cầu họ thực hiện.
-        """
-        # Chỉ thực hiện nếu người dùng đã đăng nhập
         if 'user_id' in session:
-            # Bỏ qua các yêu cầu không cần thiết như tải file tĩnh để giảm tải cho DB
-            if request.endpoint and (
-                request.endpoint.startswith('static') or
-                request.endpoint.startswith('api.') # Bỏ qua các API call để tối ưu
-            ):
+            if request.endpoint and (request.endpoint.startswith('static') or request.endpoint.startswith('api.')):
                 return
 
             from .models import User
             
             try:
-                # Lấy người dùng và cập nhật thời gian
                 user = User.query.get(session['user_id'])
                 if user:
                     user.last_seen = int(time.time())
                     db.session.commit()
             except Exception as e:
-                # Ghi lại lỗi nhưng không làm gián đoạn yêu cầu của người dùng
                 logger.error(f"Lỗi khi cập nhật last_seen cho user {session['user_id']}: {e}")
                 db.session.rollback()
-    # --- KẾT THÚC THAY ĐỔI ---
 
     @app.before_request
     def check_maintenance_mode():
@@ -93,8 +78,8 @@ def create_app():
             try:
                 with open(MAINTENANCE_CONFIG_PATH, 'r') as f:
                     maintenance_config = json.load(f)
-            except (IOError, json.JSONDecodeError) as e:
-                logger.error(f"Lỗi khi đọc file cấu hình bảo trì: {e}")
+            except (IOError, json.JSONDecodeError):
+                pass
         
         is_active = maintenance_config.get('is_active', False)
         end_timestamp = maintenance_config.get('end_timestamp', 0)
@@ -115,6 +100,7 @@ def create_app():
     from .routes.main import main_bp
     from .routes.user import user_bp
     from .routes.feedback import feedback_bp
+    from .routes.set_management import set_management_bp # BẮT ĐẦU THÊM MỚI
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(flashcard_bp, url_prefix='/flashcard')
@@ -124,6 +110,6 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(feedback_bp)
+    app.register_blueprint(set_management_bp) # BẮT ĐẦU THÊM MỚI
 
-    logger.info("Ứng dụng Flask đã được khởi tạo và cấu hình với các route đã tách.")
     return app
