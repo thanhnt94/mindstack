@@ -38,7 +38,6 @@
 
 
 {# --- Macro chính để hiển thị toàn bộ trang chọn bộ --- #}
-{# BẮT ĐẦU SỬA: Thêm 'user' vào danh sách tham số của macro #}
 {% macro render_set_selection_page(
     user,
     started_tab_title,
@@ -46,10 +45,20 @@
     started_sets_pagination,
     new_sets_pagination,
     set_type,
-    learn_endpoint
+    learn_endpoint,
+    search_query
 ) %}
-{# KẾT THÚC SỬA #}
 <div class="container select-set-container">
+
+    {# BẮT ĐẦU THÊM MỚI: Thanh tìm kiếm #}
+    <div class="search-bar-container">
+        <form method="GET" action="{{ url_for(request.endpoint) }}">
+            <input type="text" name="q" class="search-input" placeholder="Tìm kiếm theo tên hoặc mô tả..." value="{{ search_query or '' }}">
+            <button type="submit" class="button primary"><i class="fas fa-search"></i> Tìm</button>
+        </form>
+    </div>
+    {# KẾT THÚC THÊM MỚI #}
+
     <div class="tab-container">
         <div class="tab-navigation">
             <button class="tab-button active" data-tab="my-sets">{{ started_tab_title }}</button>
@@ -92,7 +101,7 @@
                             </li>
                         {% endfor %}
                     </ul>
-                    {{ render_pagination(started_sets_pagination, request.endpoint, 'page_started', {'page_new': new_sets_pagination.page}) }}
+                    {{ render_pagination(started_sets_pagination, request.endpoint, 'page_started', {'page_new': new_sets_pagination.page, 'q': search_query}) }}
                 {% else %}
                     <p class="empty-message">Bạn chưa bắt đầu bộ nào. Hãy khám phá ngay!</p>
                 {% endif %}
@@ -117,7 +126,7 @@
                             </li>
                         {% endfor %}
                     </ul>
-                    {{ render_pagination(new_sets_pagination, request.endpoint, 'page_new', {'page_started': started_sets_pagination.page}) }}
+                    {{ render_pagination(new_sets_pagination, request.endpoint, 'page_new', {'page_started': started_sets_pagination.page, 'q': search_query}) }}
                 {% else %}
                     <p class="empty-message">Không có bộ mới nào để khám phá.</p>
                 {% endif %}

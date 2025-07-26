@@ -2,7 +2,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request
 import logging
 import json
-from sqlalchemy import func
+# BẮT ĐẦU SỬA: Import thêm `or_` từ sqlalchemy
+from sqlalchemy import func, or_
+# KẾT THÚC SỬA
 from ..services import learning_logic_service, stats_service, note_service
 from ..models import db, User, VocabularySet, Flashcard, UserFlashcardProgress
 from ..config import LEARNING_MODE_DISPLAY_NAMES, MODE_AUTOPLAY_REVIEW, SETS_PER_PAGE, MODE_NEW_CARDS_ONLY, MODE_SEQUENTIAL_LEARNING, MODE_REVIEW_ALL_DUE, MODE_REVIEW_HARDEST
@@ -63,12 +65,27 @@ def index():
     
     page_started = request.args.get('page_started', 1, type=int)
     page_new = request.args.get('page_new', 1, type=int)
+    # BẮT ĐẦU THÊM MỚI: Lấy tham số tìm kiếm
+    search_query = request.args.get('q', None)
+    # KẾT THÚC THÊM MỚI
 
     progressed_set_ids = {row[0] for row in db.session.query(Flashcard.set_id).join(UserFlashcardProgress).filter(UserFlashcardProgress.user_id == user_id).distinct().all()}
 
     started_sets_with_progress = []
     if progressed_set_ids:
-        started_sets_raw = VocabularySet.query.filter(VocabularySet.set_id.in_(progressed_set_ids)).all()
+        # BẮT ĐẦU SỬA: Thêm logic lọc tìm kiếm cho các bộ đã bắt đầu
+        started_sets_query = VocabularySet.query.filter(VocabularySet.set_id.in_(progressed_set_ids))
+        if search_query:
+            search_term = f"%{search_query}%"
+            started_sets_query = started_sets_query.filter(
+                or_(
+                    VocabularySet.title.ilike(search_term),
+                    VocabularySet.description.ilike(search_term)
+                )
+            )
+        started_sets_raw = started_sets_query.all()
+        # KẾT THÚC SỬA
+
         total_cards_map = dict(db.session.query(Flashcard.set_id, func.count(Flashcard.flashcard_id)).filter(Flashcard.set_id.in_(progressed_set_ids)).group_by(Flashcard.set_id).all())
         learned_cards_map = dict(db.session.query(Flashcard.set_id, func.count(db.distinct(UserFlashcardProgress.flashcard_id))).join(Flashcard).filter(UserFlashcardProgress.user_id == user_id, Flashcard.set_id.in_(progressed_set_ids), UserFlashcardProgress.learned_date.isnot(None)).group_by(Flashcard.set_id).all())
         for set_item in started_sets_raw:
@@ -83,13 +100,25 @@ def index():
     paginated_started_sets_items = sorted_started_sets[start_index_started:end_index_started]
     started_sets_pagination = CustomPagination(page_started, SETS_PER_PAGE, total_items_started, paginated_started_sets_items)
 
-    new_sets_query = VocabularySet.query.filter(VocabularySet.is_public == 1, VocabularySet.set_id.notin_(progressed_set_ids)).order_by(VocabularySet.title.asc())
+    # BẮT ĐẦU SỬA: Thêm logic lọc tìm kiếm cho các bộ mới
+    new_sets_query = VocabularySet.query.filter(VocabularySet.is_public == 1, VocabularySet.set_id.notin_(progressed_set_ids))
+    if search_query:
+        search_term = f"%{search_query}%"
+        new_sets_query = new_sets_query.filter(
+            or_(
+                VocabularySet.title.ilike(search_term),
+                VocabularySet.description.ilike(search_term)
+            )
+        )
+    new_sets_query = new_sets_query.order_by(VocabularySet.title.asc())
+    # KẾT THÚC SỬA
     new_sets_pagination = new_sets_query.paginate(page=page_new, per_page=SETS_PER_PAGE, error_out=False)
     
     return render_template('flashcard/select_set.html', 
                            user=user, 
                            started_sets_pagination=started_sets_pagination,
-                           new_sets_pagination=new_sets_pagination)
+                           new_sets_pagination=new_sets_pagination,
+                           search_query=search_query) # Thêm search_query vào context
 
 @flashcard_bp.route('/go-to-learn')
 @login_required
@@ -120,10 +149,8 @@ def learn_set(set_id):
     context_stats = stats_service.get_user_stats_for_context(user_id, set_id)
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
     
-    # BẮT ĐẦU THAY ĐỔI: Logic phân quyền Sửa/Feedback
     can_edit = (user.user_id == flashcard_obj.vocabulary_set.creator_user_id)
     can_feedback = not can_edit
-    # KẾT THÚC THAY ĐỔI
     
     note = note_service.get_note_by_flashcard_id(user_id, flashcard_obj.flashcard_id)
     has_note = note is not None
@@ -135,7 +162,7 @@ def learn_set(set_id):
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
         audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
         can_edit=can_edit,
-        can_feedback=can_feedback, # Thêm biến mới
+        can_feedback=can_feedback,
         has_note=has_note,
         current_mode=user.current_mode,
         set_total_cards=context_stats['set_total_cards'],
@@ -159,10 +186,8 @@ def flip_card(progress_id):
     context_stats = stats_service.get_user_stats_for_context(user.user_id, flashcard_obj.set_id)
     user_audio_settings = {'front_audio_enabled': user.front_audio == 1, 'back_audio_enabled': user.back_audio == 1}
 
-    # BẮT ĐẦU THAY ĐỔI: Logic phân quyền Sửa/Feedback
     can_edit = (user.user_id == flashcard_obj.vocabulary_set.creator_user_id)
     can_feedback = not can_edit
-    # KẾT THÚC THAY ĐỔI
 
     note = note_service.get_note_by_flashcard_id(user.user_id, flashcard_obj.flashcard_id)
     has_note = note is not None
@@ -174,7 +199,7 @@ def flip_card(progress_id):
         is_autoplay_mode=(user.current_mode == MODE_AUTOPLAY_REVIEW),
         audio_url=audio_url, has_back_audio_content=bool(flashcard_obj.back_audio_content),
         can_edit=can_edit,
-        can_feedback=can_feedback, # Thêm biến mới
+        can_feedback=can_feedback,
         has_note=has_note,
         current_mode=user.current_mode,
         set_total_cards=context_stats['set_total_cards'],

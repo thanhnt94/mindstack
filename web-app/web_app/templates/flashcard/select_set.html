@@ -5,7 +5,7 @@
 {% block title %}Chọn Bộ Thẻ - Flashcard App{% endblock %}
 
 {% block content %}
-    {# BẮT ĐẦU SỬA: Thêm user=user vào lời gọi macro #}
+    {# BẮT ĐẦU SỬA: Thêm search_query=search_query vào lời gọi macro #}
     {{ render_set_selection_page(
         user=user,
         started_tab_title='📚 Đang học',
@@ -13,7 +13,8 @@
         started_sets_pagination=started_sets_pagination,
         new_sets_pagination=new_sets_pagination,
         set_type='flashcard',
-        learn_endpoint='flashcard.learn_set'
+        learn_endpoint='flashcard.learn_set',
+        search_query=search_query
     ) }}
     {# KẾT THÚC SỬA #}
 {% endblock %}

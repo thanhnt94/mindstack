@@ -2,11 +2,11 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, flash, jsonify
 import logging
 from ..services import quiz_service, quiz_note_service
-# BẮT ĐẦU SỬA: Import thêm User model
 from ..models import db, User, QuizQuestion, UserQuizProgress, QuizPassage, QuestionSet
-# KẾT THÚC SỬA
+# BẮT ĐẦU SỬA: Import thêm `or_`
 from ..config import QUIZ_MODE_DISPLAY_NAMES, SETS_PER_PAGE
-from sqlalchemy import func
+from sqlalchemy import func, or_
+# KẾT THÚC SỬA
 from .decorators import login_required
 from markupsafe import Markup, escape
 import json
@@ -93,11 +93,12 @@ def _serialize_quiz_question(q_data_dict):
 @login_required
 def index():
     user_id = session.get('user_id')
-    # BẮT ĐẦU SỬA: Lấy đối tượng user
     user = User.query.get(user_id)
-    # KẾT THÚC SỬA
     page_started = request.args.get('page_started', 1, type=int)
     page_new = request.args.get('page_new', 1, type=int)
+    # BẮT ĐẦU THÊM MỚI: Lấy tham số tìm kiếm
+    search_query = request.args.get('q', None)
+    # KẾT THÚC THÊM MỚI
 
     started_set_ids_query = db.session.query(QuizQuestion.set_id).join(
         UserQuizProgress, UserQuizProgress.question_id == QuizQuestion.question_id
@@ -106,7 +107,19 @@ def index():
 
     started_sets_with_progress = []
     if started_set_ids:
-        started_sets_raw = QuestionSet.query.filter(QuestionSet.set_id.in_(started_set_ids)).all()
+        # BẮT ĐẦU SỬA: Thêm logic lọc tìm kiếm cho các bộ đã bắt đầu
+        started_sets_query = QuestionSet.query.filter(QuestionSet.set_id.in_(started_set_ids))
+        if search_query:
+            search_term = f"%{search_query}%"
+            started_sets_query = started_sets_query.filter(
+                or_(
+                    QuestionSet.title.ilike(search_term),
+                    QuestionSet.description.ilike(search_term)
+                )
+            )
+        started_sets_raw = started_sets_query.all()
+        # KẾT THÚC SỬA
+
         total_questions_map = dict(db.session.query(
             QuizQuestion.set_id, func.count(QuizQuestion.question_id)
         ).filter(QuizQuestion.set_id.in_(started_set_ids)).group_by(QuizQuestion.set_id).all())
@@ -134,21 +147,31 @@ def index():
     paginated_started_sets_items = sorted_started_sets[start_index_started:end_index_started]
     started_sets_pagination = CustomPagination(page_started, SETS_PER_PAGE, total_items_started, paginated_started_sets_items)
 
+    # BẮT ĐẦU SỬA: Thêm logic lọc tìm kiếm cho các bộ mới
     new_sets_query = QuestionSet.query.filter(
         QuestionSet.is_public == True,
         ~QuestionSet.set_id.in_(started_set_ids)
-    ).order_by(QuestionSet.title.asc())
+    )
+    if search_query:
+        search_term = f"%{search_query}%"
+        new_sets_query = new_sets_query.filter(
+            or_(
+                QuestionSet.title.ilike(search_term),
+                QuestionSet.description.ilike(search_term)
+            )
+        )
+    new_sets_query = new_sets_query.order_by(QuestionSet.title.asc())
+    # KẾT THÚC SỬA
     new_sets_pagination = new_sets_query.paginate(page=page_new, per_page=SETS_PER_PAGE, error_out=False)
 
     for set_item in new_sets_pagination.items:
         set_item.creator_username = set_item.creator.username if set_item.creator else "N/A"
 
-    # BẮT ĐẦU SỬA: Truyền 'user' vào template
     return render_template('quiz/select_question_set.html', 
                            user=user,
                            started_sets_pagination=started_sets_pagination, 
-                           new_sets_pagination=new_sets_pagination)
-    # KẾT THÚC SỬA
+                           new_sets_pagination=new_sets_pagination,
+                           search_query=search_query) # Thêm search_query vào context
 
 @quiz_bp.route('/take/<int:set_id>')
 @login_required

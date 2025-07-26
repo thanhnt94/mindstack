@@ -3,6 +3,39 @@
  * Mô tả: Chứa các kiểu CSS dành cho danh sách chọn bộ thẻ và danh sách chọn chế độ học.
  */
 
+/* BẮT ĐẦU THÊM MỚI: Kiểu cho thanh tìm kiếm */
+.search-bar-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e7e9ed;
+}
+
+.search-bar-container form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-input {
+    flex-grow: 1;
+    padding: 12px 15px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+/* KẾT THÚC THÊM MỚI */
+
+
 /* Container chính cho trang chọn bộ */
 .select-set-container {
     width: 100%;
@@ -97,12 +130,10 @@
     background-color: rgba(255, 255, 255, 0.5);
     padding: 3px 8px;
     border-radius: 10px;
-    /* BẮT ĐẦU THÊM MỚI */
     white-space: nowrap; /* Ngăn không cho văn bản ngắt dòng */
-    /* KẾT THÚC THÊM MỚI */
 }
 
-/* --- BẮT ĐẦU SỬA: Hợp nhất và dọn dẹp CSS --- */
+/* --- Hợp nhất và dọn dẹp CSS --- */
 
 /* Kiểu chung cho các mục trong danh sách (Khám phá & Chọn chế độ) */
 .set-list li.set-item-not_started a,
@@ -161,16 +192,6 @@
 .set-status-indicator.current-mode-indicator {
     background-color: #fffaf0;
     color: #dd6b20;
-}
-
-/* --- KẾT THÚC SỬA --- */
-
-.empty-message {
-    color: #718096;
-    text-align: center;
-    padding: 20px;
-    background-color: #f7fafc;
-    border-radius: 8px;
 }
 
 /* CSS cho Phân trang */
