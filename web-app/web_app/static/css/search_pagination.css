@@ -1,0 +1,91 @@
+/* web_app/static/css/search_pagination.css */
+
+/* --- Định dạng cho Form Tìm kiếm --- */
+.search-form {
+    margin-bottom: 1.5rem;
+}
+
+.search-bar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    width: 100%;
+    max-width: 600px; /* Giới hạn chiều rộng tối đa */
+}
+
+.search-select,
+.search-input {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    font-size: 1rem;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: 'Inter', sans-serif; /* Đảm bảo font nhất quán */
+}
+
+.search-select:focus,
+.search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.search-select {
+    flex-shrink: 0; /* Ngăn không cho ô select bị co lại */
+}
+
+.search-input {
+    flex-grow: 1; /* Cho phép ô input chiếm hết không gian còn lại */
+    width: 100%;
+}
+
+/* --- Định dạng cho Phân trang --- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 1rem 0;
+    list-style: none;
+    gap: 0.5rem; /* Khoảng cách giữa các nút */
+}
+
+.page-link,
+.page-link-ellipsis {
+    display: inline-block;
+    padding: 0.6rem 1rem;
+    margin: 0 2px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    color: #007bff;
+    text-decoration: none;
+    background-color: #fff;
+    transition: background-color 0.2s, color 0.2s;
+    font-weight: 500;
+}
+
+.page-link:hover {
+    background-color: #f4f4f4;
+    border-color: #ccc;
+}
+
+.page-link.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    cursor: default;
+}
+
+.page-link.disabled {
+    color: #aaa;
+    pointer-events: none;
+    background-color: #f9f9f9;
+    border-color: #eee;
+}
+
+.page-link-ellipsis {
+    border: none;
+    background-color: transparent;
+    color: #6c757d;
+}

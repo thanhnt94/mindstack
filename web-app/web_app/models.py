@@ -60,6 +60,10 @@ class VocabularySet(db.Model):
     creator_user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='SET NULL'))
     creation_date = db.Column(TIMESTAMP, default=func.current_timestamp())
     is_public = db.Column(db.Integer, default=1)
+    # --- BẮT ĐẦU THÊM MỚI ---
+    # Lưu trữ prompt tùy chỉnh cho toàn bộ bộ flashcard
+    ai_prompt = db.Column(db.Text, nullable=True)
+    # --- KẾT THÚC THÊM MỚI ---
 
     flashcards = db.relationship('Flashcard', backref='vocabulary_set', lazy=True, cascade="all, delete-orphan")
     users_using_as_current = db.relationship('User', backref='current_vocabulary_set', lazy=True, foreign_keys='User.current_set_id')
@@ -80,7 +84,11 @@ class Flashcard(db.Model):
     front_img = db.Column(db.String)
     back_img = db.Column(db.String)
     notification_text = db.Column(db.String)
-    ai_explanation = db.Column(db.Text, nullable=True) # --- BẮT ĐẦU THÊM MỚI ---
+    ai_explanation = db.Column(db.Text, nullable=True)
+    # --- BẮT ĐẦU THÊM MỚI ---
+    # Lưu trữ prompt tùy chỉnh cho riêng thẻ này
+    ai_prompt = db.Column(db.Text, nullable=True)
+    # --- KẾT THÚC THÊM MỚI ---
 
     progresses = db.relationship('UserFlashcardProgress', backref='flashcard', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('FlashcardNote', backref='flashcard', lazy=True, cascade="all, delete-orphan")
@@ -143,6 +151,10 @@ class QuestionSet(db.Model):
     creator_user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='SET NULL'))
     creation_date = db.Column(TIMESTAMP, default=func.current_timestamp())
     is_public = db.Column(db.Integer, default=1)
+    # --- BẮT ĐẦU THÊM MỚI ---
+    # Lưu trữ prompt tùy chỉnh cho toàn bộ bộ câu hỏi
+    ai_prompt = db.Column(db.Text, nullable=True)
+    # --- KẾT THÚC THÊM MỚI ---
 
     questions = db.relationship('QuizQuestion', backref='question_set', lazy=True, cascade="all, delete-orphan")
     users_using_as_current = db.relationship('User', backref='current_question_set', lazy=True, foreign_keys='User.current_question_set_id')
@@ -176,7 +188,11 @@ class QuizQuestion(db.Model):
     guidance = db.Column(db.Text)
     question_image_file = db.Column(db.String)
     question_audio_file = db.Column(db.String)
-    ai_explanation = db.Column(db.Text, nullable=True) # --- BẮT ĐẦU THÊM MỚI ---
+    ai_explanation = db.Column(db.Text, nullable=True)
+    # --- BẮT ĐẦU THÊM MỚI ---
+    # Lưu trữ prompt tùy chỉnh cho riêng câu hỏi này
+    ai_prompt = db.Column(db.Text, nullable=True)
+    # --- KẾT THÚC THÊM MỚI ---
     
     passage_id = db.Column(db.Integer, db.ForeignKey('QuizPassages.passage_id', ondelete='SET NULL'), nullable=True)
     passage_order = db.Column(db.Integer, nullable=True)
@@ -218,7 +234,7 @@ class QuizQuestionNote(db.Model):
     def __repr__(self):
         return f"<QuizNote ID:{self.note_id} Question:{self.question_id} User:{self.user_id}>"
 
-# ========================== BẮT ĐẦU THAY ĐỔI: Bảng Feedback ==========================
+# ========================== Feedback ==========================
 class Feedback(db.Model):
     __tablename__ = 'Feedbacks'
     feedback_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -229,14 +245,11 @@ class Feedback(db.Model):
     status = db.Column(db.String(50), default='new', nullable=False)
     timestamp = db.Column(db.Integer, nullable=False)
     
-    # Các trường mới cho người giải quyết
     resolver_comment = db.Column(db.Text, nullable=True)
     resolved_by_user_id = db.Column(db.Integer, db.ForeignKey('Users.user_id', ondelete='SET NULL'), nullable=True)
     resolved_timestamp = db.Column(db.Integer, nullable=True)
 
-    # Mối quan hệ để lấy thông tin người giải quyết
     resolver = db.relationship('User', foreign_keys=[resolved_by_user_id])
 
     def __repr__(self):
         return f"<Feedback ID:{self.feedback_id} User:{self.user_id} Status:{self.status}>"
-# ========================== KẾT THÚC THAY ĐỔI ==========================

@@ -1,48 +1,192 @@
 {% extends 'base.html' %}
 {% block title %}Chỉnh sửa Bộ thẻ{% endblock %}
-{% block content %}
-    <div class="container">
-        <div class="admin-panel">
-            <div class="admin-panel-header">
-                <h1><i class="fas fa-edit"></i> Chỉnh sửa Bộ thẻ: {{ set_data.title }}</h1>
-            </div>
-            <form method="POST" action="{{ url_for('set_management.edit_flashcard_set', set_id=set_data.set_id) }}" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="title">Tên bộ thẻ (Title): <span class="required-field">*</span></label>
-                    <input type="text" id="title" name="title" value="{{ set_data.title or '' }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="description">Mô tả (Description):</label>
-                    <textarea id="description" name="description" rows="3">{{ set_data.description or '' }}</textarea>
-                </div>
-                <div class="form-group">
-                    <label for="tags">Thẻ (Tags, cách nhau bởi dấu phẩy):</label>
-                    <input type="text" id="tags" name="tags" value="{{ set_data.tags or '' }}">
-                </div>
-                <div class="form-group">
-                    <label for="is_public">Trạng thái:</label>
-                    <select id="is_public" name="is_public">
-                        <option value="1" {% if set_data.is_public %}selected{% endif %}>Công khai (Public)</option>
-                        <option value="0" {% if not set_data.is_public %}selected{% endif %}>Riêng tư (Private)</option>
-                    </select>
-                </div>
 
-                <hr style="margin: 20px 0; border: 1px solid #eee;">
-                <div class="form-group">
-                    <label for="excel_file">Đồng bộ hóa từ file Excel (.xlsx):</label>
-                    <input type="file" id="excel_file" name="excel_file" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-                    <small style="color: #dc3545; font-weight: bold;">CẢNH BÁO: Tải file lên sẽ GHI ĐÈ toàn bộ nội dung của bộ thẻ này. Các thẻ cũ không có trong file sẽ bị xóa.</small>
-                </div>
-                
-                {# BẮT ĐẦU THÊM MỚI: Thêm các nút xuất file #}
-                <div class="button-group">
-                    <button type="submit" class="button primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
-                    <a href="{{ url_for('set_management.export_flashcard_set_excel', set_id=set_data.set_id) }}" class="button success"><i class="fas fa-file-excel"></i> Xuất Excel</a>
-                    <a href="{{ url_for('set_management.export_flashcard_set_zip', set_id=set_data.set_id) }}" class="button ai-button"><i class="fas fa-file-archive"></i> Xuất Gói ZIP</a>
-                    <a href="{{ url_for('set_management.manage') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>
-                </div>
-                {# KẾT THÚC THÊM MỚI #}
-            </form>
+{% block content %}
+<div class="container">
+    {# Phần chỉnh sửa thông tin bộ thẻ #}
+    <div class="admin-panel">
+        <div class="admin-panel-header">
+            <h1><i class="fas fa-edit"></i> Chỉnh sửa Bộ thẻ: {{ set_data.title }}</h1>
+            <p>Quản lý thông tin chung, nội dung và các tùy chọn của bộ thẻ.</p>
+        </div>
+        <form method="POST" action="{{ url_for('set_management.edit_flashcard_set', set_id=set_data.set_id) }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="title">Tên bộ thẻ (Title): <span class="required-field">*</span></label>
+                <input type="text" id="title" name="title" value="{{ set_data.title or '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Mô tả (Description):</label>
+                <textarea id="description" name="description" rows="3">{{ set_data.description or '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="tags">Thẻ (Tags, cách nhau bởi dấu phẩy):</label>
+                <input type="text" id="tags" name="tags" value="{{ set_data.tags or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="is_public">Trạng thái:</label>
+                <select id="is_public" name="is_public">
+                    <option value="1" {% if set_data.is_public %}selected{% endif %}>Công khai (Public)</option>
+                    <option value="0" {% if not set_data.is_public %}selected{% endif %}>Riêng tư (Private)</option>
+                </select>
+            </div>
+            <hr style="margin: 20px 0; border: 1px solid #eee;">
+            <div class="form-group">
+                <label for="ai_prompt">AI Prompt Tùy Chỉnh cho Toàn Bộ Thẻ:</label>
+                <textarea id="ai_prompt" name="ai_prompt" rows="5" placeholder="Nhập prompt tùy chỉnh tại đây. Nếu để trống, hệ thống sẽ sử dụng prompt mặc định.">{{ set_data.ai_prompt or '' }}</textarea>
+                <small>Prompt này sẽ được áp dụng cho tất cả các thẻ trong bộ này (trừ khi thẻ có prompt riêng).</small>
+            </div>
+            <hr style="margin: 20px 0; border: 1px solid #eee;">
+            <div class="form-group">
+                <label for="excel_file">Đồng bộ hóa từ file Excel (.xlsx):</label>
+                <input type="file" id="excel_file" name="excel_file" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <small style="color: #dc3545; font-weight: bold;">CẢNH BÁO: Tải file lên sẽ GHI ĐÈ toàn bộ nội dung của bộ thẻ này.</small>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="button primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                <a href="{{ url_for('set_management.export_flashcard_set_excel', set_id=set_data.set_id) }}" class="button success"><i class="fas fa-file-excel"></i> Xuất Excel</a>
+                <a href="{{ url_for('set_management.export_flashcard_set_zip', set_id=set_data.set_id) }}" class="button ai-button"><i class="fas fa-file-archive"></i> Xuất Gói ZIP</a>
+                <a href="{{ url_for('set_management.manage') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>
+            </div>
+        </form>
+    </div>
+
+    {# Phần tìm kiếm và danh sách thẻ phân trang #}
+    <div class="admin-panel" style="margin-top: 2rem;">
+        <div class="admin-panel-header">
+            <h2><i class="fas fa-list-ul"></i> Danh sách thẻ trong bộ (Tổng: {{ cards_pagination.total }})</h2>
+        </div>
+
+        <form method="GET" action="{{ url_for('set_management.edit_flashcard_set', set_id=set_data.set_id) }}" class="search-form">
+            <div class="search-bar">
+                <select name="field" class="search-select">
+                    <option value="all" {% if search_field == 'all' %}selected{% endif %}>Tất cả</option>
+                    <option value="id" {% if search_field == 'id' %}selected{% endif %}>ID Thẻ</option>
+                    <option value="front" {% if search_field == 'front' %}selected{% endif %}>Mặt trước</option>
+                    <option value="back" {% if search_field == 'back' %}selected{% endif %}>Mặt sau</option>
+                </select>
+                <input type="text" name="q" placeholder="Nhập từ khóa tìm kiếm..." value="{{ search_term or '' }}" class="search-input">
+                <button type="submit" class="button"><i class="fas fa-search"></i> Tìm kiếm</button>
+            </div>
+        </form>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mặt trước (Front)</th>
+                        <th>Mặt sau (Back)</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in cards_pagination.items %}
+                    <tr>
+                        <td>{{ card.flashcard_id }}</td>
+                        <td>{{ card.front }}</td>
+                        <td>{{ card.back }}</td>
+                        <td>
+                            <div class="button-group-inline" style="display: flex; gap: 0.5rem;">
+                                <button class="button small open-edit-btn" data-flashcard-id="{{ card.flashcard_id }}"><i class="fas fa-edit"></i> Sửa</button>
+                                <button class="button small danger delete-card-btn" data-flashcard-id="{{ card.flashcard_id }}"><i class="fas fa-trash"></i> Xóa</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">Không tìm thấy thẻ nào phù hợp.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if cards_pagination.pages > 1 %}
+        <div class="pagination">
+            <a href="{{ url_for('set_management.edit_flashcard_set', set_id=set_data.set_id, page=cards_pagination.prev_num, q=search_term, field=search_field) if cards_pagination.has_prev else '#' }}" 
+               class="page-link {% if not cards_pagination.has_prev %}disabled{% endif %}">
+               &laquo; Trước
+            </a>
+            {% for page_num in cards_pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    <a href="{{ url_for('set_management.edit_flashcard_set', set_id=set_data.set_id, page=page_num, q=search_term, field=search_field) }}" 
+                       class="page-link {% if cards_pagination.page == page_num %}active{% endif %}">
+                       {{ page_num }}
+                    </a>
+                {% else %}
+                    <span class="page-link-ellipsis">...</span>
+                {% endif %}
+            {% endfor %}
+            <a href="{{ url_for('set_management.edit_flashcard_set', set_id=set_data.set_id, page=cards_pagination.next_num, q=search_term, field=search_field) if cards_pagination.has_next else '#' }}" 
+               class="page-link {% if not cards_pagination.has_next %}disabled{% endif %}">
+               Sau &raquo;
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Modal để chỉnh sửa chi tiết một thẻ #}
+<div id="edit-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Chỉnh sửa chi tiết Thẻ</h2>
+            <span id="edit-modal-close-btn" class="close-btn">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="edit-front">Mặt trước (Front):</label>
+                <textarea id="edit-front" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="edit-back">Mặt sau (Back):</label>
+                <textarea id="edit-back" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="edit-front-audio">Nội dung Audio mặt trước:</label>
+                <input type="text" id="edit-front-audio" placeholder="Nhập văn bản cho audio mặt trước">
+            </div>
+            <div class="form-group">
+                <label for="edit-back-audio">Nội dung Audio mặt sau:</label>
+                <input type="text" id="edit-back-audio" placeholder="Nhập văn bản cho audio mặt sau">
+            </div>
+            <div class="form-group">
+                <label for="edit-front-img">URL Hình ảnh mặt trước:</label>
+                <input type="text" id="edit-front-img" placeholder="Dán URL hình ảnh">
+            </div>
+            <div class="form-group">
+                <label for="edit-back-img">URL Hình ảnh mặt sau:</label>
+                <input type="text" id="edit-back-img" placeholder="Dán URL hình ảnh">
+            </div>
+            <hr style="margin: 20px 0; border: 1px solid #eee;">
+            <div class="form-group">
+                <label for="edit-ai-prompt">AI Prompt Tùy Chỉnh cho Thẻ này:</label>
+                <textarea id="edit-ai-prompt" rows="4" placeholder="Nhập prompt tùy chỉnh tại đây."></textarea>
+                <small>Prompt này sẽ <strong>ghi đè</strong> lên prompt của cả bộ thẻ.</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span id="edit-save-status"></span>
+            <button id="save-edit-btn" class="button primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+            <button class="button secondary regenerate-audio-btn" data-side="front">Tái tạo Audio Trước</button>
+            <button class="button secondary regenerate-audio-btn" data-side="back">Tái tạo Audio Sau</button>
         </div>
     </div>
+</div>
+
+{# Modal xác nhận xóa #}
+<div id="confirm-delete-modal" class="confirm-modal">
+    <div class="confirm-modal-content">
+        <h3>Xác nhận Xóa</h3>
+        <p>Bạn có chắc chắn muốn xóa thẻ này không? Hành động này không thể hoàn tác.</p>
+        <div class="confirm-modal-buttons">
+            <button id="confirm-delete-btn" class="button danger">Xác nhận Xóa</button>
+            <button id="cancel-delete-btn" class="button secondary">Hủy</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/edit_handler.js') }}"></script>
 {% endblock %}

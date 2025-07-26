@@ -1,5 +1,5 @@
 # web_app/routes/api.py
-from flask import Blueprint, send_file, session, jsonify, request, redirect, Response
+from flask import Blueprint, send_file, session, jsonify, request, Response
 import logging
 import os
 import asyncio
@@ -10,17 +10,13 @@ from ..config import FLASHCARD_IMAGES_DIR, QUIZ_IMAGES_DIR, QUIZ_AUDIO_CACHE_DIR
 from .decorators import login_required
 from ..db_instance import db 
 from ..services import ai_service
+
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
 
 def _check_edit_permission(user_id, flashcard_obj):
     """
     Mô tả: Helper function để kiểm tra quyền sửa thẻ.
-    Args:
-        user_id (int): ID của người dùng hiện tại.
-        flashcard_obj (Flashcard): Đối tượng flashcard cần kiểm tra.
-    Returns:
-        bool: True nếu người dùng có quyền, False nếu không.
     """
     user = User.query.get(user_id)
     if not user or not flashcard_obj:
@@ -105,12 +101,21 @@ def handle_note(flashcard_id):
 @login_required
 def get_flashcard_details(flashcard_id):
     """
-    Mô tả: Lấy chi tiết của một flashcard.
+    Mô tả: Lấy chi tiết của một flashcard, bao gồm cả AI prompt tùy chỉnh.
     """
     card = flashcard_service.get_card_by_id(flashcard_id)
     if not card:
         return jsonify({'status': 'error', 'message': 'Không tìm thấy thẻ.'}), 404
-    card_data = {'front': card.front, 'back': card.back, 'front_audio_content': card.front_audio_content, 'back_audio_content': card.back_audio_content, 'front_img': card.front_img, 'back_img': card.back_img}
+    
+    card_data = {
+        'front': card.front, 
+        'back': card.back, 
+        'front_audio_content': card.front_audio_content, 
+        'back_audio_content': card.back_audio_content, 
+        'front_img': card.front_img, 
+        'back_img': card.back_img,
+        'ai_prompt': card.ai_prompt
+    }
     return jsonify({'status': 'success', 'data': card_data})
 
 @api_bp.route('/flashcard/edit/<int:flashcard_id>', methods=['POST'])
@@ -123,12 +128,34 @@ def edit_flashcard(flashcard_id):
     data = request.get_json()
     if not data:
         return jsonify({'status': 'error', 'message': 'Dữ liệu không hợp lệ.'}), 400
+    
     updated_card, status = flashcard_service.update_card(flashcard_id, data, user_id)
+    
     if status != "success":
         message_map = {"permission_denied": "Bạn không có quyền sửa thẻ này.", "card_not_found": "Không tìm thấy thẻ."}
         return jsonify({'status': 'error', 'message': message_map.get(status, "Lỗi server.")}), 403 if status == "permission_denied" else 404 if status == "card_not_found" else 500
+    
     card_data = {'front': updated_card.front, 'back': updated_card.back, 'front_img': updated_card.front_img, 'back_img': updated_card.back_img}
     return jsonify({'status': 'success', 'message': 'Cập nhật thành công!', 'data': card_data})
+
+@api_bp.route('/flashcard/delete/<int:flashcard_id>', methods=['DELETE'])
+@login_required
+def delete_flashcard(flashcard_id):
+    """
+    Mô tả: API endpoint để xóa một flashcard.
+    """
+    user_id = session.get('user_id')
+    success, status = flashcard_service.delete_card(flashcard_id, user_id)
+
+    if not success:
+        message_map = {
+            "permission_denied": "Bạn không có quyền xóa thẻ này.",
+            "card_not_found": "Không tìm thấy thẻ."
+        }
+        status_code = 403 if status == "permission_denied" else 404 if status == "card_not_found" else 500
+        return jsonify({'status': 'error', 'message': message_map.get(status, "Lỗi server.")}), status_code
+    
+    return jsonify({'status': 'success', 'message': 'Xóa thẻ thành công!'})
 
 @api_bp.route('/flashcard/regenerate_audio/<int:flashcard_id>/<string:side>', methods=['POST'])
 @login_required
@@ -385,7 +412,6 @@ def get_quiz_question_progress(question_id):
         }
     })
 
-# --- BẮT ĐẦU THÊM MỚI: Endpoint gửi feedback ---
 @api_bp.route('/feedback/submit', methods=['POST'])
 @login_required
 def submit_feedback():
@@ -410,16 +436,12 @@ def submit_feedback():
         return jsonify({'status': 'error', 'message': message}), 400 if "Nội dung" in message else 500
     
     return jsonify({'status': 'success', 'message': message})
-# --- KẾT THÚC THÊM MỚI ---
 
-# --- BẮT ĐẦU SỬA LỖI: Bỏ tiền tố /api khỏi route vì đã được xử lý bởi url_prefix ---
 @api_bp.route('/get_explanation', methods=['GET'])
 @login_required
 def get_ai_explanation():
     """
-    Mô tả:
-    API endpoint để lấy nội dung giải thích từ AI theo yêu cầu (on-demand).
-    URL cuối cùng sẽ là /api/get_explanation do url_prefix của blueprint.
+    Mô tả: API endpoint để lấy nội dung giải thích từ AI theo yêu cầu (on-demand).
     """
     item_type = request.args.get('type')
     item_id = request.args.get('id')
@@ -464,4 +486,3 @@ def get_ai_explanation():
         db.session.rollback()
         logger.error(f"Lỗi khi xử lý API /get_explanation cho {item_type} ID {item_id}: {e}", exc_info=True)
         return jsonify({'error': 'Lỗi máy chủ nội bộ'}), 500
-# --- KẾT THÚC SỬA LỖI ---

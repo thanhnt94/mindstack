@@ -1,6 +1,8 @@
 # web_app/routes/set_management.py
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, send_file
-from ..services import set_service, quiz_service
+# --- BẮT ĐẦU THAY ĐỔI: Import thêm flashcard_service ---
+from ..services import set_service, quiz_service, flashcard_service
+# --- KẾT THÚC THAY ĐỔI ---
 from ..models import User
 from .decorators import login_required
 
@@ -47,7 +49,6 @@ def add_flashcard_set():
         
         if status == "success":
             flash(f"Bộ thẻ '{new_set.title}' đã được thêm thành công.", "success")
-            # Chuyển hướng về trang quản lý tương ứng với vai trò
             if session.get('user_role') == 'admin':
                 return redirect(url_for('admin.manage_sets'))
             return redirect(url_for('set_management.manage'))
@@ -62,19 +63,18 @@ def add_flashcard_set():
 def edit_flashcard_set(set_id):
     """
     Mô tả: Hiển thị form và xử lý việc chỉnh sửa một bộ flashcard.
-    Admin có thể sửa mọi bộ, người dùng chỉ có thể sửa bộ của mình.
+    Đã được nâng cấp để hỗ trợ tìm kiếm và phân trang danh sách thẻ.
     """
-    set_to_edit = set_service.get_set_by_id(set_id)
     user_id = session['user_id']
     user_role = session.get('user_role')
+    set_to_edit = set_service.get_set_by_id(set_id)
 
-    # Cập nhật logic kiểm tra quyền
+    # Kiểm tra quyền truy cập
     if not set_to_edit or (set_to_edit.creator_user_id != user_id and user_role != 'admin'):
         flash("Bạn không có quyền sửa bộ thẻ này.", "error")
-        if user_role == 'admin':
-            return redirect(url_for('admin.manage_sets'))
-        return redirect(url_for('set_management.manage'))
+        return redirect(url_for('admin.manage_sets') if user_role == 'admin' else url_for('set_management.manage'))
 
+    # Xử lý khi người dùng LƯU THÔNG TIN BỘ THẺ (POST request)
     if request.method == 'POST':
         data = request.form.to_dict()
         file_stream = None
@@ -87,14 +87,32 @@ def edit_flashcard_set(set_id):
         
         if status == "success":
             flash(f"Cập nhật bộ thẻ '{updated_set.title}' thành công.", "success")
-            # Chuyển hướng về trang quản lý tương ứng với vai trò
-            if user_role == 'admin':
-                return redirect(url_for('admin.manage_sets'))
-            return redirect(url_for('set_management.manage'))
+            # Chuyển hướng về chính trang edit để xem thay đổi
+            return redirect(url_for('set_management.edit_flashcard_set', set_id=set_id))
         else:
             flash(f"Lỗi khi cập nhật bộ thẻ: {status}", "error")
+
+    # Xử lý khi người dùng XEM TRANG hoặc TÌM KIẾM/PHÂN TRANG (GET request)
+    search_term = request.args.get('q', '')
+    search_field = request.args.get('field', 'all')
+    page = request.args.get('page', 1, type=int)
+
+    # Lấy danh sách thẻ đã được tìm kiếm và phân trang
+    cards_pagination = flashcard_service.search_cards_in_set_paginated(
+        set_id=set_id,
+        search_term=search_term,
+        search_field=search_field,
+        page=page,
+        per_page=10 # Hiển thị 10 thẻ mỗi trang
+    )
     
-    return render_template('set_management/edit_flashcard_set.html', set_data=set_to_edit)
+    return render_template(
+        'set_management/edit_flashcard_set.html', 
+        set_data=set_to_edit,
+        cards_pagination=cards_pagination,
+        search_term=search_term,
+        search_field=search_field
+    )
 
 @set_management_bp.route('/flashcard/delete/<int:set_id>', methods=['POST'])
 @login_required
@@ -112,7 +130,6 @@ def delete_flashcard_set(set_id):
     else:
         flash(f"Lỗi khi xóa bộ thẻ: {status}", "error")
     
-    # Chuyển hướng về trang quản lý tương ứng với vai trò
     if user_role == 'admin':
         return redirect(url_for('admin.manage_sets'))
     return redirect(url_for('set_management.manage'))
@@ -183,7 +200,6 @@ def add_quiz_set():
         
         if status == "success":
             flash(f"Bộ câu hỏi '{new_set.title}' đã được thêm thành công.", "success")
-            # Chuyển hướng về trang quản lý tương ứng với vai trò
             if session.get('user_role') == 'admin':
                 return redirect(url_for('admin.manage_question_sets'))
             return redirect(url_for('set_management.manage'))
@@ -204,7 +220,6 @@ def edit_quiz_set(set_id):
     user_id = session['user_id']
     user_role = session.get('user_role')
 
-    # Cập nhật logic kiểm tra quyền
     if not set_to_edit or (set_to_edit.creator_user_id != user_id and user_role != 'admin'):
         flash("Bạn không có quyền sửa bộ câu hỏi này.", "error")
         if user_role == 'admin':
@@ -223,7 +238,6 @@ def edit_quiz_set(set_id):
         
         if status == "success":
             flash(f"Cập nhật bộ câu hỏi '{updated_set.title}' thành công.", "success")
-            # Chuyển hướng về trang quản lý tương ứng với vai trò
             if user_role == 'admin':
                 return redirect(url_for('admin.manage_question_sets'))
             return redirect(url_for('set_management.manage'))
@@ -248,7 +262,6 @@ def delete_quiz_set(set_id):
     else:
         flash(f"Lỗi khi xóa bộ câu hỏi: {status}", "error")
     
-    # Chuyển hướng về trang quản lý tương ứng với vai trò
     if user_role == 'admin':
         return redirect(url_for('admin.manage_question_sets'))
     return redirect(url_for('set_management.manage'))
