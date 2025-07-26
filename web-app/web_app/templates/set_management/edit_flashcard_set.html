@@ -34,10 +34,14 @@
                     <small style="color: #dc3545; font-weight: bold;">CẢNH BÁO: Tải file lên sẽ GHI ĐÈ toàn bộ nội dung của bộ thẻ này. Các thẻ cũ không có trong file sẽ bị xóa.</small>
                 </div>
                 
+                {# BẮT ĐẦU THÊM MỚI: Thêm các nút xuất file #}
                 <div class="button-group">
                     <button type="submit" class="button primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                    <a href="{{ url_for('set_management.export_flashcard_set_excel', set_id=set_data.set_id) }}" class="button success"><i class="fas fa-file-excel"></i> Xuất Excel</a>
+                    <a href="{{ url_for('set_management.export_flashcard_set_zip', set_id=set_data.set_id) }}" class="button ai-button"><i class="fas fa-file-archive"></i> Xuất Gói ZIP</a>
                     <a href="{{ url_for('set_management.manage') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>
                 </div>
+                {# KẾT THÚC THÊM MỚI #}
             </form>
         </div>
     </div>

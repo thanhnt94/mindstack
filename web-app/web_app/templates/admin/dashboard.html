@@ -33,10 +33,12 @@
                         <i class="fas fa-user-plus"></i>
                         <span>Thêm Thành viên</span>
                     </a>
-                    <a href="{{ url_for('admin.add_set') }}" class="action-button">
+                    {# BẮT ĐẦU SỬA: Cập nhật đường dẫn url_for #}
+                    <a href="{{ url_for('set_management.add_flashcard_set') }}" class="action-button">
                         <i class="fas fa-plus-circle"></i>
                         <span>Thêm Bộ Flashcard</span>
                     </a>
+                    {# KẾT THÚC SỬA #}
                     <a href="{{ url_for('admin.tools_page') }}" class="action-button">
                         <i class="fas fa-tools"></i>
                         <span>Công cụ & Bảo trì</span>
@@ -101,11 +103,9 @@
                                     <div class="activity-item-info">
                                         <span class="activity-item-main">{{ user.username or user.telegram_id }}</span>
                                     </div>
-                                    {# BẮT ĐẦU THAY ĐỔI: Hiển thị thời gian hoạt động cuối #}
                                     <span class="activity-item-timestamp">
                                         {{ user.last_seen | format_unix_time_only }}
                                     </span>
-                                    {# KẾT THÚC THAY ĐỔI #}
                                 </li>
                                 {% endfor %}
                             </ul>
