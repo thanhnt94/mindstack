@@ -2,11 +2,11 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, flash, jsonify
 import logging
 from ..services import quiz_service, quiz_note_service
+# BẮT ĐẦU SỬA: Import thêm User model
 from ..models import db, User, QuizQuestion, UserQuizProgress, QuizPassage, QuestionSet
-# BẮT ĐẦU SỬA: Import thêm config và func
+# KẾT THÚC SỬA
 from ..config import QUIZ_MODE_DISPLAY_NAMES, SETS_PER_PAGE
 from sqlalchemy import func
-# KẾT THÚC SỬA
 from .decorators import login_required
 from markupsafe import Markup, escape
 import json
@@ -15,7 +15,6 @@ import os
 quiz_bp = Blueprint('quiz', __name__, url_prefix='/quiz')
 logger = logging.getLogger(__name__)
 
-# BẮT ĐẦU THÊM MỚI: Sao chép lớp CustomPagination và hàm sắp xếp từ flashcard.py
 class CustomPagination:
     def __init__(self, page, per_page, total, items):
         self.page = page
@@ -49,7 +48,6 @@ def _sort_sets_by_progress(set_items, total_key, completed_key):
         if percentage == 100: return (0, title) 
         return (-percentage, title)
     return sorted(set_items, key=custom_sort_key)
-# KẾT THÚC THÊM MỚI
 
 def _serialize_quiz_question(q_data_dict):
     """
@@ -94,18 +92,18 @@ def _serialize_quiz_question(q_data_dict):
 @quiz_bp.route('/')
 @login_required
 def index():
-    # BẮT ĐẦU SỬA: Thêm logic phân trang
     user_id = session.get('user_id')
+    # BẮT ĐẦU SỬA: Lấy đối tượng user
+    user = User.query.get(user_id)
+    # KẾT THÚC SỬA
     page_started = request.args.get('page_started', 1, type=int)
     page_new = request.args.get('page_new', 1, type=int)
 
-    # Lấy ID của các bộ đã bắt đầu
     started_set_ids_query = db.session.query(QuizQuestion.set_id).join(
         UserQuizProgress, UserQuizProgress.question_id == QuizQuestion.question_id
     ).filter(UserQuizProgress.user_id == user_id).distinct()
     started_set_ids = {row[0] for row in started_set_ids_query.all()}
 
-    # Xử lý danh sách các bộ đã bắt đầu (sắp xếp và phân trang thủ công)
     started_sets_with_progress = []
     if started_set_ids:
         started_sets_raw = QuestionSet.query.filter(QuestionSet.set_id.in_(started_set_ids)).all()
@@ -136,18 +134,18 @@ def index():
     paginated_started_sets_items = sorted_started_sets[start_index_started:end_index_started]
     started_sets_pagination = CustomPagination(page_started, SETS_PER_PAGE, total_items_started, paginated_started_sets_items)
 
-    # Xử lý danh sách các bộ mới (dùng .paginate() của SQLAlchemy)
     new_sets_query = QuestionSet.query.filter(
         QuestionSet.is_public == True,
         ~QuestionSet.set_id.in_(started_set_ids)
     ).order_by(QuestionSet.title.asc())
     new_sets_pagination = new_sets_query.paginate(page=page_new, per_page=SETS_PER_PAGE, error_out=False)
 
-    # Gán creator_username cho các mục trong trang hiện tại của new_sets
     for set_item in new_sets_pagination.items:
         set_item.creator_username = set_item.creator.username if set_item.creator else "N/A"
 
+    # BẮT ĐẦU SỬA: Truyền 'user' vào template
     return render_template('quiz/select_question_set.html', 
+                           user=user,
                            started_sets_pagination=started_sets_pagination, 
                            new_sets_pagination=new_sets_pagination)
     # KẾT THÚC SỬA

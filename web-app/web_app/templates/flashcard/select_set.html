@@ -1,108 +1,19 @@
 {% extends 'base.html' %}
-
-{% macro render_pagination(pagination, endpoint, page_var, other_page_vars) %}
-    {% if pagination.pages > 1 %}
-    <nav class="pagination-container">
-        <ul class="pagination">
-            {# Nút về trang trước #}
-            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                {% set prev_args = other_page_vars.copy() %}
-                {% do prev_args.update({page_var: pagination.prev_num}) %}
-                <a class="page-link" href="{{ url_for(endpoint, **prev_args) if pagination.has_prev else '#' }}">&laquo;</a>
-            </li>
-            {# Các trang ở giữa #}
-            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-                {% if page_num %}
-                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                        {% set page_args = other_page_vars.copy() %}
-                        {% do page_args.update({page_var: page_num}) %}
-                        <a class="page-link" href="{{ url_for(endpoint, **page_args) }}">{{ page_num }}</a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled"><span class="page-link">...</span></li>
-                {% endif %}
-            {% endfor %}
-            {# Nút tới trang sau #}
-            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                {% set next_args = other_page_vars.copy() %}
-                {% do next_args.update({page_var: pagination.next_num}) %}
-                <a class="page-link" href="{{ url_for(endpoint, **next_args) if pagination.has_next else '#' }}">&raquo;</a>
-            </li>
-        </ul>
-    </nav>
-    {% endif %}
-{% endmacro %}
-
+{# Import macro từ file template chung #}
+{% from 'includes/_set_selection_view.html' import render_set_selection_page %}
 
 {% block title %}Chọn Bộ Thẻ - Flashcard App{% endblock %}
 
 {% block content %}
-<div class="container select-set-container">
-    
-    {# BẮT ĐẦU THÊM MỚI: Cấu trúc Tab #}
-    <div class="tab-container">
-        <div class="tab-navigation">
-            <button class="tab-button active" data-tab="my-sets">📚 Đang học</button>
-            <button class="tab-button" data-tab="discover-sets">🚀 Khám phá</button>
-        </div>
-
-        <!-- Tab "Đang học" -->
-        <div id="my-sets" class="tab-content active">
-            <div class="set-category">
-                <h2 class="set-category-header">Bộ thẻ của bạn</h2>
-                {% if started_sets_pagination.items %}
-                    <ul class="set-list">
-                        {% for set_item in started_sets_pagination.items %}
-                            <li class="set-item">
-                                <a href="{{ url_for('flashcard.learn_set', set_id=set_item.set_id) }}" class="set-item-progress-link">
-                                    {% set percentage = (set_item.learned_cards * 100 / set_item.total_cards) | int if set_item.total_cards > 0 else 0 %}
-                                    <div class="progress-fill {% if set_item.set_id == user.current_set_id %}current{% endif %}" style="--progress-width: {{ percentage }}%;"></div>
-                                    <div class="set-content-overlay">
-                                        <div class="set-info">
-                                            <span class="set-title">{{ set_item.title }}</span>
-                                            <span class="set-creator">tạo bởi {{ set_item.creator.username or 'admin' }}</span>
-                                        </div>
-                                        <div class="progress-text-overlay">
-                                            <span>{{ set_item.learned_cards }} / {{ set_item.total_cards }}</span>
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                    {{ render_pagination(started_sets_pagination, 'flashcard.index', 'page_started', {'page_new': new_sets_pagination.page}) }}
-                {% else %}
-                    <p class="empty-message">Bạn chưa học bộ thẻ nào. Hãy khám phá các bộ thẻ mới!</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Tab "Khám phá" -->
-        <div id="discover-sets" class="tab-content">
-            <div class="set-category">
-                <h2 class="set-category-header">Khám phá bộ thẻ mới</h2>
-                {% if new_sets_pagination.items %}
-                    <ul class="set-list">
-                        {% for set_item in new_sets_pagination.items %}
-                            <li class="set-item-not_started">
-                                <a href="{{ url_for('flashcard.learn_set', set_id=set_item.set_id) }}">
-                                    <div class="set-info">
-                                        <span class="set-title">{{ set_item.title }}</span>
-                                        <span class="set-creator">tạo bởi {{ set_item.creator.username or 'admin' }}</span>
-                                    </div>
-                                    <span class="set-status-indicator not-started-set-indicator">Bắt đầu học</span>
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                    {{ render_pagination(new_sets_pagination, 'flashcard.index', 'page_new', {'page_started': started_sets_pagination.page}) }}
-                {% else %}
-                    <p class="empty-message">Không có bộ thẻ mới nào để khám phá.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {# KẾT THÚC THÊM MỚI #}
-
-</div>
+    {# BẮT ĐẦU SỬA: Thêm user=user vào lời gọi macro #}
+    {{ render_set_selection_page(
+        user=user,
+        started_tab_title='📚 Đang học',
+        discover_tab_title='🚀 Khám phá',
+        started_sets_pagination=started_sets_pagination,
+        new_sets_pagination=new_sets_pagination,
+        set_type='flashcard',
+        learn_endpoint='flashcard.learn_set'
+    ) }}
+    {# KẾT THÚC SỬA #}
 {% endblock %}
