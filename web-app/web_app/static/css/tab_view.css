@@ -1,0 +1,62 @@
+/*
+ * tab_view.css
+ * Mô tả: Chứa các kiểu CSS cho giao diện tab,
+ * được sử dụng trên các trang chọn bộ thẻ và bộ câu hỏi.
+ */
+
+.tab-container {
+    width: 100%;
+    margin-bottom: 25px; /* Khoảng cách với nội dung bên dưới */
+}
+
+.tab-navigation {
+    display: flex;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.tab-button {
+    padding: 12px 25px;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #6c757d; /* Màu xám cho tab không active */
+    transition: all 0.3s ease;
+    margin-bottom: -2px; /* Để border-bottom đè lên border của navigation */
+}
+
+.tab-button:hover {
+    color: #007bff; /* Màu xanh khi hover */
+}
+
+.tab-button.active {
+    color: #007bff; /* Màu xanh cho tab active */
+    border-bottom-color: #007bff;
+}
+
+.tab-content {
+    display: none; /* Mặc định ẩn tất cả nội dung tab */
+    padding-top: 20px;
+    animation: fadeIn 0.5s;
+}
+
+.tab-content.active {
+    display: block; /* Chỉ hiện nội dung của tab active */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+    .tab-button {
+        padding: 10px 15px;
+        font-size: 1em;
+        flex-grow: 1; /* Cho các tab chiếm đều không gian */
+        text-align: center;
+    }
+}

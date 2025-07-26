@@ -1,62 +1,107 @@
 {% extends 'base.html' %}
 
+{% macro render_pagination(pagination, endpoint, page_var, other_page_vars) %}
+    {% if pagination.pages > 1 %}
+    <nav class="pagination-container">
+        <ul class="pagination">
+            {# Nút về trang trước #}
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                {% set prev_args = other_page_vars.copy() %}
+                {% do prev_args.update({page_var: pagination.prev_num}) %}
+                <a class="page-link" href="{{ url_for(endpoint, **prev_args) if pagination.has_prev else '#' }}">&laquo;</a>
+            </li>
+            {# Các trang ở giữa #}
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        {% set page_args = other_page_vars.copy() %}
+                        {% do page_args.update({page_var: page_num}) %}
+                        <a class="page-link" href="{{ url_for(endpoint, **page_args) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            {# Nút tới trang sau #}
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                {% set next_args = other_page_vars.copy() %}
+                {% do next_args.update({page_var: pagination.next_num}) %}
+                <a class="page-link" href="{{ url_for(endpoint, **next_args) if pagination.has_next else '#' }}">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+{% endmacro %}
+
 {% block title %}Chọn Bài trắc nghiệm - MindStack{% endblock %}
 
 {% block content %}
 <div class="container select-set-container">
     
-    <!-- Phần "Bộ bài của bạn" -->
-    <div class="set-category">
-        <h2 class="set-category-header">📝 Bộ câu hỏi của bạn</h2>
-        {% if started_sets %}
-            <ul class="set-list">
-                {% for set_item in started_sets %}
-                    <li class="set-item">
-                        <a href="{{ url_for('quiz.take_set', set_id=set_item.set_id) }}" class="set-item-progress-link">
-                            <!-- Lớp tô màu tiến trình -->
-                            {% set percentage = (set_item.answered_questions * 100 / set_item.total_questions) | int if set_item.total_questions > 0 else 0 %}
-                            <div class="progress-fill" style="--progress-width: {{ percentage }}%;"></div>
-                            
-                            <!-- Lớp chứa nội dung -->
-                            <div class="set-content-overlay">
-                                <div class="set-info">
-                                    <span class="set-title">{{ set_item.title }}</span>
-                                    <span class="set-creator">tạo bởi {{ set_item.creator_username }}</span>
-                                </div>
-                                <div class="progress-text-overlay">
-                                    <span>{{ set_item.answered_questions }} / {{ set_item.total_questions }}</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="empty-message">Bạn chưa làm bài trắc nghiệm nào. Hãy khám phá các bài mới bên dưới!</p>
-        {% endif %}
-    </div>
+    {# BẮT ĐẦU THÊM MỚI: Cấu trúc Tab #}
+    <div class="tab-container">
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="my-quiz-sets">📝 Đang làm</button>
+            <button class="tab-button" data-tab="discover-quiz-sets">🚀 Khám phá</button>
+        </div>
 
-    <!-- Phần "Khám phá" -->
-    <div class="set-category">
-        <h2 class="set-category-header">🚀 Khám phá bài trắc nghiệm mới</h2>
-        {% if new_sets %}
-            <ul class="set-list">
-                {% for set_item in new_sets %}
-                    <li class="set-item-not_started">
-                        <a href="{{ url_for('quiz.take_set', set_id=set_item.set_id) }}">
-                            <div class="set-info">
-                                <span class="set-title">{{ set_item.title }}</span>
-                                <span class="set-creator">tạo bởi {{ set_item.creator_username }}</span>
-                            </div>
-                            <span class="set-status-indicator not-started-set-indicator">Bắt đầu làm</span>
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="empty-message">Không có bài trắc nghiệm mới nào để khám phá.</p>
-        {% endif %}
+        <!-- Tab "Đang làm" -->
+        <div id="my-quiz-sets" class="tab-content active">
+            <div class="set-category">
+                <h2 class="set-category-header">Bộ câu hỏi của bạn</h2>
+                {% if started_sets_pagination.items %}
+                    <ul class="set-list">
+                        {% for set_item in started_sets_pagination.items %}
+                            <li class="set-item">
+                                <a href="{{ url_for('quiz.take_set', set_id=set_item.set_id) }}" class="set-item-progress-link">
+                                    {% set percentage = (set_item.answered_questions * 100 / set_item.total_questions) | int if set_item.total_questions > 0 else 0 %}
+                                    <div class="progress-fill" style="--progress-width: {{ percentage }}%;"></div>
+                                    <div class="set-content-overlay">
+                                        <div class="set-info">
+                                            <span class="set-title">{{ set_item.title }}</span>
+                                            <span class="set-creator">tạo bởi {{ set_item.creator_username }}</span>
+                                        </div>
+                                        <div class="progress-text-overlay">
+                                            <span>{{ set_item.answered_questions }} / {{ set_item.total_questions }}</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    {{ render_pagination(started_sets_pagination, 'quiz.index', 'page_started', {'page_new': new_sets_pagination.page}) }}
+                {% else %}
+                    <p class="empty-message">Bạn chưa làm bài trắc nghiệm nào. Hãy khám phá các bài mới!</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Tab "Khám phá" -->
+        <div id="discover-quiz-sets" class="tab-content">
+            <div class="set-category">
+                <h2 class="set-category-header">Khám phá bài trắc nghiệm mới</h2>
+                {% if new_sets_pagination.items %}
+                    <ul class="set-list">
+                        {% for set_item in new_sets_pagination.items %}
+                            <li class="set-item-not_started">
+                                <a href="{{ url_for('quiz.take_set', set_id=set_item.set_id) }}">
+                                    <div class="set-info">
+                                        <span class="set-title">{{ set_item.title }}</span>
+                                        <span class="set-creator">tạo bởi {{ set_item.creator_username }}</span>
+                                    </div>
+                                    <span class="set-status-indicator not-started-set-indicator">Bắt đầu làm</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    {{ render_pagination(new_sets_pagination, 'quiz.index', 'page_new', {'page_started': started_sets_pagination.page}) }}
+                {% else %}
+                    <p class="empty-message">Không có bài trắc nghiệm mới nào để khám phá.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
+    {# KẾT THÚC THÊM MỚI #}
 
 </div>
 {% endblock %}

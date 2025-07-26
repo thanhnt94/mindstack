@@ -39,6 +39,7 @@
 /* --- BẮT ĐẦU THÊM MỚI --- */
 @import url("home.css");
 @import url("feedback.css"); /* Thêm file css mới */
+@import url("tab_view.css"); /* Thêm file css cho giao diện tab */
 /* --- KẾT THÚC THÊM MỚI --- */
 /* Nhập các kiểu cho footer */
 @import url("footer.css");

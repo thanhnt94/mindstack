@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Chỉnh sửa Bộ câu hỏi - Flashcard Admin{% endblock %}
+{% block content %}
+    <div class="container">
+        {# BẮT ĐẦU SỬA: Bọc tiêu đề vào admin-panel-header #}
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h1><i class="fas fa-edit"></i> Chỉnh sửa Bộ câu hỏi: {{ set_data.title }}</h1>
+            </div>
+            {# KẾT THÚC SỬA #}
+            <form method="POST" action="{{ url_for('admin.edit_question_set', set_id=set_data.set_id) }}" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Tên bộ câu hỏi (Title): <span class="required-field">*</span></label>
+                    <input type="text" id="title" name="title" value="{{ set_data.title or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Mô tả (Description):</label>
+                    <textarea id="description" name="description" rows="3">{{ set_data.description or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="is_public">Trạng thái:</label>
+                    <select id="is_public" name="is_public">
+                        <option value="1" {% if set_data.is_public %}selected{% endif %}>Công khai (Public)</option>
+                        <option value="0" {% if not set_data.is_public %}selected{% endif %}>Riêng tư (Private)</option>
+                    </select>
+                </div>
+                
+                <hr style="margin: 20px 0; border: 1px solid #eee;">
+                <div class="form-group">
+                    <label for="excel_file">Đồng bộ hóa từ file Excel (.xlsx):</label>
+                    <input type="file" id="excel_file" name="excel_file" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    <small style="color: #dc3545; font-weight: bold;">CẢNH BÁO: Tải file lên sẽ GHI ĐÈ toàn bộ nội dung của bộ câu hỏi này. Các câu hỏi cũ không có trong file sẽ bị xóa.</small>
+                    <small>File phải có các cột bắt buộc: 'question' (hoặc 'question_image_file'/'question_audio_file'), 'option_a', 'option_b', 'correct_answer_text'. Các cột 'option_c', 'option_d', 'pre_question_text', 'guidance', 'question_id', 'passage_text', 'passage_order' là tùy chọn. Dòng đầu tiên sẽ được bỏ qua (coi như tiêu đề).</small>
+                </div>
+                
+                <!-- BẮT ĐẦU THAY ĐỔI: Cập nhật nhóm nút bấm -->
+                <div class="button-group">
+                    <button type="submit" class="button primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                    <a href="{{ url_for('admin.export_question_set', set_id=set_data.set_id) }}" class="button success"><i class="fas fa-file-excel"></i> Xuất Excel</a>
+                    <a href="{{ url_for('admin.export_question_set_zip', set_id=set_data.set_id) }}" class="button ai-button"><i class="fas fa-file-archive"></i> Xuất Gói ZIP</a>
+                    <a href="{{ url_for('admin.manage_question_sets') }}" class="button secondary"><i class="fas fa-times-circle"></i> Hủy</a>
+                </div>
+                <!-- KẾT THÚC THAY ĐỔI -->
+            </form>
+        </div>
+    </div>
+{% endblock %}

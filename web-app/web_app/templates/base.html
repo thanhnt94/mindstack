@@ -36,6 +36,11 @@
     {% include 'includes/footer.html' %}
 
     <script src="{{ url_for('static', filename='js/navbar_handler.js') }}"></script>
+    
+    {# BẮT ĐẦU THÊM MỚI: Thêm script xử lý tab #}
+    <script src="{{ url_for('static', filename='js/tab_handler.js') }}"></script>
+    {# KẾT THÚC THÊM MỚI #}
+
     {% block scripts_extra %}{% endblock %}
 
     {# BẮT ĐẦU THÊM MỚI: JavaScript để chuyển hướng nếu ở URL gốc nhưng không phải trang chủ giới thiệu #}

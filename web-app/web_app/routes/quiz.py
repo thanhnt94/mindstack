@@ -2,8 +2,11 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, flash, jsonify
 import logging
 from ..services import quiz_service, quiz_note_service
-from ..models import db, User, QuizQuestion, UserQuizProgress, QuizPassage 
-from ..config import QUIZ_MODE_DISPLAY_NAMES
+from ..models import db, User, QuizQuestion, UserQuizProgress, QuizPassage, QuestionSet
+# BẮT ĐẦU SỬA: Import thêm config và func
+from ..config import QUIZ_MODE_DISPLAY_NAMES, SETS_PER_PAGE
+from sqlalchemy import func
+# KẾT THÚC SỬA
 from .decorators import login_required
 from markupsafe import Markup, escape
 import json
@@ -11,6 +14,42 @@ import os
 
 quiz_bp = Blueprint('quiz', __name__, url_prefix='/quiz')
 logger = logging.getLogger(__name__)
+
+# BẮT ĐẦU THÊM MỚI: Sao chép lớp CustomPagination và hàm sắp xếp từ flashcard.py
+class CustomPagination:
+    def __init__(self, page, per_page, total, items):
+        self.page = page
+        self.per_page = per_page
+        self.total = total
+        self.items = items
+        self.pages = (total + per_page - 1) // per_page if total > 0 else 0
+        self.has_prev = page > 1
+        self.has_next = page < self.pages
+        self.prev_num = page - 1
+        self.next_num = page + 1
+    
+    def iter_pages(self, left_edge=1, right_edge=1, left_current=1, right_current=2):
+        last_page = 0
+        for num in range(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last_page + 1 != num:
+                    yield None
+                yield num
+                last_page = num
+
+def _sort_sets_by_progress(set_items, total_key, completed_key):
+    def custom_sort_key(set_item):
+        total = getattr(set_item, total_key, 0)
+        completed = getattr(set_item, completed_key, 0)
+        title = getattr(set_item, 'title', '')
+        if total == 0: return (float('-inf'), title) 
+        percentage = (completed * 100 / total)
+        if percentage == 100: return (0, title) 
+        return (-percentage, title)
+    return sorted(set_items, key=custom_sort_key)
+# KẾT THÚC THÊM MỚI
 
 def _serialize_quiz_question(q_data_dict):
     """
@@ -55,11 +94,63 @@ def _serialize_quiz_question(q_data_dict):
 @quiz_bp.route('/')
 @login_required
 def index():
+    # BẮT ĐẦU SỬA: Thêm logic phân trang
     user_id = session.get('user_id')
-    started_sets, new_sets = quiz_service.get_categorized_question_sets_for_user(user_id)
+    page_started = request.args.get('page_started', 1, type=int)
+    page_new = request.args.get('page_new', 1, type=int)
+
+    # Lấy ID của các bộ đã bắt đầu
+    started_set_ids_query = db.session.query(QuizQuestion.set_id).join(
+        UserQuizProgress, UserQuizProgress.question_id == QuizQuestion.question_id
+    ).filter(UserQuizProgress.user_id == user_id).distinct()
+    started_set_ids = {row[0] for row in started_set_ids_query.all()}
+
+    # Xử lý danh sách các bộ đã bắt đầu (sắp xếp và phân trang thủ công)
+    started_sets_with_progress = []
+    if started_set_ids:
+        started_sets_raw = QuestionSet.query.filter(QuestionSet.set_id.in_(started_set_ids)).all()
+        total_questions_map = dict(db.session.query(
+            QuizQuestion.set_id, func.count(QuizQuestion.question_id)
+        ).filter(QuizQuestion.set_id.in_(started_set_ids)).group_by(QuizQuestion.set_id).all())
+        
+        answered_questions_map = dict(db.session.query(
+            QuizQuestion.set_id, func.count(UserQuizProgress.progress_id)
+        ).join(QuizQuestion).filter(
+            UserQuizProgress.user_id == user_id,
+            QuizQuestion.set_id.in_(started_set_ids)
+        ).group_by(QuizQuestion.set_id).all())
+
+        for set_item in started_sets_raw:
+            set_item.total_questions = total_questions_map.get(set_item.set_id, 0)
+            set_item.answered_questions = answered_questions_map.get(set_item.set_id, 0)
+            set_item.creator_username = set_item.creator.username if set_item.creator else "N/A"
+            started_sets_with_progress.append(set_item)
+
+    sorted_started_sets = _sort_sets_by_progress(started_sets_with_progress, 
+                                                 total_key='total_questions', 
+                                                 completed_key='answered_questions')
+    
+    total_items_started = len(sorted_started_sets)
+    start_index_started = (page_started - 1) * SETS_PER_PAGE
+    end_index_started = start_index_started + SETS_PER_PAGE
+    paginated_started_sets_items = sorted_started_sets[start_index_started:end_index_started]
+    started_sets_pagination = CustomPagination(page_started, SETS_PER_PAGE, total_items_started, paginated_started_sets_items)
+
+    # Xử lý danh sách các bộ mới (dùng .paginate() của SQLAlchemy)
+    new_sets_query = QuestionSet.query.filter(
+        QuestionSet.is_public == True,
+        ~QuestionSet.set_id.in_(started_set_ids)
+    ).order_by(QuestionSet.title.asc())
+    new_sets_pagination = new_sets_query.paginate(page=page_new, per_page=SETS_PER_PAGE, error_out=False)
+
+    # Gán creator_username cho các mục trong trang hiện tại của new_sets
+    for set_item in new_sets_pagination.items:
+        set_item.creator_username = set_item.creator.username if set_item.creator else "N/A"
+
     return render_template('quiz/select_question_set.html', 
-                           started_sets=started_sets, 
-                           new_sets=new_sets)
+                           started_sets_pagination=started_sets_pagination, 
+                           new_sets_pagination=new_sets_pagination)
+    # KẾT THÚC SỬA
 
 @quiz_bp.route('/take/<int:set_id>')
 @login_required
@@ -98,10 +189,8 @@ def take_set(set_id):
             common_image_file_for_group = first_q_image
 
     for i, q in enumerate(questions):
-        # BẮT ĐẦU THAY ĐỔI: Logic phân quyền Sửa/Feedback
         can_edit_q = (user.user_id == q.question_set.creator_user_id)
         can_feedback_q = not can_edit_q
-        # KẾT THÚC THAY ĐỔI
         
         note = quiz_note_service.get_note_by_question_id(user_id, q.question_id)
         question_progress = UserQuizProgress.query.filter_by(user_id=user_id, question_id=q.question_id).first()
