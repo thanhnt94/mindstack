@@ -189,6 +189,33 @@
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
+/* --- BẮT ĐẦU THÊM MỚI: Nút bấm nổi cho AI (Floating Action Button) --- */
+.ai-fab {
+    position: fixed;
+    bottom: 100px; /* Đặt phía trên footer buttons */
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background-color: #6c5ce7; /* Màu tím nổi bật */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    z-index: 999; /* Nằm trên hầu hết các phần tử */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.ai-fab:hover {
+    background-color: #5847d3;
+    transform: scale(1.05);
+}
+/* --- KẾT THÚC THÊM MỚI --- */
+
 
 /* ========================== DYNAMIC CARD DETAILS (MOBILE ONLY - TRIGGER BUTTON & EXPANDED CONTENT) ========================== */
 .dynamic-card-details {
@@ -494,6 +521,10 @@
     .card-details-modal {
         display: none !important;
     }
+
+    /* --- BẮT ĐẦU SỬA LỖI: Xóa bỏ việc ẩn nút AI trên desktop --- */
+    /* Dòng '.ai-fab' đã được xóa khỏi đây */
+    /* --- KẾT THÚC SỬA LỖI --- */
 
     .desktop-card-details {
         display: block !important;

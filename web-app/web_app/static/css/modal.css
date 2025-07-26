@@ -59,7 +59,7 @@
 
 .modal-body {
     padding: 10px 0;
-    max-height: 400px;
+    max-height: 60vh; /* Giới hạn chiều cao để không quá dài trên mobile */
     overflow-y: auto;
     border: 1px solid #eee;
     padding: 15px;
@@ -98,3 +98,44 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* --- BẮT ĐẦU THÊM MỚI: Kiểu riêng cho Modal AI --- */
+.ai-modal-header {
+    margin-top: 0;
+    color: #6c5ce7; /* Cùng màu với nút FAB */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5em;
+}
+
+.ai-modal-body h1, .ai-modal-body h2, .ai-modal-body h3 {
+    color: #2c3e50;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 5px;
+    margin-top: 20px;
+}
+
+.ai-modal-body ul, .ai-modal-body ol {
+    padding-left: 20px;
+}
+
+.ai-modal-body li {
+    margin-bottom: 8px;
+}
+
+.ai-modal-body code {
+    background-color: #ecf0f1;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.ai-modal-body pre {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+/* --- KẾT THÚC THÊM MỚI --- */

@@ -41,6 +41,13 @@
     <script src="{{ url_for('static', filename='js/tab_handler.js') }}"></script>
     {# KẾT THÚC THÊM MỚI #}
 
+    <!-- BẮT ĐẦU THÊM MỚI: Thư viện và script cho tính năng AI -->
+    <!-- Thư viện Showdown để chuyển đổi Markdown sang HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <!-- Script xử lý logic AI -->
+    <script src="{{ url_for('static', filename='js/ai_handler.js') }}"></script>
+    <!-- KẾT THÚC THÊM MỚI -->
+
     {% block scripts_extra %}{% endblock %}
 
     {# BẮT ĐẦU THÊM MỚI: JavaScript để chuyển hướng nếu ở URL gốc nhưng không phải trang chủ giới thiệu #}

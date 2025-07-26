@@ -2,9 +2,7 @@
 import os
 import sys
 import logging
-# BẮT ĐẦU THAY ĐỔI: Thêm thư viện mã hóa
 from werkzeug.security import generate_password_hash
-# KẾT THÚC THAY ĐỔI
 
 # --- Thiết lập môi trường ---
 logging.basicConfig(
@@ -25,13 +23,17 @@ def install_database():
     """
     Mô tả:
     Thực hiện quá trình cài đặt lại cơ sở dữ liệu từ đầu.
-    1. Xóa file database cũ (nếu có).
-    2. Tạo lại toàn bộ cấu trúc bảng từ các model.
-    3. Tạo một tài khoản quản trị viên (admin) mặc định với mật khẩu đã được mã hóa.
+    1. Xóa file database cũ (nếu có) để đảm bảo làm sạch.
+    2. Gọi `db.create_all()` để tạo lại toàn bộ cấu trúc bảng từ các model trong `web_app/models.py`.
+       - QUAN TRỌNG: Quá trình này sẽ tự động thêm các cột mới như `ai_explanation` vào bảng
+         `Flashcards` và `QuizQuestions` vì chúng đã được định nghĩa trong model.
+    3. Tạo một tài khoản quản trị viên (admin) mặc định.
     """
     try:
         from web_app import create_app, db
-        from web_app.models import User
+        # BẮT ĐẦU THÊM MỚI: Import các model để rõ ràng hơn
+        from web_app.models import User, VocabularySet, Flashcard, QuizQuestion
+        # KẾT THÚC THÊM MỚI
         from web_app.config import DATABASE_PATH
 
         if os.path.exists(DATABASE_PATH):
@@ -52,24 +54,24 @@ def install_database():
                 os.makedirs(db_dir)
                 logger.info(f"Đã tạo thư mục database: {db_dir}")
 
-            logger.info("Đang tạo tất cả các bảng trong database...")
+            logger.info("Đang tạo tất cả các bảng trong database dựa trên 'models.py'...")
+            # Lệnh này sẽ đọc tất cả các class Model và tạo bảng tương ứng
+            # bao gồm cả các cột mới đã được thêm vào.
             db.create_all()
-            logger.info("Tạo bảng thành công.")
+            logger.info("Tạo bảng thành công. Các cột mới (nếu có) đã được thêm vào.")
 
             if User.query.filter_by(username='admin').first():
                 logger.warning("Tài khoản 'admin' đã tồn tại. Bỏ qua bước tạo tài khoản mặc định.")
             else:
                 logger.info("Đang tạo tài khoản quản trị viên mặc định...")
-                # BẮT ĐẦU THAY ĐỔI: Mã hóa mật khẩu mặc định
                 hashed_password = generate_password_hash('admin')
                 admin_user = User(
                     username='admin',
-                    password=hashed_password,  # Lưu mật khẩu đã được mã hóa
+                    password=hashed_password,
                     user_role='admin',
                     daily_new_limit=999,
                     timezone_offset=7
                 )
-                # KẾT THÚC THAY ĐỔI
                 db.session.add(admin_user)
                 db.session.commit()
                 logger.info("Tạo tài khoản admin mặc định thành công!")

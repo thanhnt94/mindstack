@@ -5,8 +5,10 @@ import io
 import os
 import zipfile
 import hashlib
+from sqlalchemy.orm import joinedload
 from ..models import db, VocabularySet, User, Flashcard, UserFlashcardProgress
 from ..config import FLASHCARD_IMAGES_DIR, FLASHCARD_AUDIO_CACHE_DIR
+# --- XÓA BỎ IMPORT AI SERVICE VÌ KHÔNG CÒN DÙNG Ở ĐÂY ---
 
 logger = logging.getLogger(__name__)
 
@@ -20,31 +22,30 @@ class SetService:
     def get_all_sets_with_details(self):
         """
         Mô tả: Lấy tất cả các bộ thẻ cùng với thông tin chi tiết.
+        Sử dụng eager loading để tối ưu hóa truy vấn.
         """
         log_prefix = "[SET_SERVICE|GetAllSets]"
         try:
-            sets = db.session.query(
+            sets_with_counts = db.session.query(
                 VocabularySet,
-                User.username.label('creator_username'),
                 db.func.count(Flashcard.flashcard_id).label('flashcard_count')
-            ).outerjoin(User, VocabularySet.creator_user_id == User.user_id)\
-             .outerjoin(Flashcard, VocabularySet.set_id == Flashcard.set_id)\
+            ).outerjoin(Flashcard, VocabularySet.set_id == Flashcard.set_id)\
+             .options(joinedload(VocabularySet.creator))\
              .group_by(VocabularySet.set_id)\
              .order_by(VocabularySet.title)\
              .all()
             
             results = []
-            for set_obj, creator_username, flashcard_count in sets:
-                set_obj.creator_username = creator_username or "N/A"
+            for set_obj, flashcard_count in sets_with_counts:
+                set_obj.creator_username = set_obj.creator.username if set_obj.creator else "N/A"
                 set_obj.flashcard_count = flashcard_count
                 results.append(set_obj)
-                
+            
             return results
         except Exception as e:
             logger.error(f"{log_prefix} Lỗi khi truy vấn: {e}", exc_info=True)
             return []
 
-    # BẮT ĐẦU THÊM MỚI: Hàm lấy bộ thẻ theo người tạo
     def get_sets_by_creator_id(self, creator_id):
         """
         Mô tả: Lấy tất cả các bộ thẻ được tạo bởi một người dùng cụ thể.
@@ -68,13 +69,12 @@ class SetService:
         except Exception as e:
             logger.error(f"{log_prefix} Lỗi khi truy vấn: {e}", exc_info=True)
             return []
-    # KẾT THÚC THÊM MỚI
 
     def get_set_by_id(self, set_id):
         """
         Mô tả: Lấy một bộ thẻ cụ thể bằng ID.
         """
-        return VocabularySet.query.get(set_id)
+        return VocabularySet.query.options(joinedload(VocabularySet.flashcards)).get(set_id)
 
     def _process_excel_file(self, vocabulary_set, file_stream, sync_by_id=False):
         """
@@ -192,7 +192,6 @@ class SetService:
                  return None, "Lỗi đọc file Excel. Vui lòng đảm bảo file có định dạng .xlsx hợp lệ."
             return None, str(e)
 
-    # BẮT ĐẦU THAY ĐỔI: Thêm user_id và kiểm tra quyền
     def update_set(self, set_id, data, user_id, file_stream=None):
         """
         Mô tả: Cập nhật thông tin và nội dung của một bộ thẻ, có kiểm tra quyền.
@@ -228,9 +227,7 @@ class SetService:
         except Exception as e:
             db.session.rollback()
             return None, str(e)
-    # KẾT THÚC THAY ĐỔI
 
-    # BẮT ĐẦU THAY ĐỔI: Thêm user_id và kiểm tra quyền
     def delete_set(self, set_id, user_id):
         """
         Mô tả: Xóa một bộ thẻ khỏi cơ sở dữ liệu, có kiểm tra quyền.
@@ -256,7 +253,63 @@ class SetService:
         except Exception as e:
             db.session.rollback()
             return False, str(e)
-    # KẾT THÚC THAY ĐỔI
+
+    def add_flashcard(self, set_id, data):
+        """
+        Mô tả: Thêm một flashcard mới vào bộ thẻ.
+        """
+        try:
+            new_card = Flashcard(
+                set_id=set_id,
+                front=data.get('front'),
+                back=data.get('back')
+            )
+            db.session.add(new_card)
+            db.session.commit()
+            return new_card, "success"
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Lỗi khi thêm flashcard vào bộ {set_id}: {e}")
+            return None, str(e)
+            
+    def get_flashcard_by_id(self, flashcard_id):
+        """
+        Mô tả: Lấy một flashcard bằng ID.
+        """
+        return Flashcard.query.get(flashcard_id)
+
+    def update_flashcard(self, flashcard_id, data):
+        """
+        Mô tả: Cập nhật một flashcard.
+        """
+        card = self.get_flashcard_by_id(flashcard_id)
+        if not card:
+            return None, "not_found"
+        try:
+            card.front = data.get('front', card.front)
+            card.back = data.get('back', card.back)
+            db.session.commit()
+            return card, "success"
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Lỗi khi cập nhật flashcard {flashcard_id}: {e}")
+            return None, str(e)
+            
+    def delete_flashcard(self, flashcard_id):
+        """
+        Mô tả: Xóa một flashcard.
+        """
+        card = self.get_flashcard_by_id(flashcard_id)
+        if not card:
+            return False, "not_found"
+        try:
+            db.session.delete(card)
+            db.session.commit()
+            return True, "success"
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Lỗi khi xóa flashcard {flashcard_id}: {e}")
+            return False, str(e)
 
     def export_set_to_excel(self, set_id):
         """

@@ -80,6 +80,7 @@ class Flashcard(db.Model):
     front_img = db.Column(db.String)
     back_img = db.Column(db.String)
     notification_text = db.Column(db.String)
+    ai_explanation = db.Column(db.Text, nullable=True) # --- BẮT ĐẦU THÊM MỚI ---
 
     progresses = db.relationship('UserFlashcardProgress', backref='flashcard', lazy=True, cascade="all, delete-orphan")
     notes = db.relationship('FlashcardNote', backref='flashcard', lazy=True, cascade="all, delete-orphan")
@@ -175,6 +176,7 @@ class QuizQuestion(db.Model):
     guidance = db.Column(db.Text)
     question_image_file = db.Column(db.String)
     question_audio_file = db.Column(db.String)
+    ai_explanation = db.Column(db.Text, nullable=True) # --- BẮT ĐẦU THÊM MỚI ---
     
     passage_id = db.Column(db.Integer, db.ForeignKey('QuizPassages.passage_id', ondelete='SET NULL'), nullable=True)
     passage_order = db.Column(db.Integer, nullable=True)

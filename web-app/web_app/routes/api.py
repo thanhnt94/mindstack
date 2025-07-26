@@ -9,7 +9,7 @@ from ..models import Flashcard, QuizQuestion, UserQuizProgress, QuizPassage, Use
 from ..config import FLASHCARD_IMAGES_DIR, QUIZ_IMAGES_DIR, QUIZ_AUDIO_CACHE_DIR 
 from .decorators import login_required
 from ..db_instance import db 
-
+from ..services import ai_service
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
 
@@ -411,3 +411,57 @@ def submit_feedback():
     
     return jsonify({'status': 'success', 'message': message})
 # --- KẾT THÚC THÊM MỚI ---
+
+# --- BẮT ĐẦU SỬA LỖI: Bỏ tiền tố /api khỏi route vì đã được xử lý bởi url_prefix ---
+@api_bp.route('/get_explanation', methods=['GET'])
+@login_required
+def get_ai_explanation():
+    """
+    Mô tả:
+    API endpoint để lấy nội dung giải thích từ AI theo yêu cầu (on-demand).
+    URL cuối cùng sẽ là /api/get_explanation do url_prefix của blueprint.
+    """
+    item_type = request.args.get('type')
+    item_id = request.args.get('id')
+
+    if not item_type or not item_id:
+        return jsonify({'error': 'Thiếu tham số cần thiết'}), 400
+
+    try:
+        item_id = int(item_id)
+    except ValueError:
+        return jsonify({'error': 'ID không hợp lệ'}), 400
+
+    item = None
+    try:
+        if item_type == 'flashcard':
+            item = Flashcard.query.get(item_id)
+        elif item_type == 'quiz':
+            item = QuizQuestion.query.get(item_id)
+        else:
+            return jsonify({'error': 'Loại item không hợp lệ'}), 400
+
+        if not item:
+            return jsonify({'error': 'Không tìm thấy đối tượng'}), 404
+
+        if item.ai_explanation:
+            logger.info(f"API /get_explanation: Lấy giải thích từ cache DB cho {item_type} ID {item_id}.")
+            return jsonify({'explanation': item.ai_explanation})
+
+        logger.info(f"API /get_explanation: Cache DB miss. Đang tạo giải thích mới cho {item_type} ID {item_id}.")
+        new_explanation = ai_service.generate_ai_explanation(item, item_type)
+
+        if new_explanation:
+            item.ai_explanation = new_explanation
+            db.session.commit()
+            logger.info(f"API /get_explanation: Đã tạo và lưu giải thích mới vào DB cho {item_type} ID {item_id}.")
+            return jsonify({'explanation': new_explanation})
+        else:
+            logger.warning(f"API /get_explanation: AI service không thể tạo giải thích cho {item_type} ID {item_id}.")
+            return jsonify({'explanation': 'Xin lỗi, trợ lý AI hiện không thể tạo giải thích cho nội dung này.'})
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Lỗi khi xử lý API /get_explanation cho {item_type} ID {item_id}: {e}", exc_info=True)
+        return jsonify({'error': 'Lỗi máy chủ nội bộ'}), 500
+# --- KẾT THÚC SỬA LỖI ---

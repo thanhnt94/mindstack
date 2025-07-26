@@ -121,6 +121,11 @@
                     {% endif %}
                 </div>
             </div>
+            
+            <!-- BẮT ĐẦU THAY ĐỔI: Xóa bỏ nút và vùng chứa AI cũ -->
+            <!-- Đã xóa -->
+            <!-- KẾT THÚC THAY ĐỔI -->
+
         </div>
 
         <div class="right-column-container">
@@ -170,6 +175,12 @@
             </div>
         </div>
     </div>
+
+    <!-- BẮT ĐẦU THÊM MỚI: Nút bấm nổi cho AI -->
+    <button id="open-ai-modal-btn" class="ai-fab" aria-label="Giải thích bằng AI">
+        <i class="fas fa-robot"></i>
+    </button>
+    <!-- KẾT THÚC THÊM MỚI -->
 
     <div id="side-nav-overlay" class="side-nav-overlay"></div>
     <nav id="side-nav" class="side-nav">
@@ -221,7 +232,6 @@
         </div>
     </nav>
     
-    {# BẮT ĐẦU THAY ĐỔI: Cập nhật cấu trúc HTML của modal ghi chú #}
     <div id="note-modal" class="note-modal">
         <div class="note-modal-content">
             <span id="note-modal-close-btn" class="note-modal-close-btn">&times;</span>
@@ -234,7 +244,6 @@
             </div>
         </div>
     </div>
-    {# KẾT THÚC THAY ĐỔI #}
 
     <div id="edit-modal" class="edit-modal">
         <div class="edit-modal-content">
@@ -282,6 +291,21 @@
             </div>
         </div>
     </div>
+
+    <!-- BẮT ĐẦU THÊM MỚI: Cấu trúc HTML cho Modal AI -->
+    <div id="ai-explanation-modal" class="modal">
+        <div class="modal-content ai-modal-content">
+            <span id="ai-modal-close-btn" class="close-button">&times;</span>
+            <h2 class="ai-modal-header"><i class="fas fa-robot"></i> Giải thích từ Trợ lý AI</h2>
+            <div id="ai-modal-body" class="modal-body">
+                <!-- Nội dung giải thích sẽ được tải vào đây -->
+            </div>
+            <div class="modal-footer">
+                <button id="ai-modal-close-footer-btn" class="button secondary">Đóng</button>
+            </div>
+        </div>
+    </div>
+    <!-- KẾT THÚC THÊM MỚI -->
 
     <audio id="cardAudioPlayer" hidden></audio>
     <div id="jsData"

@@ -100,16 +100,18 @@ def create_app():
     from .routes.main import main_bp
     from .routes.user import user_bp
     from .routes.feedback import feedback_bp
-    from .routes.set_management import set_management_bp # BẮT ĐẦU THÊM MỚI
+    from .routes.set_management import set_management_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(flashcard_bp, url_prefix='/flashcard')
     app.register_blueprint(admin_bp)
-    app.register_blueprint(api_bp)
+    # --- BẮT ĐẦU SỬA LỖI: Thêm url_prefix cho API blueprint ---
+    app.register_blueprint(api_bp, url_prefix='/api')
+    # --- KẾT THÚC SỬA LỖI ---
     app.register_blueprint(quiz_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(feedback_bp)
-    app.register_blueprint(set_management_bp) # BẮT ĐẦU THÊM MỚI
+    app.register_blueprint(set_management_bp)
 
     return app

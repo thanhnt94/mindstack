@@ -20,6 +20,10 @@ QUIZ_MEDIA_DIR = os.path.join(APP_MEDIA_BASE_DIR, "quiz")
 QUIZ_AUDIO_CACHE_DIR = os.path.join(QUIZ_MEDIA_DIR, "audio")
 QUIZ_IMAGES_DIR = os.path.join(QUIZ_MEDIA_DIR, "images")
 
+# --- BẮT ĐẦU THÊM MỚI: Cấu hình cho AI Service ---
+AI_CACHE_DIR = os.path.join(APP_MEDIA_BASE_DIR, "ai_cache")
+# --- KẾT THÚC THÊM MỚI ---
+
 AUDIO_CACHE_DIR = FLASHCARD_AUDIO_CACHE_DIR
 IMAGES_DIR = FLASHCARD_IMAGES_DIR
 
@@ -30,6 +34,9 @@ SQLALCHEMY_DATABASE_URI = f'sqlite:///{DATABASE_PATH}'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'mot_chuoi_bi_mat_rat_dai_va_phuc_tap_cho_flask_moi')
+# --- BẮT ĐẦU THÊM MỚI: Cấu hình cho Gemini API ---
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyA6xrvIui5fdq_87DLX_2BozzXvYBmi_4A')
+# --- KẾT THÚC THÊM MỚI ---
 
 MODE_SEQUENTIAL_LEARNING = 'sequential_learning' 
 MODE_NEW_CARDS_ONLY = 'new_cards_only'         
@@ -85,7 +92,8 @@ DIRECTORIES_TO_CREATE = [
     FLASHCARD_AUDIO_CACHE_DIR,
     FLASHCARD_IMAGES_DIR,
     QUIZ_AUDIO_CACHE_DIR,
-    QUIZ_IMAGES_DIR
+    QUIZ_IMAGES_DIR,
+    AI_CACHE_DIR # --- THÊM MỚI ---
 ]
 
 for dir_path in DIRECTORIES_TO_CREATE:

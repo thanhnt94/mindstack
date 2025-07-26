@@ -145,6 +145,16 @@
                         <div class="guidance-panel" style="display: none;">
                             <h4><i class="fas fa-lightbulb"></i> Giải thích</h4>
                             <p class="guidance-text"></p>
+                            <!-- BẮT ĐẦU THÊM MỚI: Nút và vùng chứa giải thích AI cho Quiz -->
+                            <div class="ai-explanation-section" style="margin-top: 10px;">
+                                <button type="button" class="button secondary small-button btn-ai-explain" data-item-id="{{ question.question_id }}" data-item-type="quiz">
+                                    <i class="fas fa-robot"></i> Giải thích sâu hơn với AI
+                                </button>
+                                <div id="ai-explanation-container-{{ question.question_id }}" class="ai-explanation-content" style="display: none; margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                                    <!-- Nội dung giải thích AI sẽ được tải vào đây -->
+                                </div>
+                            </div>
+                            <!-- KẾT THÚC THÊM MỚI -->
                         </div>
                         <div class="result-actions">
                             <button type="button" class="button secondary small-button open-quiz-note-btn {% if has_note %}has-note{% endif %}" data-question-id="{{ question.question_id }}">
@@ -173,7 +183,6 @@
 </div>
 
 <!-- Modal Ghi chú -->
-{# BẮT ĐẦU THAY ĐỔI: Cập nhật cấu trúc HTML của modal ghi chú #}
 <div id="quiz-note-modal" class="note-modal" style="display: none;">
     <div class="note-modal-content">
         <span id="quiz-note-modal-close-btn" class="note-modal-close-btn">&times;</span>
@@ -186,7 +195,6 @@
         </div>
     </div>
 </div>
-{# KẾT THÚC THAY ĐỔI #}
 
 <!-- Modal Sửa câu hỏi -->
 <div id="quiz-edit-modal" class="edit-modal" style="display: none;">
